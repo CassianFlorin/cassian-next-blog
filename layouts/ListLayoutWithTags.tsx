@@ -9,6 +9,7 @@ import Link from '@/components/Link'
 import Tag from '@/components/Tag'
 import siteMetadata from '@/data/siteMetadata'
 import tagData from 'app/tag-data.json'
+import { useTranslations } from 'next-intl'
 
 interface PaginationProps {
   totalPages: number
@@ -31,13 +32,14 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
     .replace(/\/$/, '') // Remove trailing slash
   const prevPage = currentPage - 1 > 0
   const nextPage = currentPage + 1 <= totalPages
+  const t = useTranslations('blog')
 
   return (
     <div className="space-y-2 pt-6 pb-8 md:space-y-5">
       <nav className="flex justify-between">
         {!prevPage && (
           <button className="cursor-auto disabled:opacity-50" disabled={!prevPage}>
-            Previous
+            {t('previous')}
           </button>
         )}
         {prevPage && (
@@ -45,20 +47,20 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
             href={currentPage - 1 === 1 ? `/${basePath}/` : `/${basePath}/page/${currentPage - 1}`}
             rel="prev"
           >
-            Previous
+            {t('previous')}
           </Link>
         )}
         <span>
-          {currentPage} of {totalPages}
+          {currentPage} {t('of')} {totalPages}
         </span>
         {!nextPage && (
           <button className="cursor-auto disabled:opacity-50" disabled={!nextPage}>
-            Next
+            {t('next')}
           </button>
         )}
         {nextPage && (
           <Link href={`/${basePath}/page/${currentPage + 1}`} rel="next">
-            Next
+            {t('next')}
           </Link>
         )}
       </nav>
@@ -76,6 +78,7 @@ export default function ListLayoutWithTags({
   const tagCounts = tagData as Record<string, number>
   const tagKeys = Object.keys(tagCounts)
   const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
+  const t = useTranslations('blog')
 
   const displayPosts = initialDisplayPosts.length > 0 ? initialDisplayPosts : posts
 
@@ -91,30 +94,30 @@ export default function ListLayoutWithTags({
           <div className="hidden h-full max-h-screen max-w-[280px] min-w-[280px] flex-wrap overflow-auto rounded-sm bg-gray-50 pt-5 shadow-md sm:flex dark:bg-gray-900/70 dark:shadow-gray-800/40">
             <div className="px-6 py-4">
               {pathname.startsWith('/blog') ? (
-                <h3 className="text-primary-500 font-bold uppercase">All Posts</h3>
+                <h3 className="text-primary-500 font-bold uppercase">{t('allPosts')}</h3>
               ) : (
                 <Link
                   href={`/blog`}
                   className="hover:text-primary-500 dark:hover:text-primary-500 font-bold text-gray-700 uppercase dark:text-gray-300"
                 >
-                  All Posts
+                  {t('allPosts')}
                 </Link>
               )}
               <ul>
-                {sortedTags.map((t) => {
+                {sortedTags.map((tag) => {
                   return (
-                    <li key={t} className="my-3">
-                      {decodeURI(pathname.split('/tags/')[1]) === slug(t) ? (
+                    <li key={tag} className="my-3">
+                      {decodeURI(pathname.split('/tags/')[1]) === slug(tag) ? (
                         <h3 className="text-primary-500 inline px-3 py-2 text-sm font-bold uppercase">
-                          {`${t} (${tagCounts[t]})`}
+                          {`${tag} (${tagCounts[tag]})`}
                         </h3>
                       ) : (
                         <Link
-                          href={`/tags/${slug(t)}`}
+                          href={`/tags/${slug(tag)}`}
                           className="hover:text-primary-500 dark:hover:text-primary-500 px-3 py-2 text-sm font-medium text-gray-500 uppercase dark:text-gray-300"
-                          aria-label={`View posts tagged ${t}`}
+                          aria-label={`${t('viewPostsTagged')} ${tag}`}
                         >
-                          {`${t} (${tagCounts[t]})`}
+                          {`${tag} (${tagCounts[tag]})`}
                         </Link>
                       )}
                     </li>
@@ -131,7 +134,7 @@ export default function ListLayoutWithTags({
                   <li key={path} className="py-5">
                     <article className="flex flex-col space-y-2 xl:space-y-0">
                       <dl>
-                        <dt className="sr-only">Published on</dt>
+                        <dt className="sr-only">{t('publishedOn')}</dt>
                         <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
                           <time dateTime={date} suppressHydrationWarning>
                             {formatDate(date, siteMetadata.locale)}

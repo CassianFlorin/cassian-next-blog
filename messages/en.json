@@ -1,0 +1,76 @@
+{
+  "common": {
+    "home": "Home",
+    "blog": "Blog",
+    "about": "About",
+    "projects": "Projects",
+    "tags": "Tags",
+    "search": "Search",
+    "theme": "Theme",
+    "language": "Language"
+  },
+  "home": {
+    "title": "Welcome to My Blog",
+    "description": "Sharing technology, life and thoughts",
+    "readMore": "Read More",
+    "viewAllPosts": "View All Posts"
+  },
+  "blog": {
+    "readMore": "Read More",
+    "publishedOn": "Published on",
+    "lastModified": "Last Modified",
+    "readingTime": "Reading Time",
+    "tags": "Tags",
+    "relatedPosts": "Related Posts",
+    "noPosts": "No posts found",
+    "previous": "Previous",
+    "next": "Next",
+    "of": "of",
+    "allPosts": "All Posts",
+    "viewPostsTagged": "View posts tagged"
+  },
+  "about": {
+    "title": "About Me",
+    "description": "Learn more about me"
+  },
+  "projects": {
+    "title": "Projects",
+    "description": "Some projects I've worked on",
+    "viewProject": "View Project",
+    "viewCode": "View Code"
+  },
+  "footer": {
+    "copyright": "All rights reserved",
+    "poweredBy": "Powered by Next.js"
+  },
+  "search": {
+    "placeholder": "Search posts...",
+    "noResults": "No results found",
+    "searchResults": "Search Results"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "tags": {
+    "writings": "Writings",
+    "book": "Book",
+    "reflection": "Reflection",
+    "github": "GitHub",
+    "guide": "Guide",
+    "next-js": "Next.js",
+    "tailwind": "Tailwind",
+    "feature": "Feature",
+    "holiday": "Holiday",
+    "canada": "Canada",
+    "images": "Images",
+    "markdown": "Markdown",
+    "code": "Code",
+    "features": "Features",
+    "multi-author": "Multi-author",
+    "math": "Math",
+    "ols": "OLS",
+    "hello": "Hello"
+  }
+}
