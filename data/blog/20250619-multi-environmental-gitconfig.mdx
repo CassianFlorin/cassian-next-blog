@@ -1,0 +1,135 @@
+---
+title: '多环境下的 Git Config 配置'
+date: '2025-06-19'
+tags: ['Git', '开发习惯']
+summary: '我在新单位需要使用自己的真实姓名提交，而我的开源项目则使用第二身份。本文记录了如何通过 Git 的 includeIf 配置机制，在不影响常用配置的前提下实现多环境身份兼容。'
+images: ['/static/images/git-config-multi-env.jpg']
+draft: false
+---
+
+# 多环境 Git Config 配置
+
+<TOCInline toc={toc} asDisclosure={true} />
+
+## 🧭 背景介绍
+
+当我们在多个开发场景中使用 Git 时，常常会遇到身份信息冲突的问题：
+
+<Callout emoji="👥">
+  在公司提交代码要求使用中文实名，而在开源项目中你可能想用花名、昵称或 GitHub 关联邮箱作为作者信息。
+</Callout>
+
+如果每次都手动切换 `user.name` 和 `user.email`，不仅麻烦还容易出错。有没有一种方式可以自动切换 Git 配置？
+
+答案是 —— 有的，用 `includeIf`！
+
+---
+
+## ❓ 为什么要区分 Git 配置身份？
+
+我个人的使用场景是这样的：
+
+- **公司项目提交**：使用中文名 + 公司邮箱
+- **开源项目提交**：使用花名 `Cassian Florin` + GitHub 邮箱
+
+如果你没有多重身份需求，其实只用 `--global` 配置就足够：
+
+```bash
+git config --global user.email "公司邮箱"
+git config --global user.name "中文名"
+
+git config --global pull.rebase true
+```
+
+---
+
+## 🧬 更灵活的多身份配置方案（推荐）
+
+### ✍️ 我的开发环境说明
+
+- macOS 15.4.1 (M1 Pro)
+- JetBrains Toolbox 家族（CLion、WebStorm、DataGrip）
+- Git 已全局安装
+- 文章目录结构以 `~/dev/` 为主目录
+
+---
+
+### 📁 创建额外的 Git 配置文件
+
+1. 打开终端并进入用户主目录：
+
+```bash
+cd ~
+ls -a
+```
+
+2. 创建一份新的 Git 配置文件：
+
+```bash
+vim .gitconfig_qnvip
+```
+
+内容示例：
+
+```ini
+[user]
+    name = Cassian Florin
+    email = your-open-source-email@example.com
+```
+
+你也可以用 `touch .gitconfig_qnvip` 先建空文件再编辑。
+
+---
+
+### 🔁 修改 `.gitconfig` 主文件，实现条件切换
+
+编辑 `~/.gitconfig`，增加以下配置：
+
+```ini
+[user]
+    name = 中文名
+    email = 公司邮箱
+
+[core]
+    autocrlf = input
+
+[pull]
+    rebase = true
+
+[includeIf "gitdir:/Users/huapai/dev/open/"]
+    path = /Users/huapai/.gitconfig_qnvip
+```
+
+<Callout emoji="🧠" type="info">
+  `includeIf` 会检测路径前缀是否匹配，如果你进入 `/Users/huapai/dev/open/` 下的任意仓库，Git
+  就会自动加载指定配置文件。 当然反过来亦然，你也可以把开源项目作为常用的配置。公司作为可选目录下的
+</Callout>
+
+---
+
+## 🧪 实际效果演示
+
+在 `~/dev/open/` 目录下初始化一个新项目：
+
+```bash
+mkdir ~/dev/open/test-project
+cd ~/dev/open/test-project
+git init
+```
+
+查看当前生效的 Git 配置：
+
+```bash
+git config user.name
+git config user.email
+```
+
+如果显示的是 `Cassian Florin` 和你的开源邮箱，说明 `includeIf` 生效了！
+
+---
+
+## ✅ 总结 & 建议
+
+- 只做一个身份的开发者使用全局配置即可
+- 有公司/开源/多重角色时，推荐用 `includeIf` 管理多个身份
+- 后期还可以写自动化脚本、一键切换身份、配合 Git hook 使用等
