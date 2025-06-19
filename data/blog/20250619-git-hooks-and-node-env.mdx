@@ -1,0 +1,119 @@
+---
+title: 'Git Hooks 与 Node 环境问题'
+date: '2025-06-19 23:17:00'
+tags: ['Git', '开发习惯', '解决方案']
+summary: '在企业开发中可能会遇到项目中使用了 Git Hooks，其中有一个 git pre-commit 的 hook。本文就来说在要是用 git hooks 时我遇到的问题'
+draft: false
+---
+
+# Git Hooks 与 Node 环境问题
+
+## 🧠起因
+
+我在之前解决了 `Git Hooks与多Jdk环境问题解决` 的这个问题。但在今天又出现了本地node环境🪝钩子读不到了。真的是命运多舛。
+
+<ErrorDisplay
+  title="Git Hook 环境错误"
+  error="npx: command not found"
+  code="127"
+  path="node_modules/.bin:/opt/homebrew/opt/git/libexec/git-core:/usr/bin:/bin:/usr/sbin:/sbin"
+  details={[
+    'Git hook 无法读取到 node 环境',
+    'node_modules 文件夹中没有 npx 执行文件',
+    'PATH 环境变量配置问题',
+  ]}
+/>
+
+错误内容如下：
+
+```shell
+# 下面这一行是 sdkmanrc 的配置环境
+-e Using java version 8.0.452-amzn in this shell.
+# 这里开始是我的 node 环境问题
+.husky/pre-commit: line 16: npx: command not found
+husky - pre-commit script failed (code 127)
+husky - command not found in PATH=node_modules/.bin:/opt/homebrew/opt/git/libexec/git-core:/usr/bin:/bin:/usr/sbin:/sbin
+```
+
+从上面的 shell 日志来看，git hook 是读不到我的 node 环境了。同时项目中使用npm install安装的node_modules文件夹里也没有npx的执行文件。
+
+## ❌问题点
+
+我的开发电脑是 MacBook Pro M1 Pro 版本的。第一次接触Mac系统的开发同学在拿到电脑安装自己的shell环境时我想会有部分同学和我一样使用Homebrew。
+但是不得不说这个组建安装确实方便，只需要brew install xxx即可。但随之也会带来环境不匹配的问题。
+
+<EnvironmentComparison
+  environments={[
+    {
+      name: 'Homebrew',
+      path: '/opt/homebrew/bin/',
+      issue: '环境不匹配，与生产环境差异过大',
+      pros: ['安装方便', '包管理统一'],
+      cons: ['路径与标准环境不同', '可能导致兼容性问题', 'Git hooks 无法正确识别'],
+    },
+    {
+      name: '原生环境',
+      path: '/usr/bin/',
+      issue: '生产环境标准',
+      pros: ['与生产环境一致', '兼容性好', 'Git hooks 正常工作'],
+      cons: ['需要手动管理版本', '安装相对复杂'],
+    },
+  ]}
+/>
+
+在写这份文档之前我的 shell 环境用的都是 brew 就行安装的。
+具体的问题就是 brew install 的内容是放在/opt/homebrew/bin/这个目录下面，与实际读取原生环境会有差别。
+更多的Linux开发者与Unix开发者会使用/usr/bin、/usr/sbin/等这些目录获取需要使用的可执行文件，这与实际的生产环境相差过大。
+
+##🔧解决方案
+
+> 既然我们清楚问题在哪了。那就开始着手解决吧！
+> 我的问题是 `brew install node` 让 `git hook` 读取不到
+> 我后面说明的都是如何解决这个问题
+
+<StepProgress
+  steps={[
+    {
+      title: '卸载 Node',
+      status: 'completed',
+      description: '使用 brew uninstall node 卸载当前环境',
+    },
+    {
+      title: '安装 NVM',
+      status: 'completed',
+      description: '安装 Node Version Manager 进行版本管理',
+    },
+    { title: '安装 Node', status: 'current', description: '使用 NVM 安装指定版本的 Node.js' },
+  ]}
+/>
+
+### 卸载node
+
+<CopyableCodeBlock code="brew uninstall node" language="shell" title="卸载 Node.js" />
+
+<CopyableCodeBlock code="npm uninstall npm -g" language="shell" title="卸载 npm（可选）" />
+
+<CopyableCodeBlock code="node -v\nnpm -v" language="shell" title="验证卸载结果" />
+
+至此完成在 brew 下安装的 node 环境卸载。下面开始安装 nvm
+
+### 安装 nvm
+
+> 什么是 nvm 还请自行谷歌
+
+我们使用 nvm 作者在 GitHub 上给出的指令。
+GitHub：https://github.com/nvm-sh/nvm
+
+<CopyableCodeBlock
+  code="curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
+  language="shell"
+  title="安装 NVM"
+/>
+
+<CopyableCodeBlock code="nvm -v" language="shell" title="验证 NVM 安装" />
+
+<CopyableCodeBlock code="nvm ls-remote" language="shell" title="查看可用的 Node 版本" />
+
+<CopyableCodeBlock code="nvm install v22.16.0" language="shell" title="安装指定版本的 Node.js" />
+
+OK了。能跑到这说明你已经完成了。接下来正常使用就行。
