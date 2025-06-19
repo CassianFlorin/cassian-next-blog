@@ -54,25 +54,12 @@
     "system": "系统"
   },
   "tags": {
-    "writings": "随笔",
-    "book": "书籍",
-    "reflection": "反思",
-    "github": "GitHub",
-    "guide": "指南",
-    "next-js": "Next.js",
-    "tailwind": "Tailwind",
-    "feature": "特性",
-    "holiday": "假期",
-    "canada": "加拿大",
-    "images": "图片",
-    "markdown": "Markdown",
-    "code": "代码",
-    "features": "功能",
-    "multi-author": "多作者",
-    "math": "数学",
-    "ols": "最小二乘法",
-    "hello": "你好",
     "随笔": "随笔",
-    "开端": "开端"
+    "开端": "开端",
+    "Git": "Git",
+    "开发习惯": "开发习惯",
+    "测试": "测试",
+    "自动化": "自动化",
+    "新功能": "新功能"
   }
 }

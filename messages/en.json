@@ -54,25 +54,12 @@
     "system": "System"
   },
   "tags": {
-    "writings": "Writings",
-    "book": "Book",
-    "reflection": "Reflection",
-    "github": "GitHub",
-    "guide": "Guide",
-    "next-js": "Next.js",
-    "tailwind": "Tailwind",
-    "feature": "Feature",
-    "holiday": "Holiday",
-    "canada": "Canada",
-    "images": "Images",
-    "markdown": "Markdown",
-    "code": "Code",
-    "features": "Features",
-    "multi-author": "Multi-author",
-    "math": "Math",
-    "ols": "OLS",
-    "hello": "Hello",
     "随笔": "Essay",
-    "开端": "Start"
+    "开端": "Start",
+    "Git": "Git",
+    "开发习惯": "Development Habits",
+    "测试": "测试",
+    "自动化": "自动化",
+    "新功能": "新功能"
   }
 }
