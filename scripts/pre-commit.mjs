@@ -10,4 +10,4 @@ try {
 } catch (error) {
   console.error('❌ Pre-commit: Failed to update tags:', error.message)
   process.exit(1)
-} 
+}
