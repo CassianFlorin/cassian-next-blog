@@ -20,4 +20,5 @@ export const components: MDXComponents = {
   ErrorDisplay,
   StepProgress,
   EnvironmentComparison,
+  CopyableCodeBlock,
 }
