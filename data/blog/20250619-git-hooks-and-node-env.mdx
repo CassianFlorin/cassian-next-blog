@@ -10,7 +10,13 @@ draft: false
 
 ## 🧠起因
 
-我在之前解决了 `Git Hooks与多Jdk环境问题解决` 的这个问题。但在今天又出现了本地node环境🪝钩子读不到了。真的是命运多舛。
+我在之前解决了 [Git Hooks与多JDK环境问题解决](/blog/git-hooks-and-multi-java-env) 的这个问题。但在今天又出现了本地node环境🪝钩子读不到了。真的是命运多舛。
+
+<Callout emoji="📖">
+  如果您还没有阅读过 JDK 环境问题的解决方案，建议先查看 [Git
+  Hooks与多JDK环境问题解决](/blog/git-hooks-and-multi-java-env) 这篇文章，了解如何使用 SDKMAN 管理
+  Java 环境。
+</Callout>
 
 <ErrorDisplay
   title="Git Hook 环境错误"
@@ -71,6 +77,12 @@ husky - command not found in PATH=node_modules/.bin:/opt/homebrew/opt/git/libexe
 > 我的问题是 `brew install node` 让 `git hook` 读取不到
 > 我后面说明的都是如何解决这个问题
 
+<Callout emoji="💡">
+  这个问题与之前解决的 [JDK 环境问题](/blog/git-hooks-and-multi-java-env)
+  类似，都是由于环境管理工具导致的 PATH 配置问题。不同的是，这次我们需要管理 Node.js 环境而不是 Java
+  环境。
+</Callout>
+
 <StepProgress
   steps={[
     {
@@ -117,3 +129,28 @@ GitHub：https://github.com/nvm-sh/nvm
 <CopyableCodeBlock code="nvm install v22.16.0" language="shell" title="安装指定版本的 Node.js" />
 
 OK了。能跑到这说明你已经完成了。接下来正常使用就行。
+
+## 📝 总结
+
+通过这次问题的解决，我总结出了一些关于开发环境管理的重要经验：
+
+### 🔄 环境管理工具的选择
+
+1. **避免使用 Homebrew 安装开发语言环境**：虽然 Homebrew 安装方便，但会导致路径不一致，影响 Git hooks 的正常工作
+2. **推荐使用版本管理工具**：
+   - Java 环境：使用 [SDKMAN](/blog/git-hooks-and-multi-java-env) 进行管理
+   - Node.js 环境：使用 NVM 进行管理
+   - Python 环境：使用 pyenv 进行管理
+
+### 🔗 相关文章
+
+- [Git Hooks与多JDK环境问题解决](/blog/git-hooks-and-multi-java-env) - 解决 Java 环境问题
+- [SDKMAN 安装与配置指南](/blog/install-sdkman) - SDKMAN 的详细安装教程
+
+### 💡 最佳实践
+
+1. **统一环境管理**：在团队中统一使用相同的环境管理工具
+2. **项目配置**：在项目中添加相应的配置文件（如 `.sdkmanrc`、`.nvmrc`）
+3. **文档记录**：将环境配置步骤记录在项目文档中，方便团队成员快速搭建环境
+
+这样，无论是 Java 还是 Node.js 环境问题，都能得到妥善解决，确保 Git hooks 能够正常工作。
