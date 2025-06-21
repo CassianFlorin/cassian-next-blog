@@ -1,0 +1,248 @@
+---
+title: 'Git Hooks与多JDK环境问题解决'
+date: '2025-06-19 22:00:00'
+tags: ['Git', '开发习惯', '解决方案']
+summary: '公司通过 git commit hook 实现代码提交前校验，但本地多JDK环境（最高JDK22）导致 Maven spotless 插件无法正常执行。'
+draft: false
+---
+
+# Git Hooks与多JDK环境问题解决
+
+## 🧠 起因
+
+公司使用了 git commit hook 在 git 提交之前对提交的内容与代码进行前置校验。
+我本地存在多个 JDK 版本，最高版本为 JDK22，因此在使用 mvn 的 spotless 插件时会出现无法执行的问题。
+
+<ErrorDisplay
+  title="Maven Spotless 插件执行失败"
+  error="java.lang.reflect.InvocationTargetException: 'com.sun.tools.javac.tree.JCTree com.sun.tools.javac.tree.JCTree$JCImport.getQualifiedIdentifier()'"
+  code="1"
+  path="Maven spotless plugin execution"
+  details={[
+    'JDK 版本不兼容导致的问题',
+    'Spotless 插件与高版本 JDK 存在兼容性问题',
+    'Git hooks 执行失败，阻止代码提交',
+  ]}
+/>
+
+错误日志示例：
+
+```bash
+[ERROR] Failed to execute goal com.diffplug.spotless:spotless-maven-plugin:2.30.0:apply(default-cli) on project qnvip-referral-client: Execution default-cli of goal com.diffplug.spotless:spotless-maven-plugin:2.30.0:apply failed: java.lang.reflect.InvocationTargetException: 'com.sun.tools.javac.tree.JCTree com.sun.tools.javac.tree.JCTree$JCImport.getQualifiedIdentifier()' -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :qnvip-referral-client
+husky - pre-commit script failed (code 1)
+```
+
+## 💼 解决方案
+
+<Callout emoji="💡">
+  考虑到或许有人会和我一样安装多个 JDK，因此结合这个情况与找到的资料，推荐使用 SDKMAN 来管理 Java
+  版本。
+</Callout>
+
+## ⚙️ 安装 SDKMAN
+
+参考 [SDKMAN 安装与配置指南](/blog/install-sdkman) 文档，其中对 Mac 系统环境与 Windows 系统环境的安装都有详细指导。
+
+<Callout emoji="📖">如果您还没有安装 SDKMAN，请先阅读安装指南，然后再继续本文的配置步骤。</Callout>
+
+## ⚙️ 安装需要的 JDK
+
+### 查看可用的 Java 版本
+
+执行以下命令查看现在能使用的 Java 版本：
+
+```bash
+sdk list java
+```
+
+### 安装项目所需的 JDK
+
+这个环境目前使用的是 JDK8。找到需要的版本后执行：
+
+```bash
+sdk install java 8.0.452-amzn
+```
+
+### 验证安装
+
+安装完成后，验证 Java 版本：
+
+```bash
+java -version
+```
+
+预期输出：
+
+```bash
+openjdk version "1.8.0_452"
+OpenJDK Runtime Environment (build 1.8.0_452-b08)
+OpenJDK 64-Bit Server VM (build 25.452-b08, mixed mode)
+```
+
+## 🔧 在项目中配置 SDKMAN
+
+### 项目目录结构
+
+假设项目目录结构如下：
+
+```plaintext
+your-project/
+├── .husky/
+│   └── pre-commit
+├── .sdkmanrc # sdkman配置
+├── mvnw
+├── mvnw.cmd
+├── pom.xml
+├── package.json
+├── lint-staged.config.js
+└── ...
+```
+
+### 创建 .sdkmanrc 配置文件
+
+需要在项目根目录下配置 `.sdkmanrc` 文件，在其中写入 JDK 信息：
+
+```plaintext
+# This file is used by SDKMAN to automatically switch to the correct Java version
+# when entering this project directory
+#
+# 注意：
+# 1. 此文件需要 SDKMAN 支持才能生效
+# 2. 如果您没有安装 SDKMAN，请参考 [SDKMAN 安装与配置指南](/blog/install-sdkman)
+# 3. Windows 用户需要在 Git Bash 或类似的 Unix-like 环境中使用 SDKMAN
+# 4. 如果您使用的是 IDE（如 IntelliJ IDEA），请确保在项目设置中也配置了正确的 JDK
+#
+# Note:
+# 1. This file requires SDKMAN to take effect
+# 2. If you haven't installed SDKMAN, please refer to the installation guide
+# 3. Windows users need to use SDKMAN in Git Bash or similar Unix-like environment
+# 4. If you're using an IDE (like IntelliJ IDEA), make sure to configure the correct JDK in project settings
+
+java=8.0.452-amzn
+```
+
+## 🔧 配置 pre-commit Hook
+
+### 完整的 pre-commit 脚本
+
+这里是一个完整的 pre-commit 配置文件，支持跨平台使用：
+
+```bash
+#!/bin/sh
+# Check if running on Windows or Unix-like system
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    # Windows environment
+    IS_WINDOWS=true
+    SDKMAN_DIR="$USERPROFILE/.sdkman"
+    SDKMAN_INIT="$SDKMAN_DIR/bin/sdkman-init.sh"
+    ;;
+  *)
+    # Unix-like environment (macOS, Linux, etc.)
+    IS_WINDOWS=false
+    SDKMAN_DIR="$HOME/.sdkman"
+    SDKMAN_INIT="$SDKMAN_DIR/bin/sdkman-init.sh"
+    ;;
+esac
+
+# Check if .sdkmanrc file exists and SDKMAN is installed
+if [ -f .sdkmanrc ] && [ -f "$SDKMAN_INIT" ]; then
+  echo "SDKMAN detected, activating project Java version"
+  # Load sdkman
+  source "$SDKMAN_INIT"
+
+  # Execute sdkman commands
+  sdk env
+else
+  echo "SDKMAN not detected or .sdkmanrc not found. Using system Java version."
+  # Print current Java version for reference
+  if command -v java >/dev/null 2>&1; then
+    echo "Current Java version: $(java -version 2>&1 | head -n 1)"
+  else
+    echo "Warning: Java not found in PATH"
+  fi
+fi
+
+# Execute other pre-commit hooks
+if [ -f "$HOME"/qnvip.gitconfig.sh ]; then
+  bash "$HOME"/qnvip.gitconfig.sh
+fi
+
+npx --no-install node .husky/scripts/modify-author-from-file.js
+npx lint-staged --verbose --debug
+```
+
+### 脚本功能说明
+
+<Callout emoji="🔍">
+  这个脚本的主要功能： 1. **跨平台检测**: 自动识别 Windows 和 Unix-like 系统 2. **SDKMAN 集成**:
+  自动加载 SDKMAN 并切换到项目指定的 Java 版本 3. **错误处理**: 当 SDKMAN 不可用时，显示当前 Java
+  版本信息 4. **其他钩子**: 执行额外的 Git hooks 和代码检查
+</Callout>
+
+## ✅ 验证配置
+
+### 测试 Git Commit
+
+配置完成后，尝试进行一次提交来验证配置是否正确：
+
+```bash
+git add .
+git commit -m "test: 验证 SDKMAN 配置"
+```
+
+如果看到类似以下输出，说明配置成功：
+
+```bash
+SDKMAN detected, activating project Java version
+Using java version 8.0.452-amzn in this shell.
+```
+
+### 常见问题排查
+
+<ErrorDisplay
+  title="SDKMAN 未检测到"
+  error="SDKMAN not detected or .sdkmanrc not found"
+  code="0"
+  path="Project directory"
+  details={['SDKMAN 未正确安装', '.sdkmanrc 文件不存在', '需要先安装 SDKMAN']}
+/>
+
+**解决方案**: 参考 [SDKMAN 安装与配置指南](/blog/install-sdkman)
+
+<ErrorDisplay
+  title="Java 版本仍然不匹配"
+  error="Java version mismatch in Git hooks"
+  code="1"
+  path="Git hooks execution"
+  details={['SDKMAN 未正确加载', '环境变量配置问题', '需要检查 shell 配置']}
+/>
+
+**解决方案**: 确保在 shell 配置文件中正确加载了 SDKMAN
+
+## 🔗 关联内容
+
+### 相关博客文章
+
+- [SDKMAN 安装与配置指南](/blog/install-sdkman) - 详细的 SDKMAN 安装和配置步骤
+- [Git Hooks 与 Node 环境问题](/blog/git-hooks-and-node-env) - 解决 Git Hooks 中的 Node.js 环境问题
+- [多环境 Git 配置管理](/blog/multi-environmental-gitconfig) - 管理多个环境的 Git 配置
+
+### 相关工具
+
+- [Husky](https://typicode.github.io/husky/) - Git hooks 工具
+- [Lint-staged](https://github.com/okonet/lint-staged) - 对暂存文件运行 linter
+- [Maven Spotless](https://github.com/diffplug/spotless) - 代码格式化插件
+
+---
+
+<Callout emoji="🎉">
+  恭喜！现在你已经成功配置了 SDKMAN 来解决 Git Hooks 中的多 JDK 环境问题。这将确保你的团队使用统一的
+  Java 环境，避免版本冲突问题。
+</Callout>

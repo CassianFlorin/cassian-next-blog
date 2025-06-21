@@ -1,0 +1,298 @@
+---
+title: 'SDKMAN 安装指南'
+date: '2025-06-19 21:59:00'
+tags: ['SDKMAN', '开发习惯', '解决方案']
+summary: '本文档使用 SDKMAN 来管理 Java 版本，确保所有开发人员使用相同的 Java 环境。以下是在不同操作系统上安装和配置 SDKMAN 的指南。'
+draft: false
+---
+
+# SDKMAN 安装与配置指南
+
+## 🧠 什么是 SDKMAN？
+
+SDKMAN 是一个用于管理多个软件开发工具包版本的工具，特别是用于管理不同版本的 Java。它允许你在不同项目之间轻松切换不同的 JDK 版本。
+
+<Callout emoji="💡">
+  SDKMAN 不仅支持 Java，还支持 Kotlin、Scala、Gradle、Maven 等多种开发工具。
+</Callout>
+
+## 🎯 为什么需要 SDKMAN？
+
+在开发过程中，我们经常需要处理多个项目，每个项目可能使用不同版本的 Java。SDKMAN 帮助我们：
+
+- 🔄 **轻松切换 Java 版本**
+- 🛠️ **统一团队开发环境**
+- 🚀 **简化工具安装和管理**
+- 🔧 **解决 Git Hooks 中的版本冲突问题**
+
+<Callout emoji="📖">
+  如果您遇到了 Git Hooks 与多 JDK 环境的问题，可以参考我们的另一篇文章： [Git
+  Hooks与多JDK环境问题解决](/blog/git-hooks-and-multi-java-env)
+</Callout>
+
+## ⚙️ 安装 SDKMAN
+
+### 🍎 macOS 和 Linux
+
+<StepProgress
+  steps={[
+    {
+      title: '打开终端',
+      status: 'completed',
+      description: '打开系统终端或 iTerm2',
+    },
+    {
+      title: '运行安装命令',
+      status: 'completed',
+      description: '执行 curl 命令下载并安装 SDKMAN',
+    },
+    {
+      title: '完成安装',
+      status: 'completed',
+      description: '按照屏幕提示完成安装过程',
+    },
+    {
+      title: '重新加载配置',
+      status: 'current',
+      description: '重新加载 shell 配置文件',
+    },
+  ]}
+/>
+
+1. **打开终端**
+2. **运行安装命令**：
+
+```bash
+curl -s "https://get.sdkman.io" | bash
+```
+
+3. **按照屏幕上的说明完成安装**
+4. **重新加载 shell 配置**：
+
+```bash
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+```
+
+### 🪟 Windows
+
+#### 使用 Git Bash 或 MSYS2
+
+<StepProgress
+  steps={[
+    {
+      title: '打开 Git Bash',
+      status: 'completed',
+      description: '打开 Git Bash 或 MSYS2 终端',
+    },
+    {
+      title: '运行安装命令',
+      status: 'completed',
+      description: '执行 curl 命令下载并安装 SDKMAN',
+    },
+    {
+      title: '完成安装',
+      status: 'completed',
+      description: '按照屏幕提示完成安装过程',
+    },
+    {
+      title: '重新加载配置',
+      status: 'current',
+      description: '重新加载 shell 配置文件',
+    },
+  ]}
+/>
+
+1. **打开 Git Bash 或 MSYS2 终端**
+2. **运行安装命令**：
+
+```bash
+curl -s "https://get.sdkman.io" | bash
+```
+
+3. **按照屏幕上的说明完成安装**
+4. **重新加载 shell 配置**：
+
+```bash
+source "$USERPROFILE/.sdkman/bin/sdkman-init.sh"
+```
+
+#### 使用 Windows PowerShell（替代方案）
+
+如果不使用 Git Bash 或 MSYS2，可以考虑使用以下工具安装特定版本的 Java：
+
+- [Scoop](https://scoop.sh/) - Windows 包管理器
+- [Chocolatey](https://chocolatey.org/) - Windows 包管理器
+
+<Callout emoji="⚠️">Windows 用户建议使用 Git Bash 或 MSYS2 来获得最佳的 SDKMAN 体验。</Callout>
+
+## 📦 安装项目所需的 Java 版本
+
+本项目使用 Java 8。安装 SDKMAN 后，运行以下命令安装所需的 Java 版本：
+
+```bash
+sdk install java 8.0.452-amzn
+```
+
+### 查看可用的 Java 版本
+
+```bash
+sdk list java
+```
+
+### 查看已安装的版本
+
+```bash
+sdk list java | grep installed
+```
+
+### 常用 SDKMAN 命令
+
+| 命令                           | 描述                     |
+| ------------------------------ | ------------------------ |
+| `sdk list java`                | 查看所有可用的 Java 版本 |
+| `sdk install java <version>`   | 安装指定版本的 Java      |
+| `sdk use java <version>`       | 临时切换到指定版本       |
+| `sdk default java <version>`   | 设置默认 Java 版本       |
+| `sdk current java`             | 查看当前使用的 Java 版本 |
+| `sdk uninstall java <version>` | 卸载指定版本的 Java      |
+
+## ✅ 验证安装
+
+安装完成后，您可以运行以下命令验证 SDKMAN 是否正常工作：
+
+```bash
+sdk version
+```
+
+验证 Java 版本是否正确：
+
+```bash
+java -version
+```
+
+预期输出应该类似：
+
+```bash
+openjdk version "1.8.0_452"
+OpenJDK Runtime Environment (build 1.8.0_452-b08)
+OpenJDK 64-Bit Server VM (build 25.452-b08, mixed mode)
+```
+
+## 🔄 项目自动切换 Java 版本
+
+本项目包含一个 `.sdkmanrc` 文件，它会在您进入项目目录时自动切换到正确的 Java 版本。要启用此功能，请运行：
+
+```bash
+sdk env
+```
+
+### 项目配置文件示例
+
+在项目根目录创建 `.sdkmanrc` 文件：
+
+```plaintext
+# This file is used by SDKMAN to automatically switch to the correct Java version
+# when entering this project directory
+#
+# 注意：
+# 1. 此文件需要 SDKMAN 支持才能生效
+# 2. 如果您没有安装 SDKMAN，请参考本文档进行安装
+# 3. Windows 用户需要在 Git Bash 或类似的 Unix-like 环境中使用 SDKMAN
+# 4. 如果您使用的是 IDE（如 IntelliJ IDEA），请确保在项目设置中也配置了正确的 JDK
+
+java=8.0.452-amzn
+```
+
+## 🔧 故障排除
+
+### Git Hooks 中的 Java 版本问题
+
+如果您在运行 Git 命令时遇到 Java 版本相关的问题，请确保：
+
+1. ✅ SDKMAN 已正确安装
+2. ✅ 项目所需的 Java 版本已安装
+3. ✅ 在您的 shell 配置文件（如 `.bashrc`、`.zshrc` 或 Git Bash 的 `.bash_profile`）中已加载 SDKMAN
+
+<Callout emoji="💡">
+  如果您没有安装 SDKMAN，Git hooks 将使用系统默认的 Java 版本。请确保您的系统 Java 版本与项目兼容。
+</Callout>
+
+### Windows 特定问题
+
+在 Windows 上，如果您在 CMD 或 PowerShell 中使用 Git，可能需要手动设置 `JAVA_HOME` 环境变量指向正确的 Java 版本。
+
+#### 设置 JAVA_HOME 环境变量
+
+```powershell
+# PowerShell 示例
+$env:JAVA_HOME = "C:\Users\YourUsername\.sdkman\candidates\java\8.0.452-amzn"
+```
+
+#### 永久设置环境变量
+
+```powershell
+# 设置系统环境变量（需要管理员权限）
+[Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\Users\YourUsername\.sdkman\candidates\java\8.0.452-amzn", "User")
+```
+
+### 常见问题解决
+
+<ErrorDisplay
+  title="SDKMAN 命令未找到"
+  error="sdk: command not found"
+  code="127"
+  path="/usr/bin:/bin:/usr/sbin:/sbin"
+  details={['SDKMAN 未正确安装', 'shell 配置文件未重新加载', '需要重启终端或重新加载配置']}
+/>
+
+**解决方案**: 确保已重新加载 shell 配置或重启终端
+
+<ErrorDisplay
+  title="Java 版本未自动切换"
+  error="Java version not switched automatically"
+  code="0"
+  path="Project directory"
+  details={['.sdkmanrc 文件不存在或格式错误', 'SDKMAN 未正确加载', '需要运行 sdk env 命令']}
+/>
+
+**解决方案**: 运行 `sdk env` 命令，或检查 `.sdkmanrc` 文件是否存在
+
+<ErrorDisplay
+  title="Windows Git hooks 失败"
+  error="Git hooks failed on Windows"
+  code="1"
+  path="CMD/PowerShell environment"
+  details={['在 CMD 或 PowerShell 中运行 Git', '环境变量配置不正确', '建议使用 Git Bash']}
+/>
+
+**解决方案**: 使用 Git Bash 而不是 CMD 或 PowerShell
+
+## 📚 相关资源
+
+### 官方文档
+
+- [SDKMAN 官方文档](https://sdkman.io/usage)
+- [SDKMAN 命令参考](https://sdkman.io/usage#command-reference)
+- [SDKMAN 安装指南](https://sdkman.io/install)
+
+### 相关博客文章
+
+- [Git Hooks与多JDK环境问题解决](/blog/git-hooks-and-multi-java-env) - 解决 Git Hooks 中的 Java 版本冲突
+- [Git Hooks 与 Node 环境问题](/blog/git-hooks-and-node-env) - 解决 Git Hooks 中的 Node.js 环境问题
+- [多环境 Git 配置管理](/blog/multi-environmental-gitconfig) - 管理多个环境的 Git 配置
+
+### 工具推荐
+
+- [Scoop](https://scoop.sh/) - Windows 包管理器
+- [Chocolatey](https://chocolatey.org/) - Windows 包管理器
+- [Husky](https://typicode.github.io/husky/) - Git hooks 工具
+- [NVM](https://github.com/nvm-sh/nvm) - Node.js 版本管理器
+
+---
+
+<Callout emoji="🎉">
+恭喜！现在您已经成功安装和配置了 SDKMAN。这将帮助您更好地管理 Java 版本，确保项目的一致性。
+
+如果您在安装过程中遇到任何问题，欢迎参考我们的其他相关文章或查看官方文档。
+
+</Callout>
