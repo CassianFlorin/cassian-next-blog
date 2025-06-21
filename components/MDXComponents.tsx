@@ -13,7 +13,8 @@ export const components: MDXComponents = {
   Image,
   // TOCInline,
   a: CustomLink,
-  pre: CopyableCodeBlock,
+  // 移除 pre: CopyableCodeBlock，让传统的 Markdown 代码块正常渲染
+  // pre: CopyableCodeBlock,
   // BlogNewsletterForm,
   table: TableWrapper,
   Callout,
