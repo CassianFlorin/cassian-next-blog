@@ -26,16 +26,18 @@ export default function CopyableCodeBlock({
   }
 
   return (
-    <div className="my-4">
+    <div className="my-4 w-full max-w-full">
       {title && (
-        <div className="flex items-center justify-between rounded-t-lg border-b border-gray-200 bg-gray-100 px-4 py-2 dark:border-gray-700 dark:bg-gray-800">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{title}</span>
+        <div className="flex items-center justify-between rounded-t-lg border-b border-gray-200 bg-gray-100 px-3 py-2 sm:px-4 dark:border-gray-700 dark:bg-gray-800">
+          <span className="text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+            {title}
+          </span>
           <span className="text-xs text-gray-500 dark:text-gray-400">{language}</span>
         </div>
       )}
       <div className="relative">
         <pre
-          className={`${title ? 'rounded-b-lg' : 'rounded-lg'} overflow-x-auto bg-gray-900 p-4 text-gray-100`}
+          className={`${title ? 'rounded-b-lg' : 'rounded-lg'} overflow-x-auto bg-gray-900 p-3 text-xs text-gray-100 sm:p-4 sm:text-sm`}
         >
           <code>{code}</code>
         </pre>

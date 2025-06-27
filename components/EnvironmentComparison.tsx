@@ -16,12 +16,17 @@ interface EnvironmentComparisonProps {
 
 export default function EnvironmentComparison({ environments }: EnvironmentComparisonProps) {
   return (
-    <div className="my-6">
-      <div className="grid gap-4 md:grid-cols-2">
+    <div className="my-6 w-full max-w-full">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {environments.map((env, index) => (
-          <div key={index} className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{env.name}</h3>
+          <div
+            key={index}
+            className="w-full max-w-full rounded-lg border border-gray-200 p-3 sm:p-4 dark:border-gray-700"
+          >
+            <div className="mb-2 flex flex-col items-start justify-between sm:mb-3 sm:flex-row sm:items-center">
+              <h3 className="text-base font-semibold break-words text-gray-900 sm:text-lg dark:text-gray-100">
+                {env.name}
+              </h3>
               <span
                 className={`rounded-full px-2 py-1 text-xs ${
                   env.name === 'Homebrew'
@@ -33,10 +38,12 @@ export default function EnvironmentComparison({ environments }: EnvironmentCompa
               </span>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1 sm:space-y-2">
               <div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">路径:</span>
-                <code className="ml-2 rounded bg-gray-100 px-2 py-1 text-sm dark:bg-gray-800">
+                <span className="text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
+                  路径:
+                </span>
+                <code className="ml-2 rounded bg-gray-100 px-2 py-1 text-xs break-all sm:text-sm dark:bg-gray-800">
                   {env.path}
                 </code>
               </div>

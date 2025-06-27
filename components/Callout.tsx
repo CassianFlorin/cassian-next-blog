@@ -8,19 +8,9 @@ export default function Callout({
   children: React.ReactNode
 }) {
   return (
-    <div
-      style={{
-        borderLeft: '4px solid #fbbf24',
-        background: '#fffbe6',
-        padding: '12px 16px',
-        margin: '16px 0',
-        borderRadius: '4px',
-        display: 'flex',
-        alignItems: 'center',
-      }}
-    >
-      {emoji && <span style={{ fontSize: 24, marginRight: 8 }}>{emoji}</span>}
-      <div>{children}</div>
+    <div className="my-4 flex w-full max-w-full items-center rounded border-l-4 border-yellow-400 bg-yellow-50 p-3 sm:p-4 dark:bg-yellow-900/20">
+      {emoji && <span className="mr-2 text-xl sm:text-2xl">{emoji}</span>}
+      <div className="w-full text-sm break-words sm:text-base">{children}</div>
     </div>
   )
 }
