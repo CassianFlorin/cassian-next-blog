@@ -32,6 +32,10 @@ const generateRss = (config, posts, page = 'feed.xml') => `
       <webMaster>${config.email} (${config.author})</webMaster>
       <lastBuildDate>${new Date(posts[0].date).toUTCString()}</lastBuildDate>
       <atom:link href="${config.siteUrl}/${page}" rel="self" type="application/rss+xml"/>
+      <follow_challenge>
+        <feedId>158720387189413888</feedId>
+        <userId>71735074870774784</userId>
+      </follow_challenge>
       ${posts.map((post) => generateRssItem(config, post)).join('')}
     </channel>
   </rss>
