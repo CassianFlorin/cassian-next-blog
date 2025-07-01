@@ -1,0 +1,321 @@
+---
+title: 'ValidatorUtils 工具类详解：身份证、手机号、银行卡等验证功能'
+date: '2025-07-01 16:00:00'
+tags: ['Java', '工具类', '验证', '开发习惯']
+draft: false
+summary: '详细介绍 ValidatorUtils 工具类的功能和使用方法，包括身份证号码验证、手机号验证、银行卡验证等常用验证功能，并提供丰富的使用示例。'
+---
+
+# ValidatorUtils 工具类详解
+
+在日常开发中，数据验证是一个非常重要的环节。无论是用户注册、信息录入还是数据导入，都需要对各种格式的数据进行验证。本文将详细介绍 `ValidatorUtils` 工具类的功能和使用方法。
+
+## 🎯 工具类概述
+
+`ValidatorUtils` 是一个功能强大的 Java 验证工具类，提供了以下主要功能：
+
+- **身份证号码验证**：支持 15 位和 18 位中国身份证号码验证
+- **手机号验证**：中国大陆手机号格式验证和运营商识别
+- **银行卡验证**：银行卡号格式验证和类型识别
+- **其他验证**：邮箱、密码强度、URL、IP 地址等
+
+## 📋 身份证号码验证
+
+### 基本验证
+
+```java
+// 验证 18 位身份证号码
+String idCard18 = "110101199001011234";
+boolean isValid = ValidatorUtil.isValidIdCard(idCard18);
+System.out.println("身份证是否有效: " + isValid); // true
+
+// 验证 15 位身份证号码
+String idCard15 = "110101900101123";
+boolean isValid15 = ValidatorUtil.isValidIdCard(idCard15);
+System.out.println("15位身份证是否有效: " + isValid15); // true
+```
+
+### 提取身份证信息
+
+```java
+String idCard = "110101199001011234";
+
+// 获取出生日期
+String birthDate = ValidatorUtil.getIdCardBirthDate(idCard);
+System.out.println("出生日期: " + birthDate); // 1990-01-01
+
+// 获取性别
+String gender = ValidatorUtil.getIdCardGender(idCard);
+System.out.println("性别: " + gender); // 男
+
+// 获取省份信息
+String province = ValidatorUtil.getIdCardProvince(idCard);
+System.out.println("省份: " + province); // 北京
+```
+
+### 15 位转 18 位
+
+```java
+String idCard15 = "110101900101123";
+String idCard18 = ValidatorUtil.convert15To18(idCard15);
+System.out.println("转换后的18位身份证: " + idCard18);
+```
+
+## 📱 手机号验证
+
+### 基本验证
+
+```java
+// 验证手机号格式
+String mobile = "13812345678";
+boolean isValid = ValidatorUtil.isValidMobile(mobile);
+System.out.println("手机号是否有效: " + isValid); // true
+
+// 验证无效手机号
+String invalidMobile = "12345678901";
+boolean isInvalid = ValidatorUtil.isValidMobile(invalidMobile);
+System.out.println("无效手机号: " + isInvalid); // false
+```
+
+### 运营商识别
+
+```java
+String mobile = "13812345678";
+String operator = ValidatorUtil.getMobileOperator(mobile);
+System.out.println("运营商: " + operator); // 中国移动
+
+// 不同运营商的手机号
+String[] mobiles = {
+    "13812345678", // 中国移动
+    "18612345678", // 中国联通
+    "18912345678"  // 中国电信
+};
+
+for (String phone : mobiles) {
+    String op = ValidatorUtil.getMobileOperator(phone);
+    System.out.println(phone + " -> " + op);
+}
+```
+
+### 格式化功能
+
+```java
+String mobile = "13812345678";
+
+// 格式化显示
+String formatted = ValidatorUtil.formatMobile(mobile);
+System.out.println("格式化: " + formatted); // 138 1234 5678
+
+// 隐藏中间数字
+String masked = ValidatorUtil.maskMobile(mobile);
+System.out.println("隐藏后: " + masked); // 138****5678
+```
+
+## 💳 银行卡验证
+
+### 基本验证
+
+```java
+// 验证银行卡号
+String bankCard = "6222021234567890123";
+boolean isValid = ValidatorUtil.isValidBankCard(bankCard);
+System.out.println("银行卡是否有效: " + isValid); // true
+
+// 验证信用卡
+String creditCard = "6222021234567890123";
+boolean isCredit = ValidatorUtil.isCreditCard(creditCard);
+System.out.println("是否为信用卡: " + isCredit);
+
+// 验证借记卡
+boolean isDebit = ValidatorUtil.isDebitCard(creditCard);
+System.out.println("是否为借记卡: " + isDebit);
+```
+
+### 银行卡类型识别
+
+```java
+String bankCard = "6222021234567890123";
+String cardType = ValidatorUtil.getBankCardType(bankCard);
+System.out.println("银行卡类型: " + cardType); // 工商银行借记卡
+```
+
+### 格式化功能
+
+```java
+String bankCard = "6222021234567890123";
+
+// 格式化显示
+String formatted = ValidatorUtil.formatBankCard(bankCard);
+System.out.println("格式化: " + formatted); // 6222 0212 3456 7890 123
+
+// 隐藏中间数字
+String masked = ValidatorUtil.maskBankCard(bankCard);
+System.out.println("隐藏后: " + masked); // 6222 **** **** 0123
+```
+
+## 📧 其他验证功能
+
+### 邮箱验证
+
+```java
+String email = "test@example.com";
+boolean isValid = ValidatorUtil.isValidEmail(email);
+System.out.println("邮箱是否有效: " + isValid); // true
+
+String invalidEmail = "invalid-email";
+boolean isInvalid = ValidatorUtil.isValidEmail(invalidEmail);
+System.out.println("无效邮箱: " + isInvalid); // false
+```
+
+### 密码强度验证
+
+```java
+// 强密码示例
+String strongPassword = "MyP@ssw0rd";
+boolean isStrong = ValidatorUtil.isStrongPassword(strongPassword);
+System.out.println("密码强度: " + isStrong); // true
+
+// 弱密码示例
+String weakPassword = "123456";
+boolean isWeak = ValidatorUtil.isStrongPassword(weakPassword);
+System.out.println("弱密码: " + isWeak); // false
+```
+
+### URL 和 IP 地址验证
+
+```java
+// URL 验证
+String url = "https://www.example.com";
+boolean isValidUrl = ValidatorUtil.isValidUrl(url);
+System.out.println("URL 是否有效: " + isValidUrl); // true
+
+// IP 地址验证
+String ip = "192.168.1.1";
+boolean isValidIp = ValidatorUtil.isValidIpAddress(ip);
+System.out.println("IP 地址是否有效: " + isValidIp); // true
+```
+
+### 其他格式验证
+
+```java
+// 纯数字验证
+String numeric = "12345";
+boolean isNumeric = ValidatorUtil.isNumeric(numeric);
+System.out.println("是否为纯数字: " + isNumeric); // true
+
+// 邮政编码验证
+String postcode = "100000";
+boolean isValidPostcode = ValidatorUtil.isValidPostcode(postcode);
+System.out.println("邮政编码是否有效: " + isValidPostcode); // true
+
+// 车牌号验证
+String plateNumber = "京A12345";
+boolean isValidPlate = ValidatorUtil.isValidPlateNumber(plateNumber);
+System.out.println("车牌号是否有效: " + isValidPlate); // true
+```
+
+## 🔧 实际应用场景
+
+### 用户注册验证
+
+```java
+public class UserRegistrationValidator {
+
+    public ValidationResult validateUserInfo(String idCard, String mobile, String email) {
+        ValidationResult result = new ValidationResult();
+
+        // 验证身份证
+        if (!ValidatorUtil.isValidIdCard(idCard)) {
+            result.addError("身份证号码格式不正确");
+        }
+
+        // 验证手机号
+        if (!ValidatorUtil.isValidMobile(mobile)) {
+            result.addError("手机号格式不正确");
+        }
+
+        // 验证邮箱
+        if (!ValidatorUtil.isValidEmail(email)) {
+            result.addError("邮箱格式不正确");
+        }
+
+        return result;
+    }
+}
+```
+
+### 数据导入验证
+
+```java
+public class DataImportValidator {
+
+    public boolean validateBankCardData(String bankCardNo, String cardHolder) {
+        // 验证银行卡号
+        if (!ValidatorUtil.isValidBankCard(bankCardNo)) {
+            return false;
+        }
+
+        // 获取银行卡类型
+        String cardType = ValidatorUtil.getBankCardType(bankCardNo);
+        System.out.println("持卡人: " + cardHolder + ", 卡类型: " + cardType);
+
+        return true;
+    }
+}
+```
+
+### 敏感信息脱敏
+
+```java
+public class DataMaskingService {
+
+    public String maskSensitiveData(String data, String type) {
+        switch (type) {
+            case "mobile":
+                return ValidatorUtil.maskMobile(data);
+            case "bankCard":
+                return ValidatorUtil.maskBankCard(data);
+            case "idCard":
+                // 身份证脱敏：显示前6位和后4位
+                if (ValidatorUtil.isValidIdCard(data)) {
+                    return data.substring(0, 6) + "********" + data.substring(data.length() - 4);
+                }
+                return data;
+            default:
+                return data;
+        }
+    }
+}
+```
+
+## ⚠️ 注意事项
+
+1. **性能考虑**：正则表达式验证会有一定的性能开销，在高并发场景下需要注意缓存策略
+2. **数据更新**：手机号段、银行卡前缀等信息会定期更新，需要及时维护
+3. **国际化**：当前工具类主要针对中国大陆，如需支持其他地区需要扩展
+4. **安全性**：验证通过不代表数据真实有效，重要业务还需要其他验证手段
+
+## 📚 总结
+
+`ValidatorUtils` 工具类提供了全面的数据验证功能，涵盖了日常开发中常见的验证需求。通过合理使用这些验证方法，可以：
+
+- 提高数据质量
+- 减少系统错误
+- 提升用户体验
+- 降低维护成本
+
+建议在实际项目中根据具体需求选择合适的验证方法，并结合业务逻辑进行二次封装。
+
+---
+
+<Callout emoji="💡">
+  提示：本文中的代码示例可以直接在项目中使用，建议根据实际需求进行调整和优化。
+</Callout>
+
+---
+
+## 🔗 相关资源
+
+- [身份证号码验证算法详解](https://zh.wikipedia.org/wiki/中华人民共和国居民身份证)
+- [手机号码段查询](https://www.ip138.com/mobile.asp)
+- [银行卡号验证算法](https://zh.wikipedia.org/wiki/Luhn算法)
