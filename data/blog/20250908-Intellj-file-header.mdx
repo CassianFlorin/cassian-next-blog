@@ -1,0 +1,107 @@
+---
+title: 'IntelliJ IDEA File Header 自定义配置'
+date: '2025-09-08 15:30'
+tags: ['Java', 'IntelliJ IDEA', '开发工具', '技术分享']
+summary: '分享如何在 IntelliJ IDEA 中自定义 File Header，通过 Groovy 脚本实现动态生成不同项目的文件头信息，提高代码可维护性和团队协作效率。'
+---
+
+# IntelliJ IDEA File Header 自定义配置
+
+## 🎯 背景介绍
+
+在软件开发过程中，**File Header**（文件头）承载着对项目、文件的定义与初衷。良好的 File Header 可以帮助后来者快速了解代码的设计意图和背景信息。
+
+### File Header 的作用
+
+文件头作为文件的第一部分，通常包含以下基础信息：
+
+- **作者信息** - 明确代码的创建者
+- **创建日期** - 记录文件的创建时间
+- **文件描述** - 说明文件的功能和用途
+- **版权声明** - 保护知识产权
+- **版本信息** - 跟踪文件版本变化
+- **项目或模块名称** - 标识所属项目
+- **联系方式** - 便于后续沟通
+
+通过标准化文件头，团队成员可以快速了解文件的创建背景和作者，提高代码维护效率，特别是在处理复杂或长期积累的项目时。
+
+## 📝 File Header 示例
+
+以下是一个标准的 Java 文件头示例：
+
+```java
+/**
+ * Author: HuaPai
+ * Created: 2025-05-20
+ * Description: This class implements the user authentication logic.
+ * Version: 1.0.0
+ * License: MIT License
+ */
+public class AuthService {
+    // Class implementation
+}
+```
+
+## ⚙️ File Header 配置步骤
+
+### 1. 进入配置界面
+
+在 IntelliJ IDEA 中，按照以下路径进入配置：
+
+```
+File → Settings → Editor → File and Code Templates → Includes → File Header
+```
+
+### 2. 配置界面说明
+
+- **File and Code Templates**：文件和代码模板设置
+- **Includes**：包含的模板文件
+- **File Header**：文件头模板
+
+## 🚀 使用 Groovy 脚本动态生成 Header
+
+为了区分个人项目和企业项目的文件头，我使用了 Groovy 脚本来动态生成不同的 Header 信息。
+
+### 配置脚本
+
+```groovy
+#if(${PACKAGE_NAME.startsWith("com.qnvip")})
+/**
+ * @Author 黄子豪
+ * @Email huangzihao@qnvip.com
+ * @Date ${DATE} ${TIME}
+ */
+#else
+/**
+ * @Author CassianFlorin
+ * @Email flowercard591@gmail.com
+ * @Date ${DATE} ${TIME}
+ */
+#end
+```
+
+### 脚本说明
+
+- **`${PACKAGE_NAME}`**：获取当前创建类的包名
+- **`${DATE}`**：当前日期
+- **`${TIME}`**：当前时间
+- **条件判断**：根据包名前缀判断是公司项目还是个人项目
+
+### 工作原理
+
+企业级开发中，包名通常遵循反转域名的规范（如 `com.company.project`），因此可以通过判断包名前缀来区分不同的项目类型，从而生成相应的文件头信息。
+
+## 💡 扩展建议
+
+配置方法多种多样，除了简单的 Groovy 脚本外，还可以：
+
+- 使用更复杂的条件判断
+- 集成项目信息
+- 添加更多元数据
+- 自定义格式化样式
+
+如有需要了解更多配置方式，欢迎联系交流！
+
+---
+
+> **提示**：File Header 的具体内容和格式可以根据团队规范和项目需求进行调整。
