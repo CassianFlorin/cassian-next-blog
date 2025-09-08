@@ -59,9 +59,20 @@
     "Git": "Git",
     "git": "Git",
     "开发习惯": "Development Habits",
-    "测试": "测试",
-    "自动化": "自动化",
-    "新功能": "新功能",
-    "解决方案": "Solution"
+    "测试": "Testing",
+    "自动化": "Automation",
+    "新功能": "New Features",
+    "解决方案": "Solution",
+    "SDKMAN": "SDKMAN",
+    "Java": "Java",
+    "工具类": "Utility Classes",
+    "验证": "Validation",
+    "IntelliJ IDEA": "IntelliJ IDEA",
+    "开发工具": "Development Tools",
+    "技术分享": "Tech Sharing",
+    "AI": "AI",
+    "Cursor": "Cursor",
+    "Manus": "Manus",
+    "效率提升": "Efficiency Improvement"
   }
 }
