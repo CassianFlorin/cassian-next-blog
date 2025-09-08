@@ -1,6 +1,6 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  title: 'Cassian Florin Blog',
+  title: "Cassian Florin's Blog",
   author: 'Cassian Florin',
   headerTitle: 'CassianFlorinBlog',
   description: 'A blog about Cassian Florin',
