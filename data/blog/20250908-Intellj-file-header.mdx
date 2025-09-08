@@ -31,7 +31,7 @@ summary: '分享如何在 IntelliJ IDEA 中自定义 File Header，通过 Groovy
 
 ```java
 /**
- * Author: HuaPai
+ * Author: CassianFlorin
  * Created: 2025-05-20
  * Description: This class implements the user authentication logic.
  * Version: 1.0.0
@@ -65,10 +65,10 @@ File → Settings → Editor → File and Code Templates → Includes → File H
 ### 配置脚本
 
 ```groovy
-#if(${PACKAGE_NAME.startsWith("com.qnvip")})
+#if(${PACKAGE_NAME.startsWith("[公司的包路径]")})
 /**
- * @Author 黄子豪
- * @Email huangzihao@qnvip.com
+ * @Author [公司要求的名称]
+ * @Email [公司邮箱]
  * @Date ${DATE} ${TIME}
  */
 #else
