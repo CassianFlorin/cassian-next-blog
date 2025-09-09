@@ -1,14 +1,14 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import adsenseConfig from '@/data/adsenseConfig'
+import { useEffect, useState } from 'react';
+import adsenseConfig from '@/data/adsenseConfig';
 
 interface AdSenseProps {
-  adSlot: string
-  adFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal'
-  adStyle?: React.CSSProperties
-  className?: string
-  fallbackContent?: React.ReactNode
+  adSlot: string;
+  adFormat?: 'auto' | 'rectangle' | 'vertical' | 'horizontal';
+  adStyle?: React.CSSProperties;
+  className?: string;
+  fallbackContent?: React.ReactNode;
 }
 
 export default function AdSense({
@@ -18,32 +18,32 @@ export default function AdSense({
   className,
   fallbackContent,
 }: AdSenseProps) {
-  const [isAdBlocked, setIsAdBlocked] = useState(false)
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false)
+  const [isAdBlocked, setIsAdBlocked] = useState(false);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
   // 检查是否应该显示广告
   const shouldShowAd =
     adsenseConfig.enabled &&
-    (process.env.NODE_ENV === 'production' || adsenseConfig.showInDevelopment)
+    (process.env.NODE_ENV === 'production' || adsenseConfig.showInDevelopment);
 
   useEffect(() => {
-    if (!shouldShowAd) return
+    if (!shouldShowAd) return;
 
     // 检查 AdSense 脚本是否被阻止
     const checkAdBlock = () => {
-      const testAd = document.createElement('div')
-      testAd.innerHTML = '&nbsp;'
-      testAd.className = 'adsbox'
-      testAd.style.cssText = 'position:absolute;left:-10000px;top:-1000px;'
-      document.body.appendChild(testAd)
+      const testAd = document.createElement('div');
+      testAd.innerHTML = '&nbsp;';
+      testAd.className = 'adsbox';
+      testAd.style.cssText = 'position:absolute;left:-10000px;top:-1000px;';
+      document.body.appendChild(testAd);
 
       setTimeout(() => {
         if (testAd.offsetHeight === 0) {
-          setIsAdBlocked(true)
+          setIsAdBlocked(true);
         }
-        document.body.removeChild(testAd)
-      }, 100)
-    }
+        document.body.removeChild(testAd);
+      }, 100);
+    };
 
     // 检查 AdSense 脚本是否加载成功
     const checkScriptLoaded = () => {
@@ -51,37 +51,38 @@ export default function AdSense({
         typeof window !== 'undefined' &&
         (window as Window & { adsbygoogle?: unknown }).adsbygoogle
       ) {
-        setIsScriptLoaded(true)
+        setIsScriptLoaded(true);
       } else {
         // 如果脚本没有加载，可能是被广告拦截器阻止了
         setTimeout(() => {
           if (!(window as Window & { adsbygoogle?: unknown }).adsbygoogle) {
-            setIsAdBlocked(true)
+            setIsAdBlocked(true);
           }
-        }, 2000)
+        }, 2000);
       }
-    }
+    };
 
-    checkAdBlock()
-    checkScriptLoaded()
+    checkAdBlock();
+    checkScriptLoaded();
 
     // 尝试加载 AdSense
     if (isScriptLoaded) {
       try {
-        const adsbygoogle = (window as Window & { adsbygoogle?: unknown[] }).adsbygoogle
+        const adsbygoogle = (window as Window & { adsbygoogle?: unknown[] })
+          .adsbygoogle;
         if (adsbygoogle && Array.isArray(adsbygoogle)) {
-          adsbygoogle.push({})
+          adsbygoogle.push({});
         }
       } catch (error) {
-        console.warn('AdSense 加载失败，可能是被广告拦截器阻止:', error)
-        setIsAdBlocked(true)
+        console.warn('AdSense 加载失败，可能是被广告拦截器阻止:', error);
+        setIsAdBlocked(true);
       }
     }
-  }, [shouldShowAd, isScriptLoaded])
+  }, [shouldShowAd, isScriptLoaded]);
 
   // 如果不应该显示广告，返回空内容
   if (!shouldShowAd) {
-    return null
+    return null;
   }
 
   // 如果广告被阻止，显示备用内容
@@ -98,7 +99,7 @@ export default function AdSense({
           </div>
         )}
       </div>
-    )
+    );
   }
 
   return (
@@ -115,5 +116,5 @@ export default function AdSense({
         data-full-width-responsive="true"
       />
     </div>
-  )
+  );
 }

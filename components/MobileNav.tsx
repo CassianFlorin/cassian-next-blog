@@ -1,36 +1,49 @@
-'use client'
+'use client';
 
-import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react'
-import { disableBodyScroll, enableBodyScroll, clearAllBodyScrollLocks } from 'body-scroll-lock'
-import { Fragment, useState, useEffect, useRef } from 'react'
-import Link from './Link'
-import headerNavLinks from '@/data/headerNavLinks'
-import { useTranslations } from 'next-intl'
+import {
+  Dialog,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from '@headlessui/react';
+import {
+  disableBodyScroll,
+  enableBodyScroll,
+  clearAllBodyScrollLocks,
+} from 'body-scroll-lock';
+import { Fragment, useState, useEffect, useRef } from 'react';
+import Link from './Link';
+import headerNavLinks from '@/data/headerNavLinks';
+import { useTranslations } from 'next-intl';
 
 const MobileNav = () => {
-  const [navShow, setNavShow] = useState(false)
-  const navRef = useRef(null)
-  const t = useTranslations()
+  const [navShow, setNavShow] = useState(false);
+  const navRef = useRef(null);
+  const t = useTranslations();
 
   const onToggleNav = () => {
     setNavShow((status) => {
       if (status) {
-        enableBodyScroll(navRef.current)
+        enableBodyScroll(navRef.current);
       } else {
         // Prevent scrolling
-        disableBodyScroll(navRef.current)
+        disableBodyScroll(navRef.current);
       }
-      return !status
-    })
-  }
+      return !status;
+    });
+  };
 
   useEffect(() => {
-    return clearAllBodyScrollLocks
-  })
+    return clearAllBodyScrollLocks;
+  });
 
   return (
     <>
-      <button aria-label="Toggle Menu" onClick={onToggleNav} className="sm:hidden">
+      <button
+        aria-label="Toggle Menu"
+        onClick={onToggleNav}
+        className="sm:hidden"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
@@ -91,7 +104,11 @@ const MobileNav = () => {
                 aria-label="Toggle Menu"
                 onClick={onToggleNav}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
                   <path
                     fillRule="evenodd"
                     d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -104,7 +121,7 @@ const MobileNav = () => {
         </Dialog>
       </Transition>
     </>
-  )
-}
+  );
+};
 
-export default MobileNav
+export default MobileNav;

@@ -14,8 +14,8 @@ draft: false
 
 <Callout emoji="📖">
   如果您还没有阅读过 JDK 环境问题的解决方案，建议先查看 [Git
-  Hooks与多JDK环境问题解决](/blog/git-hooks-and-multi-java-env) 这篇文章，了解如何使用 SDKMAN 管理
-  Java 环境。
+  Hooks与多JDK环境问题解决](/blog/git-hooks-and-multi-java-env)
+  这篇文章，了解如何使用 SDKMAN 管理 Java 环境。
 </Callout>
 
 <ErrorDisplay
@@ -55,7 +55,11 @@ husky - command not found in PATH=node_modules/.bin:/opt/homebrew/opt/git/libexe
       path: '/opt/homebrew/bin/',
       issue: '环境不匹配，与生产环境差异过大',
       pros: ['安装方便', '包管理统一'],
-      cons: ['路径与标准环境不同', '可能导致兼容性问题', 'Git hooks 无法正确识别'],
+      cons: [
+        '路径与标准环境不同',
+        '可能导致兼容性问题',
+        'Git hooks 无法正确识别',
+      ],
     },
     {
       name: '原生环境',
@@ -79,8 +83,8 @@ husky - command not found in PATH=node_modules/.bin:/opt/homebrew/opt/git/libexe
 
 <Callout emoji="💡">
   这个问题与之前解决的 [JDK 环境问题](/blog/git-hooks-and-multi-java-env)
-  类似，都是由于环境管理工具导致的 PATH 配置问题。不同的是，这次我们需要管理 Node.js 环境而不是 Java
-  环境。
+  类似，都是由于环境管理工具导致的 PATH 配置问题。不同的是，这次我们需要管理
+  Node.js 环境而不是 Java 环境。
 </Callout>
 
 <StepProgress
@@ -95,17 +99,33 @@ husky - command not found in PATH=node_modules/.bin:/opt/homebrew/opt/git/libexe
       status: 'completed',
       description: '安装 Node Version Manager 进行版本管理',
     },
-    { title: '安装 Node', status: 'current', description: '使用 NVM 安装指定版本的 Node.js' },
+    {
+      title: '安装 Node',
+      status: 'current',
+      description: '使用 NVM 安装指定版本的 Node.js',
+    },
   ]}
 />
 
 ### 卸载node
 
-<CopyableCodeBlock code="brew uninstall node" language="shell" title="卸载 Node.js" />
+<CopyableCodeBlock
+  code="brew uninstall node"
+  language="shell"
+  title="卸载 Node.js"
+/>
 
-<CopyableCodeBlock code="npm uninstall npm -g" language="shell" title="卸载 npm（可选）" />
+<CopyableCodeBlock
+  code="npm uninstall npm -g"
+  language="shell"
+  title="卸载 npm（可选）"
+/>
 
-<CopyableCodeBlock code="node -v\nnpm -v" language="shell" title="验证卸载结果" />
+<CopyableCodeBlock
+  code="node -v\nnpm -v"
+  language="shell"
+  title="验证卸载结果"
+/>
 
 至此完成在 brew 下安装的 node 环境卸载。下面开始安装 nvm
 
@@ -124,9 +144,17 @@ GitHub：https://github.com/nvm-sh/nvm
 
 <CopyableCodeBlock code="nvm -v" language="shell" title="验证 NVM 安装" />
 
-<CopyableCodeBlock code="nvm ls-remote" language="shell" title="查看可用的 Node 版本" />
+<CopyableCodeBlock
+  code="nvm ls-remote"
+  language="shell"
+  title="查看可用的 Node 版本"
+/>
 
-<CopyableCodeBlock code="nvm install v22.16.0" language="shell" title="安装指定版本的 Node.js" />
+<CopyableCodeBlock
+  code="nvm install v22.16.0"
+  language="shell"
+  title="安装指定版本的 Node.js"
+/>
 
 OK了。能跑到这说明你已经完成了。接下来正常使用就行。
 

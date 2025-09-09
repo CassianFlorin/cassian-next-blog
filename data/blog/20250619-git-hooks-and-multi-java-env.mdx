@@ -41,15 +41,17 @@ husky - pre-commit script failed (code 1)
 ## 💼 解决方案
 
 <Callout emoji="💡">
-  考虑到或许有人会和我一样安装多个 JDK，因此结合这个情况与找到的资料，推荐使用 SDKMAN 来管理 Java
-  版本。
+  考虑到或许有人会和我一样安装多个 JDK，因此结合这个情况与找到的资料，推荐使用
+  SDKMAN 来管理 Java 版本。
 </Callout>
 
 ## ⚙️ 安装 SDKMAN
 
 参考 [SDKMAN 安装与配置指南](/blog/install-sdkman) 文档，其中对 Mac 系统环境与 Windows 系统环境的安装都有详细指导。
 
-<Callout emoji="📖">如果您还没有安装 SDKMAN，请先阅读安装指南，然后再继续本文的配置步骤。</Callout>
+<Callout emoji="📖">
+  如果您还没有安装 SDKMAN，请先阅读安装指南，然后再继续本文的配置步骤。
+</Callout>
 
 ## ⚙️ 安装需要的 JDK
 
@@ -181,9 +183,10 @@ npx lint-staged --verbose --debug
 ### 脚本功能说明
 
 <Callout emoji="🔍">
-  这个脚本的主要功能： 1. **跨平台检测**: 自动识别 Windows 和 Unix-like 系统 2. **SDKMAN 集成**:
-  自动加载 SDKMAN 并切换到项目指定的 Java 版本 3. **错误处理**: 当 SDKMAN 不可用时，显示当前 Java
-  版本信息 4. **其他钩子**: 执行额外的 Git hooks 和代码检查
+  这个脚本的主要功能： 1. **跨平台检测**: 自动识别 Windows 和 Unix-like 系统 2.
+  **SDKMAN 集成**: 自动加载 SDKMAN 并切换到项目指定的 Java 版本 3. **错误处理**:
+  当 SDKMAN 不可用时，显示当前 Java 版本信息 4. **其他钩子**: 执行额外的 Git
+  hooks 和代码检查
 </Callout>
 
 ## ✅ 验证配置
@@ -243,6 +246,6 @@ Using java version 8.0.452-amzn in this shell.
 ---
 
 <Callout emoji="🎉">
-  恭喜！现在你已经成功配置了 SDKMAN 来解决 Git Hooks 中的多 JDK 环境问题。这将确保你的团队使用统一的
-  Java 环境，避免版本冲突问题。
+  恭喜！现在你已经成功配置了 SDKMAN 来解决 Git Hooks 中的多 JDK
+  环境问题。这将确保你的团队使用统一的 Java 环境，避免版本冲突问题。
 </Callout>

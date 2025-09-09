@@ -1,20 +1,20 @@
-import 'css/tailwind.css'
-import 'pliny/search/algolia.css'
-import 'remark-github-blockquote-alert/alert.css'
+import 'css/tailwind.css';
+import 'pliny/search/algolia.css';
+import 'remark-github-blockquote-alert/alert.css';
 
-import { Space_Grotesk, Inter } from 'next/font/google'
-import { ThemeProviders } from './theme-providers'
-import { Metadata } from 'next'
-import { locales } from '../i18n'
-import siteMetadata from '@/data/siteMetadata'
+import { Space_Grotesk, Inter } from 'next/font/google';
+import { ThemeProviders } from './theme-providers';
+import { Metadata } from 'next';
+import { locales } from '../i18n';
+import siteMetadata from '@/data/siteMetadata';
 
 const space_grotesk = Space_Grotesk({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-space-grotesk',
-})
+});
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteMetadata.siteUrl),
@@ -54,21 +54,21 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     images: [siteMetadata.socialBanner],
   },
-}
+};
 
 export async function generateStaticParams() {
-  return locales.map((locale) => ({ locale }))
+  return locales.map((locale) => ({ locale }));
 }
 
 export default async function RootLayout({
   children,
   params,
 }: {
-  children: React.ReactNode
-  params: Promise<{ locale: string }>
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params
-  const basePath = process.env.BASE_PATH || ''
+  const { locale } = await params;
+  const basePath = process.env.BASE_PATH || '';
 
   return (
     <html
@@ -93,16 +93,31 @@ export default async function RootLayout({
         sizes="16x16"
         href={`${basePath}/static/favicons/favicon-16x16.png`}
       />
-      <link rel="manifest" href={`${basePath}/static/favicons/site.webmanifest`} />
+      <link
+        rel="manifest"
+        href={`${basePath}/static/favicons/site.webmanifest`}
+      />
       <link
         rel="mask-icon"
         href={`${basePath}/static/favicons/safari-pinned-tab.svg`}
         color="#5bbad5"
       />
       <meta name="msapplication-TileColor" content="#000000" />
-      <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
-      <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
-      <link rel="alternate" type="application/rss+xml" href={`${basePath}/feed.xml`} />
+      <meta
+        name="theme-color"
+        media="(prefers-color-scheme: light)"
+        content="#fff"
+      />
+      <meta
+        name="theme-color"
+        media="(prefers-color-scheme: dark)"
+        content="#000"
+      />
+      <link
+        rel="alternate"
+        type="application/rss+xml"
+        href={`${basePath}/feed.xml`}
+      />
       <script
         async
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5441938758887409"
@@ -112,5 +127,5 @@ export default async function RootLayout({
         <ThemeProviders>{children}</ThemeProviders>
       </body>
     </html>
-  )
+  );
 }

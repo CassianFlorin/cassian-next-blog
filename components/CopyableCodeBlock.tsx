@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 
 interface CopyableCodeBlockProps {
-  code: string
-  language?: string
-  title?: string
+  code: string;
+  language?: string;
+  title?: string;
 }
 
 export default function CopyableCodeBlock({
@@ -13,17 +13,17 @@ export default function CopyableCodeBlock({
   language = 'shell',
   title,
 }: CopyableCodeBlockProps) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(code)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('复制失败:', err)
+      console.error('复制失败:', err);
     }
-  }
+  };
 
   return (
     <div className="my-4 w-full max-w-full">
@@ -32,7 +32,9 @@ export default function CopyableCodeBlock({
           <span className="text-xs font-medium text-gray-700 sm:text-sm dark:text-gray-300">
             {title}
           </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">{language}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {language}
+          </span>
         </div>
       )}
       <div className="relative">
@@ -47,7 +49,11 @@ export default function CopyableCodeBlock({
           title="复制代码"
         >
           {copied ? (
-            <svg className="h-4 w-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+            <svg
+              className="h-4 w-4 text-green-400"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
               <path
                 fillRule="evenodd"
                 d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -55,7 +61,12 @@ export default function CopyableCodeBlock({
               />
             </svg>
           ) : (
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -67,5 +78,5 @@ export default function CopyableCodeBlock({
         </button>
       </div>
     </div>
-  )
+  );
 }

@@ -20,6 +20,6 @@ export const adsenseConfig = {
 
   // 开发环境是否显示广告（建议设为 false）
   showInDevelopment: false,
-}
+};
 
-export default adsenseConfig
+export default adsenseConfig;

@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import Link from '@/components/Link'
-import Tag from '@/components/Tag'
-import { slug } from 'github-slugger'
-import tagData from 'app/tag-data.json'
-import { useTranslations } from 'next-intl'
+import Link from '@/components/Link';
+import Tag from '@/components/Tag';
+import { slug } from 'github-slugger';
+import tagData from 'app/tag-data.json';
+import { useTranslations } from 'next-intl';
 
 export default function Page() {
-  const tagCounts = tagData as Record<string, number>
-  const tagKeys = Object.keys(tagCounts)
-  const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a])
-  const t = useTranslations('blog')
+  const tagCounts = tagData as Record<string, number>;
+  const tagKeys = Object.keys(tagCounts);
+  const sortedTags = tagKeys.sort((a, b) => tagCounts[b] - tagCounts[a]);
+  const t = useTranslations('blog');
 
   return (
     <>
@@ -34,10 +34,10 @@ export default function Page() {
                   {` (${tagCounts[tag]})`}
                 </Link>
               </div>
-            )
+            );
           })}
         </div>
       </div>
     </>
-  )
+  );
 }

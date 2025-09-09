@@ -1,11 +1,11 @@
-import { getRequestConfig } from 'next-intl/server'
+import { getRequestConfig } from 'next-intl/server';
 
 // 支持的语言列表
-export const locales = ['zh', 'en'] as const
-export type Locale = (typeof locales)[number]
+export const locales = ['zh', 'en'] as const;
+export type Locale = (typeof locales)[number];
 
 // 默认语言
-export const defaultLocale: Locale = 'zh'
+export const defaultLocale: Locale = 'zh';
 
 // 语言配置
 export const localeConfig = {
@@ -19,14 +19,16 @@ export const localeConfig = {
     flag: '🇺🇸',
     dir: 'ltr' as const,
   },
-}
+};
 
 export default getRequestConfig(async ({ locale }) => {
   // 验证语言是否支持，如果不支持则使用默认语言
-  const validLocale = locales.includes(locale as Locale) ? locale : defaultLocale
+  const validLocale = locales.includes(locale as Locale)
+    ? locale
+    : defaultLocale;
 
   return {
     locale: validLocale as string,
     messages: (await import(`./messages/${validLocale}.json`)).default,
-  }
-})
+  };
+});

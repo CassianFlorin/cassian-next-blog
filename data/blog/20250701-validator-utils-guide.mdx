@@ -330,7 +330,7 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * 通用校验工具类 支持中国身份证号码验证和手机号验证
- * 
+ *
  * @author 黄子豪
  * @Email huangzihao@qnvip.com
  * @Date 2025/6/26 16:44
@@ -663,7 +663,7 @@ public class ValidatorUtil {
 
     /**
      * 验证中国大陆手机号是否有效
-     * 
+     *
      * @param mobile 手机号
      * @return 如果手机号有效则为 true，否则为 false
      */
@@ -690,7 +690,7 @@ public class ValidatorUtil {
 
     /**
      * 获取手机号运营商信息
-     * 
+     *
      * @param mobile 手机号
      * @return 运营商名称，如果无法识别返回null
      */
@@ -722,7 +722,7 @@ public class ValidatorUtil {
 
     /**
      * 格式化手机号（添加空格分隔）
-     * 
+     *
      * @param mobile 手机号
      * @return 格式化后的手机号，如果输入无效返回null
      */
@@ -736,7 +736,7 @@ public class ValidatorUtil {
 
     /**
      * 隐藏手机号中间4位数字
-     * 
+     *
      * @param mobile 手机号
      * @return 隐藏后的手机号，如果输入无效返回null
      */
@@ -750,7 +750,7 @@ public class ValidatorUtil {
 
     /**
      * 验证银行卡号是否有效 使用Luhn算法（模10算法）验证银行卡号
-     * 
+     *
      * @param bankCardNo 银行卡号
      * @return 如果银行卡号有效则为 true，否则为 false
      */
@@ -794,7 +794,7 @@ public class ValidatorUtil {
 
     /**
      * 获取银行卡类型
-     * 
+     *
      * @param bankCardNo 银行卡号
      * @return 银行卡类型，如果无法识别返回null
      */
@@ -820,7 +820,7 @@ public class ValidatorUtil {
 
     /**
      * 格式化银行卡号（添加空格分隔）
-     * 
+     *
      * @param bankCardNo 银行卡号
      * @return 格式化后的银行卡号，如果输入无效返回null
      */
@@ -833,11 +833,11 @@ public class ValidatorUtil {
         int length = bankCardNo.length();
 
         if (length == 16) {
-            return bankCardNo.substring(0, 4) + " " + bankCardNo.substring(4, 8) + " " + 
+            return bankCardNo.substring(0, 4) + " " + bankCardNo.substring(4, 8) + " " +
                    bankCardNo.substring(8, 12) + " " + bankCardNo.substring(12);
         } else if (length == 19) {
-            return bankCardNo.substring(0, 4) + " " + bankCardNo.substring(4, 8) + " " + 
-                   bankCardNo.substring(8, 12) + " " + bankCardNo.substring(12, 16) + " " + 
+            return bankCardNo.substring(0, 4) + " " + bankCardNo.substring(4, 8) + " " +
+                   bankCardNo.substring(8, 12) + " " + bankCardNo.substring(12, 16) + " " +
                    bankCardNo.substring(16);
         }
 
@@ -846,7 +846,7 @@ public class ValidatorUtil {
 
     /**
      * 隐藏银行卡号中间部分数字
-     * 
+     *
      * @param bankCardNo 银行卡号
      * @return 隐藏后的银行卡号，如果输入无效返回null
      */
@@ -867,7 +867,7 @@ public class ValidatorUtil {
 
     /**
      * 验证是否为信用卡
-     * 
+     *
      * @param bankCardNo 银行卡号
      * @return 如果是信用卡则为 true，否则为 false
      */
@@ -881,7 +881,7 @@ public class ValidatorUtil {
 
     /**
      * 验证是否为借记卡
-     * 
+     *
      * @param bankCardNo 银行卡号
      * @return 如果是借记卡则为 true，否则为 false
      */
@@ -895,7 +895,7 @@ public class ValidatorUtil {
 
     /**
      * 验证邮箱格式是否有效
-     * 
+     *
      * @param email 邮箱地址
      * @return 如果邮箱格式有效则为 true，否则为 false
      */
@@ -910,7 +910,7 @@ public class ValidatorUtil {
 
     /**
      * 验证密码强度 要求：至少8位，包含大小写字母、数字和特殊字符
-     * 
+     *
      * @param password 密码
      * @return 如果密码强度符合要求则为 true，否则为 false
      */
@@ -929,7 +929,7 @@ public class ValidatorUtil {
 
     /**
      * 验证URL格式是否有效
-     * 
+     *
      * @param url URL地址
      * @return 如果URL格式有效则为 true，否则为 false
      */
@@ -948,7 +948,7 @@ public class ValidatorUtil {
 
     /**
      * 验证IP地址格式是否有效
-     * 
+     *
      * @param ip IP地址
      * @return 如果IP地址格式有效则为 true，否则为 false
      */
@@ -963,7 +963,7 @@ public class ValidatorUtil {
 
     /**
      * 验证是否为纯数字字符串
-     * 
+     *
      * @param str 待验证的字符串
      * @return 如果为纯数字则为 true，否则为 false
      */
@@ -977,7 +977,7 @@ public class ValidatorUtil {
 
     /**
      * 验证是否为有效的中国邮政编码
-     * 
+     *
      * @param postcode 邮政编码
      * @return 如果邮政编码有效则为 true，否则为 false
      */
@@ -991,7 +991,7 @@ public class ValidatorUtil {
 
     /**
      * 验证是否为有效的中国车牌号
-     * 
+     *
      * @param plateNumber 车牌号
      * @return 如果车牌号有效则为 true，否则为 false
      */
@@ -1012,10 +1012,10 @@ public class ValidatorUtil {
 ```
 
 <Callout emoji="📝">
-  **代码说明**：
-  - 完整源码包含所有银行卡前缀映射（为节省篇幅，上述代码中部分银行卡前缀用注释省略）
-  - 实际使用时，请确保添加了所有必要的依赖包（Apache Commons Lang3）
-  - 建议根据实际业务需求对某些验证规则进行调整
+  **代码说明**： -
+  完整源码包含所有银行卡前缀映射（为节省篇幅，上述代码中部分银行卡前缀用注释省略）
+  - 实际使用时，请确保添加了所有必要的依赖包（Apache Commons Lang3） -
+  建议根据实际业务需求对某些验证规则进行调整
 </Callout>
 
 ---

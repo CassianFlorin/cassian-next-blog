@@ -23,7 +23,7 @@
 export const adsenseConfig = {
   clientId: 'ca-pub-你的客户端ID', // 替换为你的真实客户端 ID
   // ...
-}
+};
 ```
 
 ### 2. 更新广告位 ID
@@ -56,14 +56,13 @@ adSlots: {
 你可以在任何地方使用 AdSense 组件：
 
 ```tsx
-import AdSense from '@/components/AdSense'
-
-;<AdSense
+import AdSense from '@/components/AdSense';
+<AdSense
   adSlot="你的广告位ID"
   adFormat="auto"
   className="text-center"
   adStyle={{ minHeight: '250px' }}
-/>
+/>;
 ```
 
 ## 参数说明

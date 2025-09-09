@@ -1,19 +1,20 @@
-import siteMetadata from '@/data/siteMetadata'
-import headerNavLinks from '@/data/headerNavLinks'
-import Logo from '@/data/logo.svg'
-import Link from './Link'
-import MobileNav from './MobileNav'
-import ThemeSwitch from './ThemeSwitch'
-import SearchButton from './SearchButton'
-import LanguageSwitch from './LanguageSwitch'
-import { useTranslations } from 'next-intl'
+import siteMetadata from '@/data/siteMetadata';
+import headerNavLinks from '@/data/headerNavLinks';
+import Logo from '@/data/logo.svg';
+import Link from './Link';
+import MobileNav from './MobileNav';
+import ThemeSwitch from './ThemeSwitch';
+import SearchButton from './SearchButton';
+import LanguageSwitch from './LanguageSwitch';
+import { useTranslations } from 'next-intl';
 
 const Header = () => {
-  const t = useTranslations()
+  const t = useTranslations();
 
-  let headerClass = 'flex items-center w-full bg-white dark:bg-gray-950 justify-between py-10'
+  let headerClass =
+    'flex items-center w-full bg-white dark:bg-gray-950 justify-between py-10';
   if (siteMetadata.stickyNav) {
-    headerClass += ' sticky top-0 z-50'
+    headerClass += ' sticky top-0 z-50';
   }
 
   return (
@@ -52,7 +53,7 @@ const Header = () => {
         <MobileNav />
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;

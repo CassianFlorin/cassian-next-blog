@@ -1,20 +1,22 @@
-'use client'
+'use client';
 
-import React from 'react'
+import React from 'react';
 
 interface Environment {
-  name: string
-  path: string
-  issue: string
-  pros?: string[]
-  cons?: string[]
+  name: string;
+  path: string;
+  issue: string;
+  pros?: string[];
+  cons?: string[];
 }
 
 interface EnvironmentComparisonProps {
-  environments: Environment[]
+  environments: Environment[];
 }
 
-export default function EnvironmentComparison({ environments }: EnvironmentComparisonProps) {
+export default function EnvironmentComparison({
+  environments,
+}: EnvironmentComparisonProps) {
   return (
     <div className="my-6 w-full max-w-full">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -49,8 +51,12 @@ export default function EnvironmentComparison({ environments }: EnvironmentCompa
               </div>
 
               <div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">问题:</span>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{env.issue}</p>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  问题:
+                </span>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  {env.issue}
+                </p>
               </div>
 
               {env.pros && env.pros.length > 0 && (
@@ -81,7 +87,9 @@ export default function EnvironmentComparison({ environments }: EnvironmentCompa
 
               {env.cons && env.cons.length > 0 && (
                 <div>
-                  <span className="text-sm font-medium text-red-700 dark:text-red-300">缺点:</span>
+                  <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                    缺点:
+                  </span>
                   <ul className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                     {env.cons.map((con, idx) => (
                       <li key={idx} className="flex items-center">
@@ -107,5 +115,5 @@ export default function EnvironmentComparison({ environments }: EnvironmentCompa
         ))}
       </div>
     </div>
-  )
+  );
 }

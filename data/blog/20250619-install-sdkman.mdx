@@ -123,7 +123,9 @@ source "$USERPROFILE/.sdkman/bin/sdkman-init.sh"
 - [Scoop](https://scoop.sh/) - Windows 包管理器
 - [Chocolatey](https://chocolatey.org/) - Windows 包管理器
 
-<Callout emoji="⚠️">Windows 用户建议使用 Git Bash 或 MSYS2 来获得最佳的 SDKMAN 体验。</Callout>
+<Callout emoji="⚠️">
+  Windows 用户建议使用 Git Bash 或 MSYS2 来获得最佳的 SDKMAN 体验。
+</Callout>
 
 ## 📦 安装项目所需的 Java 版本
 
@@ -214,7 +216,8 @@ java=8.0.452-amzn
 3. ✅ 在您的 shell 配置文件（如 `.bashrc`、`.zshrc` 或 Git Bash 的 `.bash_profile`）中已加载 SDKMAN
 
 <Callout emoji="💡">
-  如果您没有安装 SDKMAN，Git hooks 将使用系统默认的 Java 版本。请确保您的系统 Java 版本与项目兼容。
+  如果您没有安装 SDKMAN，Git hooks 将使用系统默认的 Java 版本。请确保您的系统
+  Java 版本与项目兼容。
 </Callout>
 
 ### Windows 特定问题
@@ -242,7 +245,11 @@ $env:JAVA_HOME = "C:\Users\YourUsername\.sdkman\candidates\java\8.0.452-amzn"
   error="sdk: command not found"
   code="127"
   path="/usr/bin:/bin:/usr/sbin:/sbin"
-  details={['SDKMAN 未正确安装', 'shell 配置文件未重新加载', '需要重启终端或重新加载配置']}
+  details={[
+    'SDKMAN 未正确安装',
+    'shell 配置文件未重新加载',
+    '需要重启终端或重新加载配置',
+  ]}
 />
 
 **解决方案**: 确保已重新加载 shell 配置或重启终端
@@ -252,7 +259,11 @@ $env:JAVA_HOME = "C:\Users\YourUsername\.sdkman\candidates\java\8.0.452-amzn"
   error="Java version not switched automatically"
   code="0"
   path="Project directory"
-  details={['.sdkmanrc 文件不存在或格式错误', 'SDKMAN 未正确加载', '需要运行 sdk env 命令']}
+  details={[
+    '.sdkmanrc 文件不存在或格式错误',
+    'SDKMAN 未正确加载',
+    '需要运行 sdk env 命令',
+  ]}
 />
 
 **解决方案**: 运行 `sdk env` 命令，或检查 `.sdkmanrc` 文件是否存在
@@ -262,7 +273,11 @@ $env:JAVA_HOME = "C:\Users\YourUsername\.sdkman\candidates\java\8.0.452-amzn"
   error="Git hooks failed on Windows"
   code="1"
   path="CMD/PowerShell environment"
-  details={['在 CMD 或 PowerShell 中运行 Git', '环境变量配置不正确', '建议使用 Git Bash']}
+  details={[
+    '在 CMD 或 PowerShell 中运行 Git',
+    '环境变量配置不正确',
+    '建议使用 Git Bash',
+  ]}
 />
 
 **解决方案**: 使用 Git Bash 而不是 CMD 或 PowerShell

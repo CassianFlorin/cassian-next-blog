@@ -1,47 +1,54 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { usePathname } from 'next/navigation'
-import { formatDate } from 'pliny/utils/formatDate'
-import { CoreContent } from 'pliny/utils/contentlayer'
-import type { Blog } from 'contentlayer/generated'
-import Link from '@/components/Link'
-import Tag from '@/components/Tag'
-import siteMetadata from '@/data/siteMetadata'
+import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { formatDate } from 'pliny/utils/formatDate';
+import { CoreContent } from 'pliny/utils/contentlayer';
+import type { Blog } from 'contentlayer/generated';
+import Link from '@/components/Link';
+import Tag from '@/components/Tag';
+import siteMetadata from '@/data/siteMetadata';
 
 interface PaginationProps {
-  totalPages: number
-  currentPage: number
+  totalPages: number;
+  currentPage: number;
 }
 interface ListLayoutProps {
-  posts: CoreContent<Blog>[]
-  title: string
-  initialDisplayPosts?: CoreContent<Blog>[]
-  pagination?: PaginationProps
+  posts: CoreContent<Blog>[];
+  title: string;
+  initialDisplayPosts?: CoreContent<Blog>[];
+  pagination?: PaginationProps;
 }
 
 function Pagination({ totalPages, currentPage }: PaginationProps) {
-  const pathname = usePathname()
-  const segments = pathname.split('/')
-  const lastSegment = segments[segments.length - 1]
+  const pathname = usePathname();
+  const segments = pathname.split('/');
+  const lastSegment = segments[segments.length - 1];
   const basePath = pathname
     .replace(/^\//, '') // Remove leading slash
     .replace(/\/page\/\d+\/?$/, '') // Remove any trailing /page
-    .replace(/\/$/, '') // Remove trailing slash
-  const prevPage = currentPage - 1 > 0
-  const nextPage = currentPage + 1 <= totalPages
+    .replace(/\/$/, ''); // Remove trailing slash
+  const prevPage = currentPage - 1 > 0;
+  const nextPage = currentPage + 1 <= totalPages;
 
   return (
     <div className="space-y-2 pt-6 pb-8 md:space-y-5">
       <nav className="flex justify-between">
         {!prevPage && (
-          <button className="cursor-auto disabled:opacity-50" disabled={!prevPage}>
+          <button
+            className="cursor-auto disabled:opacity-50"
+            disabled={!prevPage}
+          >
             Previous
           </button>
         )}
         {prevPage && (
           <Link
-            href={currentPage - 1 === 1 ? `/${basePath}/` : `/${basePath}/page/${currentPage - 1}`}
+            href={
+              currentPage - 1 === 1
+                ? `/${basePath}/`
+                : `/${basePath}/page/${currentPage - 1}`
+            }
             rel="prev"
           >
             Previous
@@ -51,7 +58,10 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
           {currentPage} of {totalPages}
         </span>
         {!nextPage && (
-          <button className="cursor-auto disabled:opacity-50" disabled={!nextPage}>
+          <button
+            className="cursor-auto disabled:opacity-50"
+            disabled={!nextPage}
+          >
             Next
           </button>
         )}
@@ -62,7 +72,7 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
         )}
       </nav>
     </div>
-  )
+  );
 }
 
 export default function ListLayout({
@@ -71,15 +81,17 @@ export default function ListLayout({
   initialDisplayPosts = [],
   pagination,
 }: ListLayoutProps) {
-  const [searchValue, setSearchValue] = useState('')
+  const [searchValue, setSearchValue] = useState('');
   const filteredBlogPosts = posts.filter((post) => {
-    const searchContent = post.title + post.summary + post.tags?.join(' ')
-    return searchContent.toLowerCase().includes(searchValue.toLowerCase())
-  })
+    const searchContent = post.title + post.summary + post.tags?.join(' ');
+    return searchContent.toLowerCase().includes(searchValue.toLowerCase());
+  });
 
   // If initialDisplayPosts exist, display it if no searchValue is specified
   const displayPosts =
-    initialDisplayPosts.length > 0 && !searchValue ? initialDisplayPosts : filteredBlogPosts
+    initialDisplayPosts.length > 0 && !searchValue
+      ? initialDisplayPosts
+      : filteredBlogPosts;
 
   return (
     <>
@@ -118,25 +130,30 @@ export default function ListLayout({
         <ul>
           {!filteredBlogPosts.length && 'No posts found.'}
           {displayPosts.map((post) => {
-            const { path, date, title, summary, tags } = post
+            const { path, date, title, summary, tags } = post;
             return (
               <li key={path} className="py-4">
                 <article className="space-y-2 xl:grid xl:grid-cols-4 xl:items-baseline xl:space-y-0">
                   <dl>
                     <dt className="sr-only">Published on</dt>
                     <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
-                      <time dateTime={date}>{formatDate(date, siteMetadata.locale)}</time>
+                      <time dateTime={date}>
+                        {formatDate(date, siteMetadata.locale)}
+                      </time>
                     </dd>
                   </dl>
                   <div className="space-y-3 xl:col-span-3">
                     <div>
                       <h3 className="text-2xl leading-8 font-bold tracking-tight">
-                        <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
+                        <Link
+                          href={`/${path}`}
+                          className="text-gray-900 dark:text-gray-100"
+                        >
                           {title}
                         </Link>
                       </h3>
                       <div className="flex flex-wrap">
-                        {tags?.map((tag) =>(<Tag key={tag} text={tag} />)}
+                        {tags?.map((tag) => <Tag key={tag} text={tag} />)}
                       </div>
                     </div>
                     <div className="prose max-w-none text-gray-500 dark:text-gray-400">
@@ -145,13 +162,16 @@ export default function ListLayout({
                   </div>
                 </article>
               </li>
-            )
+            );
           })}
         </ul>
       </div>
       {pagination && pagination.totalPages > 1 && !searchValue && (
-        <Pagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} />
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+        />
       )}
     </>
-  )
+  );
 }

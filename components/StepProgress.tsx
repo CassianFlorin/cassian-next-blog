@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import React from 'react'
+import React from 'react';
 
 interface Step {
-  title: string
-  status: 'completed' | 'current' | 'pending'
-  description?: string
+  title: string;
+  status: 'completed' | 'current' | 'pending';
+  description?: string;
 }
 
 interface StepProgressProps {
-  steps: Step[]
+  steps: Step[];
 }
 
 export default function StepProgress({ steps }: StepProgressProps) {
@@ -20,7 +20,11 @@ export default function StepProgress({ steps }: StepProgressProps) {
           <div key={index} className="flex w-full items-start">
             <div className="mt-0.5 mr-3 flex h-7 w-7 items-center justify-center rounded-full border-2 sm:mr-4 sm:h-8 sm:w-8">
               {step.status === 'completed' && (
-                <svg className="h-4 w-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="h-4 w-4 text-green-600"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path
                     fillRule="evenodd"
                     d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -57,5 +61,5 @@ export default function StepProgress({ steps }: StepProgressProps) {
         ))}
       </div>
     </div>
-  )
+  );
 }

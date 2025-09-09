@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const ZH_TRANSLATION_FILE = path.join(__dirname, '../messages/zh.json')
-const EN_TRANSLATION_FILE = path.join(__dirname, '../messages/en.json')
+const ZH_TRANSLATION_FILE = path.join(__dirname, '../messages/zh.json');
+const EN_TRANSLATION_FILE = path.join(__dirname, '../messages/en.json');
 
 const zhTranslations = {
   common: {
@@ -66,7 +66,7 @@ const zhTranslations = {
     system: '系统',
   },
   tags: {},
-}
+};
 
 const enTranslations = {
   common: {
@@ -124,26 +124,32 @@ const enTranslations = {
     system: 'System',
   },
   tags: {},
-}
+};
 
 function initTranslations() {
-  console.log('📝 Initializing translation files...')
+  console.log('📝 Initializing translation files...');
 
   try {
-    fs.writeFileSync(ZH_TRANSLATION_FILE, JSON.stringify(zhTranslations, null, 2) + '\n')
-    console.log('✓ Created Chinese translation file')
+    fs.writeFileSync(
+      ZH_TRANSLATION_FILE,
+      JSON.stringify(zhTranslations, null, 2) + '\n',
+    );
+    console.log('✓ Created Chinese translation file');
 
-    fs.writeFileSync(EN_TRANSLATION_FILE, JSON.stringify(enTranslations, null, 2) + '\n')
-    console.log('✓ Created English translation file')
+    fs.writeFileSync(
+      EN_TRANSLATION_FILE,
+      JSON.stringify(enTranslations, null, 2) + '\n',
+    );
+    console.log('✓ Created English translation file');
 
-    console.log('✅ Translation files initialized successfully!')
+    console.log('✅ Translation files initialized successfully!');
   } catch (error) {
-    console.error('❌ Error initializing translation files:', error.message)
+    console.error('❌ Error initializing translation files:', error.message);
   }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  initTranslations()
+  initTranslations();
 }
 
-export { initTranslations }
+export { initTranslations };

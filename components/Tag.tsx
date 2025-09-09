@@ -1,12 +1,12 @@
-import Link from 'next/link'
-import { slug } from 'github-slugger'
-import { useTranslations } from 'next-intl'
+import Link from 'next/link';
+import { slug } from 'github-slugger';
+import { useTranslations } from 'next-intl';
 interface Props {
-  text: string
+  text: string;
 }
 
 const Tag = ({ text }: Props) => {
-  const t = useTranslations('tags')
+  const t = useTranslations('tags');
   return (
     <Link
       href={`/tags/${slug(text)}`}
@@ -14,7 +14,7 @@ const Tag = ({ text }: Props) => {
     >
       {t(text, { default: text.split(' ').join('-') })}
     </Link>
-  )
-}
+  );
+};
 
-export default Tag
+export default Tag;

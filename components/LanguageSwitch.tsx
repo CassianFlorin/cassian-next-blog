@@ -1,22 +1,22 @@
-'use client'
+'use client';
 
-import { useLocale, useTranslations } from 'next-intl'
-import { usePathname, useRouter } from 'next/navigation'
-import { locales, localeConfig } from '../i18n'
+import { useLocale, useTranslations } from 'next-intl';
+import { usePathname, useRouter } from 'next/navigation';
+import { locales, localeConfig } from '../i18n';
 
 export default function LanguageSwitch() {
-  const locale = useLocale()
-  const router = useRouter()
-  const pathname = usePathname()
-  const t = useTranslations('common')
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+  const t = useTranslations('common');
 
   const handleLanguageChange = (newLocale: string) => {
     // 移除当前语言前缀
-    const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/'
+    const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/';
     // 构建新的路径
-    const newPath = `/${newLocale}${pathWithoutLocale}`
-    router.push(newPath)
-  }
+    const newPath = `/${newLocale}${pathWithoutLocale}`;
+    router.push(newPath);
+  };
 
   return (
     <div className="relative inline-block text-left">
@@ -32,5 +32,5 @@ export default function LanguageSwitch() {
         ))}
       </select>
     </div>
-  )
+  );
 }
