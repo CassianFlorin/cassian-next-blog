@@ -73,6 +73,12 @@
     "AI": "AI",
     "Cursor": "Cursor",
     "Manus": "Manus",
-    "效率提升": "Efficiency Improvement"
+    "效率提升": "Efficiency Improvement",
+    "java": "Java",
+    "sdkman": "SDKMAN",
+    "intellij-idea": "IntelliJ IDEA",
+    "ai": "AI",
+    "cursor": "Cursor",
+    "manus": "Manus"
   }
 }
