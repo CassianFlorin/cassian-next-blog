@@ -2,8 +2,7 @@
 title: 'AI工具使用技巧分享'
 date: '2025-09-09 02:00'
 tags: ['AI', 'Cursor', 'Manus', '开发工具', '效率提升']
-description: '分享Cursor和Manus等AI工具的使用技巧，提升开发效率和工作生产力'
-author: 'sparrowhawk'
+summary: '分享Cursor和Manus等AI工具的使用技巧，提升开发效率和工作生产力'
 ---
 
 # AI工具使用技巧分享
@@ -232,8 +231,8 @@ Cursor 只是众多 AI 工具的一种表现，依托与 **MCP（Model Context P
   </div>
   <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
     <ul className="space-y-2 text-blue-700 dark:text-blue-300">
-      <li>• 先让模型「拆解思路」再让模型「写出答案」</li>
-      <li>• 就像复杂计算时先打草稿，再写最终的步骤</li>
+      <li>先让模型「拆解思路」再让模型「写出答案」</li>
+      <li>就像复杂计算时先打草稿，再写最终的步骤</li>
     </ul>
   </div>
 </div>
@@ -275,8 +274,8 @@ Cursor 只是众多 AI 工具的一种表现，依托与 **MCP（Model Context P
   </div>
   <div className="rounded-lg bg-orange-50 p-4 dark:bg-orange-900/20">
     <ul className="space-y-2 text-orange-700 dark:text-orange-300">
-      <li>• 不要期待「一发入魂」，可以先拿到草稿，再说：「再简洁一点」、「换个轻松的语气」</li>
-      <li>• LLM 的强项其实是「协作式修改」，而不是一次就写完美</li>
+      <li>不要期待「一发入魂」，可以先拿到草稿，再说：「再简洁一点」、「换个轻松的语气」</li>
+      <li>LLM 的强项其实是「协作式修改」，而不是一次就写完美</li>
     </ul>
   </div>
 </div>
@@ -300,6 +299,7 @@ Cursor 只是众多 AI 工具的一种表现，依托与 **MCP（Model Context P
 app client：提供客户端界面与用户直接交互
 backend server：通过用户选择的方言语言，选择对应的语言翻译模型
 module server：提供方言翻译模型能力`}
+
 </pre>
 </div>
 </div>
@@ -329,13 +329,13 @@ module server：提供方言翻译模型能力`}
     <p className="text-sm text-gray-600 dark:text-gray-400">提出要求的单位</p>
   </div>
 
-  <div className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow-md dark:border-gray-700 dark:bg-gray-800">
-    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-      <span className="text-2xl text-green-600 dark:text-green-400">🧠</span>
-    </div>
-    <h4 className="mb-2 font-semibold text-gray-800 dark:text-gray-200">LLM</h4>
-    <p className="text-sm text-gray-600 dark:text-gray-400">处理用户要求的单位</p>
+<div className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow-md dark:border-gray-700 dark:bg-gray-800">
+  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+    <span className="text-2xl text-green-600 dark:text-green-400">🧠</span>
   </div>
+  <h4 className="mb-2 font-semibold text-gray-800 dark:text-gray-200">LLM</h4>
+  <p className="text-sm text-gray-600 dark:text-gray-400">处理用户要求的单位</p>
+</div>
 
   <div className="rounded-lg border border-gray-200 bg-white p-6 text-center shadow-md dark:border-gray-700 dark:bg-gray-800">
     <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900">
@@ -367,58 +367,71 @@ module server：提供方言翻译模型能力`}
     因此对于「复杂的内容」处理，就如我在「跟LLM对话的几个技巧」中写道的那样：
   </p>
 
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-    <div className="space-y-3">
+  <div className="space-y-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div className="flex items-start space-x-3">
-        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+          <span className="text-sm font-bold text-blue-600 dark:text-blue-400">1</span>
         </div>
         <p className="text-sm text-gray-700 dark:text-gray-300">
           <strong>理清具体的内容与需求</strong>
         </p>
       </div>
       <div className="flex items-start space-x-3">
-        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">2</span>
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+          <span className="text-sm font-bold text-blue-600 dark:text-blue-400">2</span>
         </div>
         <p className="text-sm text-gray-700 dark:text-gray-300">
           <strong>整理完整的需求内容</strong>
         </p>
       </div>
+    </div>
+    
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div className="flex items-start space-x-3">
-        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">3</span>
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+          <span className="text-sm font-bold text-blue-600 dark:text-blue-400">3</span>
         </div>
         <p className="text-sm text-gray-700 dark:text-gray-300">
           <strong>拆分任务模块（todo list）</strong>
         </p>
       </div>
-    </div>
-
-    <div className="space-y-3">
       <div className="flex items-start space-x-3">
-        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">4</span>
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+          <span className="text-sm font-bold text-blue-600 dark:text-blue-400">4</span>
         </div>
         <p className="text-sm text-gray-700 dark:text-gray-300">
           <strong>涉及行业相关的可以为 LLM 设置一个角色</strong>
         </p>
       </div>
+    </div>
+    
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div className="flex items-start space-x-3">
-        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">5</span>
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+          <span className="text-sm font-bold text-blue-600 dark:text-blue-400">5</span>
         </div>
-        <p className="text-sm text-gray-700 dark:text-gray-300">
-          <strong>每个任务块完成就进入新的会话中</strong>（避免上下文过长）
-        </p>
+        <div className="flex-1">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            <strong>每个任务块完成就进入新的会话中</strong>
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            （避免上下文过长）
+          </p>
+        </div>
       </div>
       <div className="flex items-start space-x-3">
-        <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
-          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">6</span>
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+          <span className="text-sm font-bold text-blue-600 dark:text-blue-400">6</span>
         </div>
-        <p className="text-sm text-gray-700 dark:text-gray-300">
-          <strong>项目中如果有示例代码可以添加引用</strong>
-        </p>
+        <div className="flex-1">
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            <strong>项目中如果有示例代码可以添加引用</strong>
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            （提高代码质量和一致性）
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -521,7 +534,7 @@ module server：提供方言翻译模型能力`}
       <div className="w-8 h-8 bg-teal-100 dark:bg-teal-900 rounded-lg flex items-center justify-center mr-3">
         <span className="text-teal-600 dark:text-teal-400 text-sm">🔗</span>
       </div>
-      <h5 className="font-semibold text-gray-800 dark:text-gray-200">MyBatis Jump</h5>
+      <h5 className="font-semibold text-gray-800 dark:text-gray-200">mybatis jump to mapper xml</h5>
     </div>
     <p className="text-gray-600 dark:text-gray-400 text-sm">
       弥补了不能在 vscode 编辑器跳转 mapper xml 的遗憾
