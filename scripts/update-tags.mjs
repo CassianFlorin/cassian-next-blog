@@ -3,6 +3,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import matter from 'gray-matter';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -89,28 +90,13 @@ const EN_TO_ZH_TRANSLATIONS = {
  */
 function extractTagsFromMDX(filePath) {
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
-    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-
-    if (!frontmatterMatch) {
-      return [];
+    const raw = fs.readFileSync(filePath, 'utf8');
+    const parsed = matter(raw);
+    const tags = parsed?.data?.tags;
+    if (Array.isArray(tags)) {
+      return tags.filter((t) => typeof t === 'string' && t.trim().length > 0);
     }
-
-    const frontmatter = frontmatterMatch[1];
-    const tagsMatch = frontmatter.match(/^tags:\s*\[(.*?)\]/m);
-
-    if (!tagsMatch) {
-      return [];
-    }
-
-    // 解析标签数组
-    const tagsString = tagsMatch[1];
-    const tags = tagsString
-      .split(',')
-      .map((tag) => tag.trim().replace(/['"]/g, ''))
-      .filter((tag) => tag.length > 0);
-
-    return tags;
+    return [];
   } catch (error) {
     console.error(`Error reading file ${filePath}:`, error.message);
     return [];

@@ -5,11 +5,13 @@
   "scripts": {
     "start": "next dev",
     "dev": "cross-env INIT_CWD=$PWD next dev",
+    "prebuild": "node scripts/generate-post-tags.mjs && node scripts/update-tags.mjs",
     "build": "cross-env INIT_CWD=$PWD next build && cross-env NODE_OPTIONS='--experimental-json-modules' node ./scripts/postbuild.mjs",
     "serve": "next start",
     "analyze": "cross-env ANALYZE=true next build",
     "lint": "next lint --fix --dir pages --dir app --dir components --dir lib --dir layouts --dir scripts",
     "prepare": "husky",
+    "generate-tags": "node scripts/generate-post-tags.mjs",
     "update-tags": "node scripts/update-tags.mjs",
     "init-translations": "node scripts/init-translations.mjs"
   },

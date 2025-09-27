@@ -83,6 +83,12 @@
     "intellij-idea": "IntelliJ IDEA",
     "ai": "AI",
     "cursor": "Cursor",
-    "manus": "Manus"
+    "manus": "Manus",
+    "Contributors": "Contributors",
+    "GitHub": "GitHub",
+    "Tools": "Tools",
+    "Open Source": "Open Source",
+    "MooTool": "MooTool",
+    "Diff": "Diff"
   }
 }
