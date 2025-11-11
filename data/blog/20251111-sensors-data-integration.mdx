@@ -1,0 +1,991 @@
+---
+title: '神策数据分析开发接入文档'
+date: '2025-11-11 15:55:00'
+tags: ['Java', '神策数据', '开发工具', '技术分享']
+draft: false
+summary: '基于 SensorsConfig.java 配置类，详细说明如何在项目中集成神策数据分析功能，包括配置说明、代码集成和使用示例。'
+---
+
+<div className="not-prose">
+  <div className="mb-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 p-8 text-white shadow-lg">
+    <h1 className="mb-4 text-4xl font-bold">🎯 神策数据分析开发接入文档</h1>
+    <p className="text-xl opacity-90">
+      快速集成神策数据分析，实现精准的用户行为追踪
+    </p>
+  </div>
+</div>
+
+## 📖 概述
+
+神策数据分析（Sensors Analytics）是一款专业的用户行为分析产品。本文档基于 `SensorsConfig.java` 配置类，详细说明如何在项目中集成神策数据分析功能。
+
+### ✨ 功能特性
+
+<div className="my-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+    <div className="mb-2 font-semibold text-blue-900 dark:text-blue-300">
+      🔄 多种上报模式
+    </div>
+    <div className="text-sm text-blue-700 dark:text-blue-400">
+      支持 DEBUG、BATCH 等多种数据上报模式
+    </div>
+  </div>
+  <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+    <div className="mb-2 font-semibold text-green-900 dark:text-green-300">
+      ⚙️ 自动配置
+    </div>
+    <div className="text-sm text-green-700 dark:text-green-400">
+      自动配置神策 SDK 客户端，开箱即用
+    </div>
+  </div>
+  <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20">
+    <div className="mb-2 font-semibold text-purple-900 dark:text-purple-300">
+      🔥 配置热更新
+    </div>
+    <div className="text-sm text-purple-700 dark:text-purple-400">
+      支持 @RefreshScope 配置热更新
+    </div>
+  </div>
+  <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-900/20">
+    <div className="mb-2 font-semibold text-orange-900 dark:text-orange-300">
+      📊 完整埋点 API
+    </div>
+    <div className="text-sm text-orange-700 dark:text-orange-400">
+      提供完整的埋点 API 接口
+    </div>
+  </div>
+</div>
+
+### 🏗️ 技术架构
+
+<div className="my-6 rounded-lg border border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-800">
+  <pre className="text-center text-sm">
+    <code>
+      应用层 → ISensorsAnalytics → Consumer → 神策服务器 (埋点接口) (数据消费者)
+      (数据收集)
+    </code>
+  </pre>
+</div>
+
+---
+
+## 📦 依赖配置
+
+### Maven 依赖
+
+在项目的 `pom.xml` 中添加神策 SDK 依赖：
+
+```xml
+<!-- 引入神策分析 SDK -->
+<dependency>
+    <groupId>com.sensorsdata.analytics.javasdk</groupId>
+    <artifactId>SensorsAnalyticsSDK</artifactId>
+    <version>3.6.8</version>
+</dependency>
+```
+
+### 📋 版本兼容性
+
+<div className="my-6 overflow-x-auto">
+  <table className="min-w-full border-collapse">
+    <thead>
+      <tr className="bg-gray-100 dark:bg-gray-800">
+        <th className="border border-gray-300 px-4 py-2 text-left dark:border-gray-600">
+          组件
+        </th>
+        <th className="border border-gray-300 px-4 py-2 text-left dark:border-gray-600">
+          版本要求
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          JDK 版本
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>1.8+</code>
+        </td>
+      </tr>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          Spring Boot 版本
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>2.x+</code>
+        </td>
+      </tr>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          神策 SDK 版本
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>3.6.8</code>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+---
+
+## ⚙️ 配置说明
+
+### 配置属性类
+
+项目中使用 `SensorsDataProperties` 类来管理神策相关配置：
+
+```java
+@RefreshScope
+@Data
+@Component
+@ConfigurationProperties(prefix = "sensorsdata")
+public class SensorsDataProperties {
+
+    /**
+     * 神策服务地址
+     */
+    private String serverUrl;
+
+    /**
+     * 埋点模式
+     */
+    private String trackMode;
+
+    /**
+     * 神策事件名称
+     */
+    private String eventName;
+
+    /**
+     * 批量发送配置
+     */
+    private BatchMode batch;
+
+    @Data
+    public static class BatchMode {
+        /**
+         * 快速批量发送模式"每次发送"条数阈值
+         */
+        private Integer bulkSize;
+
+        /**
+         * 缓存队列最大条数
+         */
+        private Integer maxCacheSize;
+
+        /**
+         * 超时时间（秒）
+         */
+        private Integer timeoutSeconds;
+    }
+}
+```
+
+### 跟踪模式枚举
+
+支持的跟踪模式定义在 `SensorsTrackModeEnums` 中：
+
+```java
+public enum SensorsTrackModeEnums implements EnumLookUp<String> {
+    DEBUG("debug", "测试上报"),
+    BATCH("batch", "批量模式"),
+    FAST_BATCH("fast_batch", "快速批量模式");
+}
+```
+
+### 📝 配置参数详解
+
+<div className="my-6 overflow-x-auto">
+  <table className="min-w-full border-collapse text-sm">
+    <thead>
+      <tr className="bg-blue-100 dark:bg-blue-900/30">
+        <th className="border border-gray-300 px-4 py-2 text-left dark:border-gray-600">
+          参数
+        </th>
+        <th className="border border-gray-300 px-4 py-2 text-left dark:border-gray-600">
+          类型
+        </th>
+        <th className="border border-gray-300 px-4 py-2 text-left dark:border-gray-600">
+          必填
+        </th>
+        <th className="border border-gray-300 px-4 py-2 text-left dark:border-gray-600">
+          说明
+        </th>
+        <th className="border border-gray-300 px-4 py-2 text-left dark:border-gray-600">
+          示例
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>serverUrl</code>
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          String
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          ✅ 是
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          神策服务器地址
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>https://api.example.com/sa?project=stage</code>
+        </td>
+      </tr>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>trackMode</code>
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          String
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          ✅ 是
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          埋点模式
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>batch</code>、<code>debug</code>
+        </td>
+      </tr>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>eventName</code>
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          String
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          ❌ 否
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          默认事件名称
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>d_h5_trilateral_credit_claim_click</code>
+        </td>
+      </tr>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>batch.bulkSize</code>
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          Integer
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          ❌ 否
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          批量发送条数阈值
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>100</code>
+        </td>
+      </tr>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>batch.maxCacheSize</code>
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          Integer
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          ❌ 否
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          缓存队列最大条数
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>10000</code>
+        </td>
+      </tr>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>batch.timeoutSeconds</code>
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          Integer
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          ❌ 否
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          超时时间（秒）
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>30</code>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+---
+
+## 🔧 代码集成
+
+### 配置类
+
+将 `SensorsConfig.java` 添加到项目中：
+
+```java
+/**
+ * @author 开发者
+ * @date 2025/11/11 15:55:00
+ */
+@Slf4j
+@Configuration
+public class SensorsConfig {
+
+    @Resource
+    private SensorsDataProperties sensorsDataProperties;
+
+    @Bean(destroyMethod = "shutdown")
+    public ISensorsAnalytics init() {
+
+        SensorsTrackModeEnums trackModeEnums =
+            EnumLookUp.getEnumInstance(SensorsTrackModeEnums.class, sensorsDataProperties.getTrackMode());
+
+        switch (trackModeEnums) {
+            case DEBUG:
+                // 注意：debug 模式数据不会写入服务器
+                // URL 会从 https://api.example.com/sa?project=stage
+                // 变为 https://api.example.com/debug?project=default
+                log.info("sensorsData debug mode");
+                return new SensorsAnalytics(new DebugConsumer(sensorsDataProperties.getServerUrl(), true));
+
+            case BATCH:
+                log.info("sensorsData batch mode");
+                return new SensorsAnalytics(new BatchConsumer(sensorsDataProperties.getServerUrl()));
+        }
+
+        log.info("sensorsData default mode [batch]");
+        return new SensorsAnalytics(new BatchConsumer(sensorsDataProperties.getServerUrl()));
+    }
+}
+```
+
+<div className="my-6 border-l-4 border-blue-500 bg-blue-50 p-4 dark:bg-blue-900/20">
+  <div className="flex items-start">
+    <span className="mr-3 text-2xl">💡</span>
+    <div>
+      <div className="mb-1 font-semibold text-blue-900 dark:text-blue-300">
+        提示
+      </div>
+      <div className="text-sm text-blue-800 dark:text-blue-400">
+        确保 <code>SensorsDataProperties</code> 和{' '}
+        <code>SensorsTrackModeEnums</code> 在项目的 classpath 中。
+      </div>
+    </div>
+  </div>
+</div>
+
+---
+
+## 💻 使用示例
+
+### 基本埋点
+
+```java
+@Service
+public class UserBehaviorService {
+
+    @Resource
+    private ISensorsAnalytics sensorsAnalytics;
+
+    @Resource
+    private SensorsDataProperties sensorsDataProperties;
+
+    /**
+     * 用户点击事件埋点
+     */
+    public void trackUserClick(String userId, String creditApplyNo, String scene) {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("f_credit_apply_no", creditApplyNo);
+        properties.put("f_quotient_scene", scene);
+        properties.put("timestamp", System.currentTimeMillis());
+
+        // 发送埋点数据
+        sensorsAnalytics.track(userId, false, sensorsDataProperties.getEventName(), properties);
+
+        // 立即刷新（可选）
+        sensorsAnalytics.flush();
+    }
+}
+```
+
+### 业务场景示例
+
+```java
+@Service
+public class CreditApplyService {
+
+    @Resource
+    private ISensorsAnalytics sensorsAnalytics;
+
+    @Resource
+    private SensorsDataProperties sensorsDataProperties;
+
+    /**
+     * 授信申请成功埋点
+     */
+    public void trackCreditApplySuccess(CreditApply creditApply, Partner partner) {
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("f_credit_apply_no", creditApply.getSeqNo());
+        properties.put("f_quotient_scene", partner.getPartnerCode());
+        properties.put("f_credit_amount", creditApply.getCreditAmount());
+        properties.put("f_apply_time", creditApply.getCreateTime());
+
+        // 使用随机 UUID 作为匿名用户标识
+        String distinctId = UUID.randomUUID().toString();
+
+        sensorsAnalytics.track(distinctId, false, sensorsDataProperties.getEventName(), properties);
+        sensorsAnalytics.flush();
+    }
+}
+```
+
+### 测试代码
+
+```java
+@Test
+public void testSensorsAnalytics() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("f_credit_apply_no", "CA20251111000001");
+    properties.put("f_quotient_scene", "miniWallet");
+    properties.put("f_event_type", "click");
+
+    sensorsAnalytics.track(
+        UUID.randomUUID().toString(),
+        false,
+        "d_h5_trilateral_credit_claim_click",
+        properties
+    );
+
+    sensorsAnalytics.flush();
+}
+```
+
+---
+
+## 🔐 配置示例
+
+<div className="my-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+  <div className="rounded-lg border border-green-200 bg-green-50 p-5 dark:border-green-800 dark:bg-green-900/20">
+    <div className="mb-3 text-lg font-semibold text-green-900 dark:text-green-300">
+      🛠️ 开发环境
+    </div>
+    <div className="text-xs text-green-700 dark:text-green-400">
+      使用 DEBUG 模式进行调试
+    </div>
+  </div>
+  <div className="rounded-lg border border-blue-200 bg-blue-50 p-5 dark:border-blue-800 dark:bg-blue-900/20">
+    <div className="mb-3 text-lg font-semibold text-blue-900 dark:text-blue-300">
+      🧪 测试环境
+    </div>
+    <div className="text-xs text-blue-700 dark:text-blue-400">
+      使用 BATCH 模式进行测试
+    </div>
+  </div>
+  <div className="rounded-lg border border-red-200 bg-red-50 p-5 dark:border-red-800 dark:bg-red-900/20">
+    <div className="mb-3 text-lg font-semibold text-red-900 dark:text-red-300">
+      🚀 生产环境
+    </div>
+    <div className="text-xs text-red-700 dark:text-red-400">
+      使用 BATCH 模式，优化性能
+    </div>
+  </div>
+</div>
+
+### 开发环境配置
+
+```yaml
+# application-dev.yml
+sensorsdata:
+  server-url: https://api.example.com/sa?project=dev
+  track-mode: debug
+  event-name: d_h5_trilateral_credit_claim_click
+  batch:
+    bulk-size: 50
+    max-cache-size: 5000
+    timeout-seconds: 10
+```
+
+### 测试环境配置
+
+```yaml
+# application-test.yml
+sensorsdata:
+  server-url: https://api.example.com/sa?project=stage
+  track-mode: batch
+  event-name: d_h5_trilateral_credit_claim_click
+  batch:
+    bulk-size: 100
+    max-cache-size: 10000
+    timeout-seconds: 30
+```
+
+### 生产环境配置
+
+```yaml
+# application-prod.yml
+sensorsdata:
+  server-url: https://api.example.com/sa?project=production
+  track-mode: batch
+  event-name: d_h5_trilateral_credit_claim_click
+  batch:
+    bulk-size: 200
+    max-cache-size: 20000
+    timeout-seconds: 60
+```
+
+### Nacos 配置中心
+
+如果使用 Nacos 配置中心，可以在对应的 `dataId` 中添加：
+
+```yaml
+# example-backend.yml
+sensorsdata:
+  server-url: ${sensors.server.url:https://api.example.com/sa?project=stage}
+  track-mode: ${sensors.track.mode:batch}
+  event-name: ${sensors.event.name:d_h5_trilateral_credit_claim_click}
+  batch:
+    bulk-size: ${sensors.batch.bulk-size:100}
+    max-cache-size: ${sensors.batch.max-cache-size:10000}
+    timeout-seconds: ${sensors.batch.timeout-seconds:30}
+```
+
+---
+
+## ⚠️ 注意事项
+
+### 重要提醒
+
+<div className="space-y-4 my-6">
+  <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4">
+    <div className="flex items-start">
+      <span className="text-2xl mr-3">🚨</span>
+      <div>
+        <div className="font-semibold text-red-900 dark:text-red-300 mb-2">DEBUG 模式限制</div>
+        <ul className="text-sm text-red-800 dark:text-red-400 space-y-1 list-disc list-inside">
+          <li><strong>切勿在生产环境使用 DEBUG 模式</strong></li>
+          <li>DEBUG 模式的数据不会写入服务器</li>
+          <li>会自动修改 server URL 格式</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+{' '}
+<div className="border-l-4 border-yellow-500 bg-yellow-50 p-4 dark:bg-yellow-900/20">
+  <div className="flex items-start">
+    <span className="mr-3 text-2xl">⚡</span>
+    <div>
+      <div className="mb-2 font-semibold text-yellow-900 dark:text-yellow-300">
+        URL 格式变化
+      </div>
+      <div className="space-y-1 text-sm text-yellow-800 dark:text-yellow-400">
+        <div>
+          正常模式：<code>https://api.example.com/sa?project=stage</code>
+        </div>
+        <div>
+          DEBUG模式：<code>https://api.example.com/debug?project=default</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4">
+    <div className="flex items-start">
+      <span className="text-2xl mr-3">🔒</span>
+      <div>
+        <div className="font-semibold text-blue-900 dark:text-blue-300 mb-2">项目环境限制</div>
+        <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1 list-disc list-inside">
+          <li>部分环境可能不支持 debug 模式的 project name</li>
+          <li>建议在开发环境使用独立的测试项目</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+### 🚀 性能优化
+
+<div className="my-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+  <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <div className="mb-2 font-semibold">📦 批量发送</div>
+    <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <li>
+        • 生产环境建议使用 <code>batch</code> 模式
+      </li>
+      <li>
+        • 合理设置 <code>bulkSize</code>
+      </li>
+      <li>
+        • 设置合适的 <code>timeoutSeconds</code>
+      </li>
+    </ul>
+  </div>
+
+  <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <div className="mb-2 font-semibold">⚡ 异步处理</div>
+    <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <li>• 埋点操作建议异步执行</li>
+      <li>• 避免影响主业务流程</li>
+      <li>• 使用线程池管理</li>
+    </ul>
+  </div>
+
+  <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <div className="mb-2 font-semibold">🛡️ 异常处理</div>
+    <ul className="space-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <li>• 捕获所有异常</li>
+      <li>• 记录错误日志</li>
+      <li>• 不影响主业务</li>
+    </ul>
+  </div>
+</div>
+
+**异常处理示例：**
+
+```java
+try {
+    sensorsAnalytics.track(distinctId, isLoginId, eventName, properties);
+    sensorsAnalytics.flush();
+} catch (Exception e) {
+    log.error("神策埋点失败", e);
+    // 不影响主业务流程
+}
+```
+
+### 📊 数据规范
+
+<div className="my-6 rounded-lg border border-purple-200 bg-purple-50 p-5 dark:border-purple-800 dark:bg-purple-900/20">
+  <div className="mb-3 font-semibold text-purple-900 dark:text-purple-300">
+    字段命名规范
+  </div>
+  <ul className="space-y-2 text-sm text-purple-800 dark:text-purple-400">
+    <li>
+      ✓ 使用 <code>f_</code> 前缀表示业务字段
+    </li>
+    <li>✓ 采用下划线命名法</li>
+    <li>
+      ✓ 示例：<code>f_credit_apply_no</code>、<code>f_quotient_scene</code>
+    </li>
+  </ul>
+</div>
+
+<div className="my-6 overflow-x-auto">
+  <table className="min-w-full border-collapse text-sm">
+    <thead>
+      <tr className="bg-purple-100 dark:bg-purple-900/30">
+        <th className="border border-gray-300 px-4 py-2 text-left dark:border-gray-600">
+          类型
+        </th>
+        <th className="border border-gray-300 px-4 py-2 text-left dark:border-gray-600">
+          说明
+        </th>
+        <th className="border border-gray-300 px-4 py-2 text-left dark:border-gray-600">
+          示例
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          字符串
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          用户ID、业务编号等
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>"CA20251111000001"</code>
+        </td>
+      </tr>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          数值
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          金额、数量等
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>10000</code>
+        </td>
+      </tr>
+      <tr>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          时间戳
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          使用毫秒级时间戳
+        </td>
+        <td className="border border-gray-300 px-4 py-2 dark:border-gray-600">
+          <code>1699689600000</code>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div className="my-6 rounded-lg border border-green-200 bg-green-50 p-5 dark:border-green-800 dark:bg-green-900/20">
+  <div className="mb-3 font-semibold text-green-900 dark:text-green-300">
+    必填字段
+  </div>
+  <div className="grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
+    <div className="flex items-center">
+      <span className="mr-2 text-green-600 dark:text-green-400">✓</span>
+      <code>distinctId</code> - 用户唯一标识
+    </div>
+    <div className="flex items-center">
+      <span className="mr-2 text-green-600 dark:text-green-400">✓</span>
+      <code>eventName</code> - 事件名称
+    </div>
+    <div className="flex items-center">
+      <span className="mr-2 text-green-600 dark:text-green-400">✓</span>
+      <code>properties</code> - 事件属性
+    </div>
+  </div>
+</div>
+
+---
+
+## 🔍 问题排查
+
+### 常见问题
+
+<div className="space-y-4 my-6">
+  <details className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
+    <summary className="font-semibold cursor-pointer text-gray-900 dark:text-gray-100">❓ Q1：配置不生效怎么办？</summary>
+    <div className="mt-3 text-sm text-gray-700 dark:text-gray-300 space-y-2">
+      <ul className="list-disc list-inside space-y-1">
+        <li>检查 <code>@ConfigurationProperties</code> 注解是否正确</li>
+        <li>确认配置文件路径和格式</li>
+        <li>验证 Nacos 配置是否正确推送</li>
+      </ul>
+    </div>
+  </details>
+
+{' '}
+<details className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+  <summary className="cursor-pointer font-semibold text-gray-900 dark:text-gray-100">
+    ❓ Q2：DEBUG 模式看不到数据？
+  </summary>
+  <div className="mt-3 space-y-2 text-sm text-gray-700 dark:text-gray-300">
+    <ul className="list-inside list-disc space-y-1">
+      <li>DEBUG 模式数据不会写入服务器</li>
+      <li>检查控制台日志输出</li>
+      <li>确认 URL 格式是否正确转换</li>
+    </ul>
+  </div>
+</details>
+
+  <details className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
+    <summary className="font-semibold cursor-pointer text-gray-900 dark:text-gray-100">❓ Q3：批量模式数据延迟？</summary>
+    <div className="mt-3 text-sm text-gray-700 dark:text-gray-300 space-y-2">
+      <ul className="list-disc list-inside space-y-1">
+        <li>检查 <code>timeoutSeconds</code> 配置</li>
+        <li>手动调用 <code>flush()</code> 立即发送</li>
+        <li>调整 <code>bulkSize</code> 参数</li>
+      </ul>
+    </div>
+  </details>
+</div>
+
+### 📝 日志调试
+
+开启神策 SDK 日志：
+
+```yaml
+logging:
+  level:
+    com.sensorsdata: DEBUG
+    com.example.backend.config.SensorsConfig: DEBUG
+```
+
+### 🏥 健康检查
+
+```java
+@Component
+public class SensorsHealthCheck {
+
+    @Resource
+    private ISensorsAnalytics sensorsAnalytics;
+
+    @PostConstruct
+    public void checkSensorsStatus() {
+        try {
+            // 发送测试事件
+            Map<String, Object> testProps = new HashMap<>();
+            testProps.put("test", "health_check");
+
+            sensorsAnalytics.track("health_check", false, "system_health_check", testProps);
+            log.info("神策数据分析初始化成功");
+        } catch (Exception e) {
+            log.error("神策数据分析初始化失败", e);
+        }
+    }
+}
+```
+
+---
+
+## 🎯 最佳实践
+
+### 代码组织
+
+<div className="my-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+  <div className="rounded-lg border border-blue-200 bg-blue-50 p-5 dark:border-blue-800 dark:bg-blue-900/20">
+    <div className="mb-3 font-semibold text-blue-900 dark:text-blue-300">
+      📦 统一埋点服务
+    </div>
+    <div className="text-sm text-blue-800 dark:text-blue-400">
+      创建统一的埋点服务类，封装通用逻辑，便于维护和管理。
+    </div>
+  </div>
+
+  <div className="rounded-lg border border-green-200 bg-green-50 p-5 dark:border-green-800 dark:bg-green-900/20">
+    <div className="mb-3 font-semibold text-green-900 dark:text-green-300">
+      🏷️ 事件常量管理
+    </div>
+    <div className="text-sm text-green-800 dark:text-green-400">
+      使用常量类管理所有事件名称，避免硬编码，减少错误。
+    </div>
+  </div>
+</div>
+
+**统一埋点服务：**
+
+```java
+@Service
+public class SensorsTrackingService {
+
+    @Resource
+    private ISensorsAnalytics sensorsAnalytics;
+
+    public void trackEvent(String userId, String eventName, Map<String, Object> properties) {
+        // 统一的埋点逻辑
+    }
+}
+```
+
+**事件常量管理：**
+
+```java
+public class SensorsEventConstants {
+    public static final String CREDIT_APPLY_CLICK = "d_h5_trilateral_credit_claim_click";
+    public static final String USER_REGISTER = "d_user_register";
+    public static final String ORDER_CREATE = "d_order_create";
+}
+```
+
+### 📊 监控告警
+
+<div className="my-6 rounded-lg border border-orange-200 bg-orange-50 p-5 dark:border-orange-800 dark:bg-orange-900/20">
+  <div className="mb-3 font-semibold text-orange-900 dark:text-orange-300">
+    监控指标
+  </div>
+  <ul className="space-y-2 text-sm text-orange-800 dark:text-orange-400">
+    <li>📈 埋点成功率监控</li>
+    <li>⏱️ 数据发送延迟监控</li>
+    <li>🚨 异常情况告警</li>
+  </ul>
+</div>
+
+### 🗂️ 数据治理
+
+<div className="my-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+  <div className="rounded-lg border border-gray-200 p-4 text-center dark:border-gray-700">
+    <div className="mb-2 text-3xl">🧹</div>
+    <div className="mb-1 font-semibold">定期清理</div>
+    <div className="text-xs text-gray-600 dark:text-gray-400">
+      定期清理测试数据
+    </div>
+  </div>
+  <div className="rounded-lg border border-gray-200 p-4 text-center dark:border-gray-700">
+    <div className="mb-2 text-3xl">📚</div>
+    <div className="mb-1 font-semibold">数据字典</div>
+    <div className="text-xs text-gray-600 dark:text-gray-400">
+      建立完整的数据字典
+    </div>
+  </div>
+  <div className="rounded-lg border border-gray-200 p-4 text-center dark:border-gray-700">
+    <div className="mb-2 text-3xl">📋</div>
+    <div className="mb-1 font-semibold">规范文档</div>
+    <div className="text-xs text-gray-600 dark:text-gray-400">
+      制定埋点规范文档
+    </div>
+  </div>
+</div>
+
+---
+
+## 📚 附录
+
+### 相关文件清单
+
+<div className="my-6 rounded-lg border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800">
+  <ul className="space-y-2 text-sm">
+    <li className="flex items-center">
+      <span className="mr-2 text-blue-500">📄</span>
+      <code>SensorsConfig.java</code> - 神策配置类
+    </li>
+    <li className="flex items-center">
+      <span className="mr-2 text-green-500">📄</span>
+      <code>SensorsDataProperties.java</code> - 配置属性类
+    </li>
+    <li className="flex items-center">
+      <span className="mr-2 text-purple-500">📄</span>
+      <code>SensorsTrackModeEnums.java</code> - 跟踪模式枚举
+    </li>
+  </ul>
+</div>
+
+### 参考链接
+
+<div className="my-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+  <a
+    href="https://manual.sensorsdata.cn/"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="block rounded-lg border border-blue-200 bg-blue-50 p-4 transition-shadow hover:shadow-lg dark:border-blue-800 dark:bg-blue-900/20"
+  >
+    <div className="mb-2 font-semibold text-blue-900 dark:text-blue-300">
+      📖 神策数据官方文档
+    </div>
+    <div className="text-xs text-blue-700 dark:text-blue-400">
+      查看完整的产品文档和使用指南
+    </div>
+  </a>
+
+  <a
+    href="https://manual.sensorsdata.cn/sa/latest/java-sdk-7538402.html"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="block rounded-lg border border-green-200 bg-green-50 p-4 transition-shadow hover:shadow-lg dark:border-green-800 dark:bg-green-900/20"
+  >
+    <div className="mb-2 font-semibold text-green-900 dark:text-green-300">
+      💻 Java SDK 使用指南
+    </div>
+    <div className="text-xs text-green-700 dark:text-green-400">
+      深入了解 Java SDK 的详细用法
+    </div>
+  </a>
+</div>
+
+---
+
+<div className="not-prose mt-12">
+  <div className="rounded-lg bg-gradient-to-r from-purple-500 to-pink-600 p-6 text-center text-white shadow-lg">
+    <div className="mb-2 text-2xl font-bold">🎉 恭喜！</div>
+    <div className="text-lg">您已完成神策数据分析的集成学习</div>
+    <div className="mt-3 text-sm opacity-90">
+      开始使用神策数据分析，深入了解用户行为吧！
+    </div>
+  </div>
+</div>
