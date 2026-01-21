@@ -1,9 +1,10 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  title: "Cassian Florin's Blog",
+  title: 'Cassian Florin · Java Developer & Tech Blog',
   author: 'Cassian Florin',
   headerTitle: 'CassianFlorinBlog',
-  description: 'A blog about Cassian Florin',
+  description:
+    "Cassian Florin's personal tech blog, focusing on Java development, backend engineering, system design, and AI productivity tools.",
   language: 'zh-cn',
   theme: 'system', // system, dark or light
   siteUrl: 'https://cassianflorin.com',

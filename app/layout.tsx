@@ -23,6 +23,17 @@ export const metadata: Metadata = {
     template: `%s | ${siteMetadata.title}`,
   },
   description: siteMetadata.description,
+  authors: [{ name: siteMetadata.author }],
+  keywords: [
+    'Java',
+    'Backend Development',
+    'Java Development',
+    'System Design',
+    'Developer Productivity',
+    'AI Tools',
+    'Tech Blog',
+    'Cassian Florin',
+  ],
   openGraph: {
     title: siteMetadata.title,
     description: siteMetadata.description,
