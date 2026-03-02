@@ -75,13 +75,13 @@ const MobileNav = () => {
       <button
         aria-label="Toggle Menu"
         onClick={onToggleNav}
-        className="transition-transform duration-200 hover:scale-110 sm:hidden"
+        className="transition-colors duration-200 sm:hidden"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
           fill="currentColor"
-          className="hover:text-primary-500 dark:hover:text-primary-400 h-8 w-8 text-gray-900 transition-colors duration-200 dark:text-gray-100"
+          className="h-6 w-6 text-gray-600 transition-colors duration-200 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
         >
           <path
             fillRule="evenodd"
@@ -117,7 +117,7 @@ const MobileNav = () => {
           >
             <DialogPanel
               ref={navRef}
-              className="fixed top-0 left-0 z-70 h-full w-full bg-white/95 duration-300 dark:bg-gray-950/98"
+              className="fixed top-0 left-0 z-70 h-full w-full bg-[#FAFAF8]/98 duration-300 dark:bg-[#1a1a1a]/98"
             >
               <nav
                 ref={navLinksRef}
@@ -127,7 +127,7 @@ const MobileNav = () => {
                   <Link
                     key={link.title}
                     href={link.href}
-                    className="hover:text-primary-500 dark:hover:text-primary-400 mb-4 py-2 pr-4 text-2xl font-bold tracking-widest text-gray-900 outline outline-0 transition-all duration-200 hover:translate-x-1 dark:text-gray-100"
+                    className="hover:text-primary-600 dark:hover:text-primary-400 mb-4 py-2 pr-4 text-xl font-medium tracking-wide text-gray-700 outline outline-0 transition-all duration-200 hover:translate-x-1 dark:text-gray-200"
                     onClick={onToggleNav}
                     style={{ opacity: 0 }}
                   >
@@ -137,7 +137,7 @@ const MobileNav = () => {
               </nav>
 
               <button
-                className="hover:text-primary-500 dark:hover:text-primary-400 fixed top-7 right-4 z-80 h-16 w-16 p-4 text-gray-900 transition-all duration-200 hover:rotate-90 dark:text-gray-100"
+                className="fixed top-7 right-4 z-80 h-16 w-16 p-4 text-gray-500 transition-all duration-200 hover:rotate-90 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 aria-label="Toggle Menu"
                 onClick={onToggleNav}
               >

@@ -20,7 +20,7 @@ const Card = ({ title, description, imgSrc, href }) => {
       <div
         className={`${
           imgSrc && 'h-full'
-        } overflow-hidden rounded-md border-2 border-gray-200/60 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg dark:border-gray-700/60`}
+        } group overflow-hidden rounded-2xl bg-white/60 transition-all duration-300 hover:bg-white hover:shadow-md dark:bg-gray-900/40 dark:hover:bg-gray-900/60`}
       >
         {imgSrc &&
           (href ? (
@@ -28,7 +28,7 @@ const Card = ({ title, description, imgSrc, href }) => {
               <Image
                 alt={title}
                 src={imgSrc}
-                className="object-cover object-center transition-transform duration-500 hover:scale-105 md:h-36 lg:h-48"
+                className="object-cover object-center transition-transform duration-500 group-hover:scale-105 md:h-36 lg:h-48"
                 width={544}
                 height={306}
               />
@@ -43,25 +43,42 @@ const Card = ({ title, description, imgSrc, href }) => {
             />
           ))}
         <div className="p-6">
-          <h2 className="mb-3 text-2xl leading-8 font-bold tracking-tight">
+          <h2 className="mb-2 text-xl leading-7 font-semibold tracking-tight text-gray-800 dark:text-gray-100">
             {href ? (
-              <Link href={href} aria-label={`Link to ${title}`}>
+              <Link
+                href={href}
+                aria-label={`Link to ${title}`}
+                className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
+              >
                 {title}
               </Link>
             ) : (
               title
             )}
           </h2>
-          <p className="prose mb-3 max-w-none text-gray-500 dark:text-gray-400">
+          <p className="mb-4 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
             {description}
           </p>
           {href && (
             <Link
               href={href}
-              className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 text-base leading-6 font-medium transition-all duration-200"
+              className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 inline-flex items-center text-sm font-medium transition-colors duration-200"
               aria-label={`Link to ${title}`}
             >
-              Learn more &rarr;
+              Learn more
+              <svg
+                className="ml-1 h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                />
+              </svg>
             </Link>
           )}
         </div>

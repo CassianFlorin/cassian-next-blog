@@ -117,12 +117,12 @@ export default async function RootLayout({
       <meta
         name="theme-color"
         media="(prefers-color-scheme: light)"
-        content="#fff"
+        content="#FAFAF8"
       />
       <meta
         name="theme-color"
         media="(prefers-color-scheme: dark)"
-        content="#000"
+        content="#1a1a1a"
       />
       <link
         rel="alternate"
@@ -134,7 +134,7 @@ export default async function RootLayout({
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5441938758887409"
         crossOrigin="anonymous"
       />
-      <body className="bg-white pl-[calc(100vw-100%)] text-black antialiased dark:bg-gray-950 dark:text-white">
+      <body className="bg-[#FAFAF8] pl-[calc(100vw-100%)] text-gray-800 antialiased dark:bg-[#1a1a1a] dark:text-gray-200">
         <ThemeProviders>{children}</ThemeProviders>
       </body>
     </html>

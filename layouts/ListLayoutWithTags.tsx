@@ -25,25 +25,21 @@ interface ListLayoutProps {
 function Pagination({ totalPages, currentPage }: PaginationProps) {
   const pathname = usePathname();
   const basePath = pathname
-    .replace(/^\//, '') // Remove leading slash
-    .replace(/\/page\/\d+\/?$/, '') // Remove any trailing /page
-    .replace(/\/$/, ''); // Remove trailing slash
+    .replace(/^\//, '')
+    .replace(/\/page\/\d+\/?$/, '')
+    .replace(/\/$/, '');
   const prevPage = currentPage - 1 > 0;
   const nextPage = currentPage + 1 <= totalPages;
   const t = useTranslations('blog');
 
   return (
-    <div className="space-y-2 pt-6 pb-8 md:space-y-5">
-      <nav className="flex justify-between">
-        {!prevPage && (
-          <button
-            className="cursor-auto disabled:opacity-50"
-            disabled={!prevPage}
-          >
+    <div className="pt-8 pb-4">
+      <nav className="flex items-center justify-between">
+        {!prevPage ? (
+          <span className="text-sm text-gray-300 dark:text-gray-600">
             {t('previous')}
-          </button>
-        )}
-        {prevPage && (
+          </span>
+        ) : (
           <Link
             href={
               currentPage - 1 === 1
@@ -51,23 +47,24 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
                 : `/${basePath}/page/${currentPage - 1}`
             }
             rel="prev"
+            className="hover:text-primary-600 dark:hover:text-primary-400 text-sm text-gray-500 transition-colors dark:text-gray-400"
           >
             {t('previous')}
           </Link>
         )}
-        <span>
-          {currentPage} {t('of')} {totalPages}
+        <span className="text-sm text-gray-400 dark:text-gray-500">
+          {currentPage} / {totalPages}
         </span>
-        {!nextPage && (
-          <button
-            className="cursor-auto disabled:opacity-50"
-            disabled={!nextPage}
-          >
+        {!nextPage ? (
+          <span className="text-sm text-gray-300 dark:text-gray-600">
             {t('next')}
-          </button>
-        )}
-        {nextPage && (
-          <Link href={`/${basePath}/page/${currentPage + 1}`} rel="next">
+          </span>
+        ) : (
+          <Link
+            href={`/${basePath}/page/${currentPage + 1}`}
+            rel="next"
+            className="hover:text-primary-600 dark:hover:text-primary-400 text-sm text-gray-500 transition-colors dark:text-gray-400"
+          >
             {t('next')}
           </Link>
         )}
@@ -94,41 +91,47 @@ export default function ListLayoutWithTags({
   return (
     <>
       <div>
-        <div className="pt-6 pb-6">
-          <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:hidden sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
+        <div className="pt-6 pb-8">
+          <h1 className="text-2xl leading-9 font-bold tracking-tight text-gray-800 sm:hidden sm:text-3xl dark:text-gray-100">
             {title}
           </h1>
         </div>
-        <div className="flex sm:space-x-24">
-          <div className="hidden h-full max-h-screen max-w-[280px] min-w-[280px] flex-wrap overflow-auto rounded-sm bg-gray-50 pt-5 shadow-md sm:flex dark:bg-gray-900/70 dark:shadow-gray-800/40">
-            <div className="px-6 py-4">
+        <div className="flex sm:space-x-12">
+          <div className="hidden h-full max-h-screen max-w-[240px] min-w-[240px] flex-wrap overflow-auto rounded-2xl bg-white/60 pt-5 sm:flex dark:bg-gray-900/40">
+            <div className="px-5 py-4">
               {pathname.startsWith('/blog') ? (
-                <h3 className="text-primary-500 font-bold uppercase">
+                <h3 className="text-primary-600 dark:text-primary-400 mb-4 text-sm font-medium">
                   {t('allPosts')}
                 </h3>
               ) : (
                 <Link
                   href={`/blog`}
-                  className="hover:text-primary-500 dark:hover:text-primary-500 font-bold text-gray-700 uppercase transition-colors duration-200 dark:text-gray-300"
+                  className="hover:text-primary-600 dark:hover:text-primary-400 mb-4 block text-sm font-medium text-gray-600 transition-colors duration-200 dark:text-gray-300"
                 >
                   {t('allPosts')}
                 </Link>
               )}
-              <ul>
+              <ul className="space-y-1">
                 {sortedTags.map((tag) => {
                   return (
-                    <li key={tag} className="my-3">
+                    <li key={tag}>
                       {decodeURI(pathname.split('/tags/')[1]) === slug(tag) ? (
-                        <h3 className="text-primary-500 inline px-3 py-2 text-sm font-bold uppercase">
-                          {`${tag} (${tagCounts[tag]})`}
-                        </h3>
+                        <span className="text-primary-600 bg-primary-50 dark:text-primary-400 dark:bg-primary-900/30 inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium">
+                          {tag}
+                          <span className="text-primary-400 dark:text-primary-500 ml-1.5">
+                            {tagCounts[tag]}
+                          </span>
+                        </span>
                       ) : (
                         <Link
                           href={`/tags/${slug(tag)}`}
-                          className="hover:text-primary-500 dark:hover:text-primary-500 px-3 py-2 text-sm font-medium text-gray-500 uppercase transition-all duration-200 hover:scale-105 dark:text-gray-300"
+                          className="inline-flex items-center rounded-full px-3 py-1.5 text-xs text-gray-500 transition-colors duration-200 hover:bg-gray-100/80 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800/60 dark:hover:text-gray-200"
                           aria-label={`${t('viewPostsTagged')} ${tag}`}
                         >
-                          {`${tag} (${tagCounts[tag]})`}
+                          {tag}
+                          <span className="ml-1.5 text-gray-400 dark:text-gray-500">
+                            {tagCounts[tag]}
+                          </span>
                         </Link>
                       )}
                     </li>
@@ -137,44 +140,44 @@ export default function ListLayoutWithTags({
               </ul>
             </div>
           </div>
-          <div>
-            <ul>
+          <div className="flex-1">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {displayPosts.map((post) => {
                 const { path, date, title, summary, tags } = post;
                 return (
-                  <li key={path} className="py-5">
-                    <article className="flex flex-col space-y-2 xl:space-y-0">
-                      <dl>
-                        <dt className="sr-only">{t('publishedOn')}</dt>
-                        <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
-                          <time dateTime={date} suppressHydrationWarning>
-                            {formatDate(date, siteMetadata.locale)}
-                          </time>
-                        </dd>
-                      </dl>
-                      <div className="space-y-3">
-                        <div>
-                          <h2 className="text-2xl leading-8 font-bold tracking-tight">
-                            <Link
-                              href={`/${path}`}
-                              className="text-gray-900 transition-colors duration-200 dark:text-gray-100"
-                            >
-                              {title}
-                            </Link>
-                          </h2>
-                          <div className="flex flex-wrap">
-                            {tags?.map((tag) => <Tag key={tag} text={tag} />)}
-                          </div>
-                        </div>
-                        <div className="prose max-w-none text-gray-500 dark:text-gray-400">
-                          {summary}
-                        </div>
+                  <article
+                    key={path}
+                    className="group rounded-2xl bg-white/60 p-5 transition-all duration-300 hover:bg-white hover:shadow-sm dark:bg-gray-900/40 dark:hover:bg-gray-900/60"
+                  >
+                    <div className="flex h-full flex-col">
+                      <time
+                        dateTime={date}
+                        className="mb-2 text-xs text-gray-400 dark:text-gray-500"
+                        suppressHydrationWarning
+                      >
+                        {formatDate(date, siteMetadata.locale)}
+                      </time>
+                      <h2 className="mb-2 text-base leading-snug font-semibold tracking-tight">
+                        <Link
+                          href={`/${path}`}
+                          className="hover:text-primary-600 dark:hover:text-primary-400 text-gray-800 transition-colors duration-200 dark:text-gray-100"
+                        >
+                          {title}
+                        </Link>
+                      </h2>
+                      <p className="mb-3 line-clamp-2 flex-grow text-sm text-gray-500 dark:text-gray-400">
+                        {summary}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {tags
+                          ?.slice(0, 3)
+                          .map((tag) => <Tag key={tag} text={tag} />)}
                       </div>
-                    </article>
-                  </li>
+                    </div>
+                  </article>
                 );
               })}
-            </ul>
+            </div>
             {pagination && pagination.totalPages > 1 && (
               <Pagination
                 currentPage={pagination.currentPage}

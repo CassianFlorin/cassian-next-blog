@@ -19,9 +19,10 @@ const Header = () => {
   const navRef = useRef<HTMLDivElement>(null);
 
   let headerClass =
-    'flex items-center w-full bg-white dark:bg-gray-950 justify-between py-10';
+    'flex items-center w-full bg-[#FAFAF8] dark:bg-[#1a1a1a] justify-between py-8';
   if (siteMetadata.stickyNav) {
-    headerClass += ' sticky top-0 z-50';
+    headerClass +=
+      ' sticky top-0 z-50 backdrop-blur-sm bg-[#FAFAF8]/90 dark:bg-[#1a1a1a]/90';
   }
 
   useAnime({
@@ -48,7 +49,7 @@ const Header = () => {
             <Logo />
           </div>
           {typeof siteMetadata.headerTitle === 'string' ? (
-            <div className="hidden h-6 text-2xl font-semibold sm:block">
+            <div className="hidden h-6 text-xl font-medium text-gray-700 sm:block dark:text-gray-200">
               {siteMetadata.headerTitle}
             </div>
           ) : (
@@ -61,14 +62,14 @@ const Header = () => {
         className="flex items-center space-x-4 leading-5 sm:-mr-6 sm:space-x-6"
         style={{ opacity: 0 }}
       >
-        <div className="no-scrollbar hidden max-w-40 items-center gap-x-4 overflow-x-auto sm:flex md:max-w-72 lg:max-w-96">
+        <div className="no-scrollbar hidden max-w-40 items-center gap-x-5 overflow-x-auto sm:flex md:max-w-72 lg:max-w-96">
           {headerNavLinks
             .filter((link) => link.href !== '/')
             .map((link) => (
               <Link
                 key={link.title}
                 href={link.href}
-                className="hover:text-primary-500 dark:hover:text-primary-400 m-1 font-medium text-gray-900 transition-all duration-200 hover:scale-105 dark:text-gray-100"
+                className="hover:text-primary-600 dark:hover:text-primary-400 text-sm font-normal text-gray-600 transition-colors duration-200 dark:text-gray-300"
               >
                 {t(link.title)}
               </Link>

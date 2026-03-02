@@ -62,31 +62,36 @@ export default function PostLayout({
     <SectionContainer>
       <ScrollTopAndComment />
       <article>
-        <div className="xl:divide-y xl:divide-gray-200 xl:dark:divide-gray-700">
-          <header className="pt-6 xl:pb-6">
-            <div className="space-y-1 text-center">
-              <dl className="space-y-10">
-                <div>
-                  <dt className="sr-only">Published on</dt>
-                  <dd className="text-base leading-6 font-medium text-gray-500 dark:text-gray-400">
-                    <time dateTime={date}>
-                      {new Date(date).toLocaleDateString(
-                        siteMetadata.locale,
-                        postDateTemplate,
-                      )}
-                    </time>
-                  </dd>
-                </div>
-              </dl>
+        <div className="xl:divide-y xl:divide-gray-200/60 xl:dark:divide-gray-800/60">
+          <header className="pt-8 xl:pb-8">
+            <div className="mx-auto max-w-3xl space-y-3 text-center">
+              <div>
+                <time
+                  dateTime={date}
+                  className="text-sm text-gray-400 dark:text-gray-500"
+                >
+                  {new Date(date).toLocaleDateString(
+                    siteMetadata.locale,
+                    postDateTemplate,
+                  )}
+                </time>
+              </div>
               <div>
                 <PageTitle>{title}</PageTitle>
               </div>
+              {tags && (
+                <div className="flex flex-wrap justify-center gap-2 pt-2">
+                  {tags.map((tag) => (
+                    <Tag key={tag} text={tag} />
+                  ))}
+                </div>
+              )}
             </div>
           </header>
-          <div className="grid-rows-[auto_1fr] divide-y divide-gray-200 pb-8 xl:grid xl:grid-cols-4 xl:gap-x-6 xl:divide-y-0 dark:divide-gray-700">
+          <div className="grid-rows-[auto_1fr] divide-y divide-gray-200/60 pb-8 xl:grid xl:grid-cols-4 xl:gap-x-8 xl:divide-y-0 dark:divide-gray-800/60">
             <dl
               ref={authorRef}
-              className="pt-6 pb-10 xl:border-b xl:border-gray-200 xl:pt-11 xl:dark:border-gray-700"
+              className="pt-6 pb-10 xl:border-b xl:border-gray-200/60 xl:pt-11 xl:dark:border-gray-800/60"
               style={{ opacity: 0 }}
             >
               <dt className="sr-only">Authors</dt>
@@ -94,21 +99,21 @@ export default function PostLayout({
                 <ul className="flex flex-wrap justify-center gap-4 sm:space-x-12 xl:block xl:space-y-8 xl:space-x-0">
                   {authorDetails.map((author) => (
                     <li
-                      className="flex items-center space-x-2"
+                      className="flex items-center space-x-3"
                       key={author.name}
                     >
                       {author.avatar && (
                         <Image
                           src={author.avatar}
-                          width={38}
-                          height={38}
+                          width={40}
+                          height={40}
                           alt="avatar"
                           className="h-10 w-10 rounded-full"
                         />
                       )}
-                      <dl className="text-sm leading-5 font-medium whitespace-nowrap">
+                      <dl className="text-sm leading-5 whitespace-nowrap">
                         <dt className="sr-only">Name</dt>
-                        <dd className="text-gray-900 dark:text-gray-100">
+                        <dd className="font-medium text-gray-700 dark:text-gray-200">
                           {author.name}
                         </dd>
                         <dt className="sr-only">Twitter</dt>
@@ -116,7 +121,7 @@ export default function PostLayout({
                           {author.twitter && (
                             <Link
                               href={author.twitter}
-                              className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
+                              className="hover:text-primary-600 dark:hover:text-primary-400 text-gray-400 transition-colors duration-200 dark:text-gray-500"
                             >
                               {author.twitter
                                 .replace('https://twitter.com/', '@')
@@ -130,10 +135,10 @@ export default function PostLayout({
                 </ul>
               </dd>
             </dl>
-            <div className="divide-y divide-gray-200 xl:col-span-3 xl:row-span-2 xl:pb-0 dark:divide-gray-700">
+            <div className="divide-y divide-gray-200/60 xl:col-span-3 xl:row-span-2 xl:pb-0 dark:divide-gray-800/60">
               <div
                 ref={contentRef}
-                className="prose dark:prose-invert max-w-none pt-10 pb-8"
+                className="prose prose-gray dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-p:leading-relaxed max-w-none pt-10 pb-8"
                 style={{ opacity: 0 }}
               >
                 {children}
@@ -147,18 +152,18 @@ export default function PostLayout({
                   adStyle={{ minHeight: '250px' }}
                 />
               </div>
-              <div className="pt-6 pb-6 text-sm text-gray-700 dark:text-gray-300">
+              <div className="pt-6 pb-6 text-sm text-gray-400 dark:text-gray-500">
                 <Link
                   href={discussUrl(path)}
                   rel="nofollow"
-                  className="transition-colors duration-200"
+                  className="transition-colors duration-200 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   Discuss on Twitter
                 </Link>
-                {` • `}
+                {` · `}
                 <Link
                   href={editUrl(filePath)}
-                  className="transition-colors duration-200"
+                  className="transition-colors duration-200 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   View on GitHub
                 </Link>
@@ -173,37 +178,25 @@ export default function PostLayout({
               )}
             </div>
             <footer>
-              <div className="divide-gray-200 text-sm leading-5 font-medium xl:col-start-1 xl:row-start-2 xl:divide-y dark:divide-gray-700">
-                {tags && (
-                  <div className="py-4 xl:py-8">
-                    <h2 className="text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">
-                      Tags
-                    </h2>
-                    <div className="flex flex-wrap">
-                      {tags.map((tag) => (
-                        <Tag key={tag} text={tag} />
-                      ))}
-                    </div>
-                  </div>
-                )}
+              <div className="divide-gray-200/60 text-sm leading-5 xl:col-start-1 xl:row-start-2 xl:divide-y dark:divide-gray-800/60">
                 {(next || prev) && (
-                  <div className="flex justify-between py-4 xl:block xl:space-y-8 xl:py-8">
+                  <div className="flex justify-between py-4 xl:block xl:space-y-6 xl:py-8">
                     {prev && prev.path && (
                       <div>
-                        <h2 className="text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">
-                          Previous Article
+                        <h2 className="mb-1 text-xs text-gray-400 dark:text-gray-500">
+                          Previous
                         </h2>
-                        <div className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
+                        <div className="hover:text-primary-600 dark:hover:text-primary-400 font-medium text-gray-700 transition-colors duration-200 dark:text-gray-300">
                           <Link href={`/${prev.path}`}>{prev.title}</Link>
                         </div>
                       </div>
                     )}
                     {next && next.path && (
                       <div>
-                        <h2 className="text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">
-                          Next Article
+                        <h2 className="mb-1 text-xs text-gray-400 dark:text-gray-500">
+                          Next
                         </h2>
-                        <div className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
+                        <div className="hover:text-primary-600 dark:hover:text-primary-400 font-medium text-gray-700 transition-colors duration-200 dark:text-gray-300">
                           <Link href={`/${next.path}`}>{next.title}</Link>
                         </div>
                       </div>
@@ -214,10 +207,23 @@ export default function PostLayout({
               <div className="pt-4 xl:pt-8">
                 <Link
                   href={`/${basePath}`}
-                  className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
+                  className="hover:text-primary-600 dark:hover:text-primary-400 inline-flex items-center text-sm text-gray-500 transition-colors duration-200 dark:text-gray-400"
                   aria-label="Back to the blog"
                 >
-                  &larr; Back to the blog
+                  <svg
+                    className="mr-1.5 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M7 16l-4-4m0 0l4-4m-4 4h18"
+                    />
+                  </svg>
+                  Back to blog
                 </Link>
               </div>
               {/* 侧边栏广告位 */}
