@@ -1,7 +1,11 @@
-import { ReactNode } from 'react';
+'use client';
+
+import { ReactNode, useRef } from 'react';
 import type { Authors } from 'contentlayer/generated';
 import SocialIcon from '@/components/social-icons';
 import Image from '@/components/Image';
+import { useAnime } from '@/lib/hooks/useAnime';
+import { fadeInScale, fadeInUp } from '@/lib/animations/fadeIn';
 
 interface Props {
   children: ReactNode;
@@ -21,23 +25,50 @@ export default function AuthorLayout({ children, content }: Props) {
     github,
   } = content;
 
+  const headerRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useAnime({
+    targets: headerRef,
+    ...fadeInUp(0, 'medium'),
+  });
+
+  useAnime({
+    targets: profileRef,
+    ...fadeInScale(180, 'strong'),
+  });
+
+  useAnime({
+    targets: contentRef,
+    ...fadeInUp(360, 'strong'),
+  });
+
   return (
     <>
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        <div className="space-y-2 pt-6 pb-8 md:space-y-5">
+        <div
+          ref={headerRef}
+          className="space-y-2 pt-6 pb-8 md:space-y-5"
+          style={{ opacity: 0 }}
+        >
           <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
             About
           </h1>
         </div>
         <div className="items-start space-y-2 xl:grid xl:grid-cols-3 xl:gap-x-8 xl:space-y-0">
-          <div className="flex flex-col items-center space-x-2 pt-8">
+          <div
+            ref={profileRef}
+            className="flex flex-col items-center space-x-2 pt-8"
+            style={{ opacity: 0 }}
+          >
             {avatar && (
               <Image
                 src={avatar}
                 alt="avatar"
                 width={192}
                 height={192}
-                className="h-48 w-48 rounded-full"
+                className="h-48 w-48 rounded-full transition-transform duration-300 hover:scale-105"
               />
             )}
             <h3 className="pt-4 pb-2 text-2xl leading-8 font-bold tracking-tight">
@@ -53,7 +84,11 @@ export default function AuthorLayout({ children, content }: Props) {
               <SocialIcon kind="bluesky" href={bluesky} />
             </div>
           </div>
-          <div className="prose dark:prose-invert max-w-none pt-8 pb-8 xl:col-span-2">
+          <div
+            ref={contentRef}
+            className="prose dark:prose-invert max-w-none pt-8 pb-8 xl:col-span-2"
+            style={{ opacity: 0 }}
+          >
             {children}
           </div>
         </div>

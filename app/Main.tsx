@@ -1,19 +1,61 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
 import Link from '@/components/Link';
 import Tag from '@/components/Tag';
 import siteMetadata from '@/data/siteMetadata';
 import { formatDate } from 'pliny/utils/formatDate';
 import NewsletterForm from 'pliny/ui/NewsletterForm';
 import { useTranslations } from 'next-intl';
+import { staggerFadeInUp } from '@/lib/animations/stagger';
+import { useAnime } from '@/lib/hooks/useAnime';
+import { fadeInUp } from '@/lib/animations/fadeIn';
 
 const MAX_DISPLAY = 5;
 
 export default function Home({ posts }) {
   const t = useTranslations();
+  const headerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  useAnime({
+    targets: headerRef,
+    ...fadeInUp(0, 'medium'),
+  });
+
+  useEffect(() => {
+    if (!listRef.current) return;
+
+    const listItems = listRef.current.querySelectorAll<HTMLElement>('li');
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+    if (reducedMotion) {
+      listItems.forEach((item) => {
+        item.style.opacity = '1';
+        item.style.removeProperty('transform');
+      });
+      return;
+    }
+
+    const animation = staggerFadeInUp(listItems, {
+      intensity: 'strong',
+      startDelay: 180,
+    });
+
+    return () => {
+      animation.pause();
+    };
+  }, [posts]);
 
   return (
     <>
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        <div className="space-y-2 pt-6 pb-8 md:space-y-5">
+        <div
+          ref={headerRef}
+          className="space-y-2 pt-6 pb-8 md:space-y-5"
+          style={{ opacity: 0 }}
+        >
           <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
             {t('home.title')}
           </h1>
@@ -21,12 +63,15 @@ export default function Home({ posts }) {
             {t('home.description')}
           </p>
         </div>
-        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+        <ul
+          ref={listRef}
+          className="divide-y divide-gray-200 dark:divide-gray-700"
+        >
           {!posts.length && t('blog.noPosts')}
           {posts.slice(0, MAX_DISPLAY).map((post) => {
             const { slug, date, title, summary, tags } = post;
             return (
-              <li key={slug} className="py-12">
+              <li key={slug} className="py-12" style={{ opacity: 0 }}>
                 <article>
                   <div className="space-y-2 xl:grid xl:grid-cols-4 xl:items-baseline xl:space-y-0">
                     <dl>
@@ -43,7 +88,7 @@ export default function Home({ posts }) {
                           <h2 className="text-2xl leading-8 font-bold tracking-tight">
                             <Link
                               href={`/blog/${slug}`}
-                              className="text-gray-900 dark:text-gray-100"
+                              className="text-gray-900 transition-colors duration-200 dark:text-gray-100"
                             >
                               {title}
                             </Link>
@@ -61,7 +106,7 @@ export default function Home({ posts }) {
                       <div className="text-base leading-6 font-medium">
                         <Link
                           href={`/blog/${slug}`}
-                          className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
+                          className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
                           aria-label={`${t('blog.readMore')}: "${title}"`}
                         >
                           {t('blog.readMore')} &rarr;
@@ -79,7 +124,7 @@ export default function Home({ posts }) {
         <div className="flex justify-end text-base leading-6 font-medium">
           <Link
             href="/blog"
-            className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
+            className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
             aria-label={t('home.viewAllPosts')}
           >
             {t('home.viewAllPosts')} &rarr;

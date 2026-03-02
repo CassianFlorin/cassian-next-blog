@@ -4147,6 +4147,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/animejs@npm:^3.1.13":
+  version: 3.1.13
+  resolution: "@types/animejs@npm:3.1.13"
+  checksum: adf7aa4fb9b59fee4adf044fc827129c69bef7a882ff5234c1b0c9609382a376cbe96873f44b90987ed8994083ae229420a6a3fa1f2917eaa7a94bf762c4de41
+  languageName: node
+  linkType: hard
+
 "@types/debug@npm:^4.0.0":
   version: 4.1.12
   resolution: "@types/debug@npm:4.1.12"
@@ -4865,6 +4872,13 @@ __metadata:
     "@algolia/requester-fetch": 5.20.1
     "@algolia/requester-node-http": 5.20.1
   checksum: 4448570276f4bcf806dec6a66cce4ae158b31f8c2f46e91f19fe393f184a6e43b1c58a4d121fb15d783e8fc4049a378a6edff771b66751cc4fbc736943e54f83
+  languageName: node
+  linkType: hard
+
+"animejs@npm:^4.3.6":
+  version: 4.3.6
+  resolution: "animejs@npm:4.3.6"
+  checksum: 8af45d7a79cc9e470b9eb0833896cb05df4253a5c1167aa7882ff9b4f4dabf7aa6c6455fcdf0db70e1628451e788907a4056391b58613e11b488ec6680667c44
   languageName: node
   linkType: hard
 
@@ -13385,11 +13399,13 @@ __metadata:
     "@tailwindcss/forms": ^0.5.9
     "@tailwindcss/postcss": ^4.0.5
     "@tailwindcss/typography": ^0.5.15
+    "@types/animejs": ^3.1.13
     "@types/mdx": ^2.0.12
     "@types/react": ^19.0.8
     "@typescript-eslint/eslint-plugin": ^8.12.0
     "@typescript-eslint/parser": ^8.12.0
     "@vercel/style-guide": ^6.0.0
+    animejs: ^4.3.6
     body-scroll-lock: ^4.0.0-beta.0
     contentlayer2: 0.5.5
     cross-env: ^7.0.3

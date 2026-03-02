@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { formatDate } from 'pliny/utils/formatDate';
 import { CoreContent } from 'pliny/utils/contentlayer';
@@ -8,6 +8,9 @@ import type { Blog } from 'contentlayer/generated';
 import Link from '@/components/Link';
 import Tag from '@/components/Tag';
 import siteMetadata from '@/data/siteMetadata';
+import { staggerFadeIn, staggerFadeInUp } from '@/lib/animations/stagger';
+import { useAnime } from '@/lib/hooks/useAnime';
+import { fadeInUp } from '@/lib/animations/fadeIn';
 
 interface PaginationProps {
   totalPages: number;
@@ -22,8 +25,6 @@ interface ListLayoutProps {
 
 function Pagination({ totalPages, currentPage }: PaginationProps) {
   const pathname = usePathname();
-  const segments = pathname.split('/');
-  const lastSegment = segments[segments.length - 1];
   const basePath = pathname
     .replace(/^\//, '') // Remove leading slash
     .replace(/\/page\/\d+\/?$/, '') // Remove any trailing /page
@@ -82,21 +83,82 @@ export default function ListLayout({
   pagination,
 }: ListLayoutProps) {
   const [searchValue, setSearchValue] = useState('');
+  const headerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
   const filteredBlogPosts = posts.filter((post) => {
     const searchContent = post.title + post.summary + post.tags?.join(' ');
     return searchContent.toLowerCase().includes(searchValue.toLowerCase());
   });
 
-  // If initialDisplayPosts exist, display it if no searchValue is specified
   const displayPosts =
     initialDisplayPosts.length > 0 && !searchValue
       ? initialDisplayPosts
       : filteredBlogPosts;
 
+  useAnime({
+    targets: headerRef,
+    ...fadeInUp(0, 'medium'),
+  });
+
+  useEffect(() => {
+    if (!listRef.current) return;
+    const listItems = listRef.current.querySelectorAll<HTMLElement>('li');
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+    if (reducedMotion) {
+      listItems.forEach((item) => {
+        item.style.opacity = '1';
+        item.style.removeProperty('transform');
+      });
+      return;
+    }
+
+    const animation = staggerFadeInUp(listItems, {
+      intensity: 'strong',
+      startDelay: 160,
+    });
+
+    return () => {
+      animation.pause();
+    };
+  }, []);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+
+    if (!listRef.current) return;
+
+    const listItems = listRef.current.querySelectorAll<HTMLElement>('li');
+    if (reducedMotion) {
+      listItems.forEach((item) => {
+        item.style.opacity = '1';
+        item.style.removeProperty('transform');
+      });
+      return;
+    }
+
+    const animation = staggerFadeIn(listItems, {
+      intensity: 'light',
+      startDelay: 40,
+    });
+
+    return () => {
+      animation.pause();
+    };
+  }, [displayPosts]);
+
   return (
     <>
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        <div className="space-y-2 pt-6 pb-8 md:space-y-5">
+        <div
+          ref={headerRef}
+          className="space-y-2 pt-6 pb-8 md:space-y-5"
+          style={{ opacity: 0 }}
+        >
           <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
             {title}
           </h1>
@@ -108,7 +170,7 @@ export default function ListLayout({
                 type="text"
                 onChange={(e) => setSearchValue(e.target.value)}
                 placeholder="Search articles"
-                className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 dark:border-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                className="focus:border-primary-500 focus:ring-primary-500 block w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-900 transition-all duration-200 dark:border-gray-900 dark:bg-gray-800 dark:text-gray-100"
               />
             </label>
             <svg
@@ -127,12 +189,12 @@ export default function ListLayout({
             </svg>
           </div>
         </div>
-        <ul>
+        <ul ref={listRef}>
           {!filteredBlogPosts.length && 'No posts found.'}
           {displayPosts.map((post) => {
             const { path, date, title, summary, tags } = post;
             return (
-              <li key={path} className="py-4">
+              <li key={path} className="py-4" style={{ opacity: 0 }}>
                 <article className="space-y-2 xl:grid xl:grid-cols-4 xl:items-baseline xl:space-y-0">
                   <dl>
                     <dt className="sr-only">Published on</dt>
@@ -147,7 +209,7 @@ export default function ListLayout({
                       <h3 className="text-2xl leading-8 font-bold tracking-tight">
                         <Link
                           href={`/${path}`}
-                          className="text-gray-900 dark:text-gray-100"
+                          className="text-gray-900 transition-colors duration-200 dark:text-gray-100"
                         >
                           {title}
                         </Link>

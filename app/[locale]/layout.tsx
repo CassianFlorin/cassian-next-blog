@@ -4,6 +4,7 @@ import { SearchProvider, SearchConfig } from 'pliny/search';
 import Header from '@/components/Header';
 import SectionContainer from '@/components/SectionContainer';
 import Footer from '@/components/Footer';
+import RouteTransitionOrchestrator from '@/components/RouteTransitionOrchestrator';
 import siteMetadata from '@/data/siteMetadata';
 import { ThemeProviders } from '../theme-providers';
 import { Metadata } from 'next';
@@ -67,10 +68,18 @@ export default async function LocaleLayout({
         />
         <SectionContainer>
           <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
-            <Header />
-            <main className="mb-auto">{children}</main>
+            <RouteTransitionOrchestrator>
+              <div data-route-section="header">
+                <Header />
+              </div>
+              <main className="mb-auto" data-route-section="main">
+                {children}
+              </main>
+              <div data-route-section="footer">
+                <Footer />
+              </div>
+            </RouteTransitionOrchestrator>
           </SearchProvider>
-          <Footer />
         </SectionContainer>
       </ThemeProviders>
     </NextIntlClientProvider>

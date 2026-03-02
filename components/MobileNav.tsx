@@ -15,10 +15,13 @@ import { Fragment, useState, useEffect, useRef } from 'react';
 import Link from './Link';
 import headerNavLinks from '@/data/headerNavLinks';
 import { useTranslations } from 'next-intl';
+import { animate, stagger, JSAnimation } from 'animejs';
+import { ANIMATION_DURATION, ANIMATION_EASING } from '@/lib/animations/fadeIn';
 
 const MobileNav = () => {
   const [navShow, setNavShow] = useState(false);
   const navRef = useRef(null);
+  const navLinksRef = useRef<HTMLElement>(null);
   const t = useTranslations();
 
   const onToggleNav = () => {
@@ -26,7 +29,6 @@ const MobileNav = () => {
       if (status) {
         enableBodyScroll(navRef.current);
       } else {
-        // Prevent scrolling
         disableBodyScroll(navRef.current);
       }
       return !status;
@@ -35,20 +37,51 @@ const MobileNav = () => {
 
   useEffect(() => {
     return clearAllBodyScrollLocks;
-  });
+  }, []);
+
+  useEffect(() => {
+    const animationRef = { current: null as JSAnimation | null };
+    const reducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+
+    if (!navShow || !navLinksRef.current) return;
+
+    const links = navLinksRef.current.querySelectorAll<HTMLElement>('a');
+
+    if (reducedMotion) {
+      links.forEach((link) => {
+        link.style.opacity = '1';
+        link.style.removeProperty('transform');
+      });
+      return;
+    }
+
+    animationRef.current = animate(links, {
+      opacity: [0, 1],
+      translateX: [-34, 0],
+      easing: ANIMATION_EASING.snappy,
+      duration: ANIMATION_DURATION.normal,
+      delay: stagger(70, { start: 120 }),
+    });
+
+    return () => {
+      animationRef.current?.pause();
+    };
+  }, [navShow]);
 
   return (
     <>
       <button
         aria-label="Toggle Menu"
         onClick={onToggleNav}
-        className="sm:hidden"
+        className="transition-transform duration-200 hover:scale-110 sm:hidden"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
           fill="currentColor"
-          className="hover:text-primary-500 dark:hover:text-primary-400 h-8 w-8 text-gray-900 dark:text-gray-100"
+          className="hover:text-primary-500 dark:hover:text-primary-400 h-8 w-8 text-gray-900 transition-colors duration-200 dark:text-gray-100"
         >
           <path
             fillRule="evenodd"
@@ -82,17 +115,21 @@ const MobileNav = () => {
             leaveTo="translate-x-full opacity-0"
             unmount={false}
           >
-            <DialogPanel className="fixed top-0 left-0 z-70 h-full w-full bg-white/95 duration-300 dark:bg-gray-950/98">
+            <DialogPanel
+              ref={navRef}
+              className="fixed top-0 left-0 z-70 h-full w-full bg-white/95 duration-300 dark:bg-gray-950/98"
+            >
               <nav
-                ref={navRef}
+                ref={navLinksRef}
                 className="mt-8 flex h-full basis-0 flex-col items-start overflow-y-auto pt-2 pl-12 text-left"
               >
                 {headerNavLinks.map((link) => (
                   <Link
                     key={link.title}
                     href={link.href}
-                    className="hover:text-primary-500 dark:hover:text-primary-400 mb-4 py-2 pr-4 text-2xl font-bold tracking-widest text-gray-900 outline outline-0 dark:text-gray-100"
+                    className="hover:text-primary-500 dark:hover:text-primary-400 mb-4 py-2 pr-4 text-2xl font-bold tracking-widest text-gray-900 outline outline-0 transition-all duration-200 hover:translate-x-1 dark:text-gray-100"
                     onClick={onToggleNav}
+                    style={{ opacity: 0 }}
                   >
                     {t(link.title)}
                   </Link>
@@ -100,7 +137,7 @@ const MobileNav = () => {
               </nav>
 
               <button
-                className="hover:text-primary-500 dark:hover:text-primary-400 fixed top-7 right-4 z-80 h-16 w-16 p-4 text-gray-900 dark:text-gray-100"
+                className="hover:text-primary-500 dark:hover:text-primary-400 fixed top-7 right-4 z-80 h-16 w-16 p-4 text-gray-900 transition-all duration-200 hover:rotate-90 dark:text-gray-100"
                 aria-label="Toggle Menu"
                 onClick={onToggleNav}
               >

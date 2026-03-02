@@ -1,10 +1,13 @@
 'use client';
 
 import siteMetadata from '@/data/siteMetadata';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { smoothScrollTo } from '@/lib/animations/scroll';
+import { animate } from 'animejs';
 
 const ScrollTopAndComment = () => {
   const [show, setShow] = useState(false);
+  const buttonsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleWindowScroll = () => {
@@ -16,21 +19,45 @@ const ScrollTopAndComment = () => {
     return () => window.removeEventListener('scroll', handleWindowScroll);
   }, []);
 
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches;
+
+    if (prefersReducedMotion || !buttonsRef.current) return;
+
+    if (show && buttonsRef.current) {
+      animate(buttonsRef.current, {
+        opacity: [0, 1],
+        scale: [0.8, 1],
+        easing: 'outElastic(1, 0.6)',
+        duration: 800,
+      });
+    }
+  }, [show]);
+
   const handleScrollTop = () => {
-    window.scrollTo({ top: 0 });
+    smoothScrollTo(0);
   };
+
   const handleScrollToComment = () => {
-    document.getElementById('comment')?.scrollIntoView();
+    const commentElement = document.getElementById('comment');
+    if (commentElement) {
+      smoothScrollTo(commentElement);
+    }
   };
+
   return (
     <div
+      ref={buttonsRef}
       className={`fixed right-8 bottom-8 hidden flex-col gap-3 ${show ? 'md:flex' : 'md:hidden'}`}
+      style={{ opacity: 0 }}
     >
       {siteMetadata.comments?.provider && (
         <button
           aria-label="Scroll To Comment"
           onClick={handleScrollToComment}
-          className="rounded-full bg-gray-200 p-2 text-gray-500 transition-all hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+          className="rounded-full bg-gray-200 p-2 text-gray-500 transition-all duration-300 hover:scale-110 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
         >
           <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path
@@ -44,7 +71,7 @@ const ScrollTopAndComment = () => {
       <button
         aria-label="Scroll To Top"
         onClick={handleScrollTop}
-        className="rounded-full bg-gray-200 p-2 text-gray-500 transition-all hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
+        className="rounded-full bg-gray-200 p-2 text-gray-500 transition-all duration-300 hover:scale-110 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600"
       >
         <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path

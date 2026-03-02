@@ -1,4 +1,6 @@
-import { ReactNode } from 'react';
+'use client';
+
+import { ReactNode, useRef } from 'react';
 import { CoreContent } from 'pliny/utils/contentlayer';
 import type { Blog, Authors } from 'contentlayer/generated';
 import Comments from '@/components/Comments';
@@ -11,6 +13,8 @@ import siteMetadata from '@/data/siteMetadata';
 import ScrollTopAndComment from '@/components/ScrollTopAndComment';
 import AdSense from '@/components/AdSense';
 import adsenseConfig from '@/data/adsenseConfig';
+import { useAnime } from '@/lib/hooks/useAnime';
+import { fadeInLeft, fadeInUp } from '@/lib/animations/fadeIn';
 
 const editUrl = (path) => `${siteMetadata.siteRepo}/blob/main/data/${path}`;
 const discussUrl = (path) =>
@@ -41,6 +45,19 @@ export default function PostLayout({
   const { filePath, path, slug, date, title, tags } = content;
   const basePath = path.split('/')[0];
 
+  const authorRef = useRef<HTMLDListElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useAnime({
+    targets: authorRef,
+    ...fadeInLeft(180, 'medium'),
+  });
+
+  useAnime({
+    targets: contentRef,
+    ...fadeInUp(260, 'strong'),
+  });
+
   return (
     <SectionContainer>
       <ScrollTopAndComment />
@@ -67,7 +84,11 @@ export default function PostLayout({
             </div>
           </header>
           <div className="grid-rows-[auto_1fr] divide-y divide-gray-200 pb-8 xl:grid xl:grid-cols-4 xl:gap-x-6 xl:divide-y-0 dark:divide-gray-700">
-            <dl className="pt-6 pb-10 xl:border-b xl:border-gray-200 xl:pt-11 xl:dark:border-gray-700">
+            <dl
+              ref={authorRef}
+              className="pt-6 pb-10 xl:border-b xl:border-gray-200 xl:pt-11 xl:dark:border-gray-700"
+              style={{ opacity: 0 }}
+            >
               <dt className="sr-only">Authors</dt>
               <dd>
                 <ul className="flex flex-wrap justify-center gap-4 sm:space-x-12 xl:block xl:space-y-8 xl:space-x-0">
@@ -95,7 +116,7 @@ export default function PostLayout({
                           {author.twitter && (
                             <Link
                               href={author.twitter}
-                              className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
+                              className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
                             >
                               {author.twitter
                                 .replace('https://twitter.com/', '@')
@@ -110,7 +131,11 @@ export default function PostLayout({
               </dd>
             </dl>
             <div className="divide-y divide-gray-200 xl:col-span-3 xl:row-span-2 xl:pb-0 dark:divide-gray-700">
-              <div className="prose dark:prose-invert max-w-none pt-10 pb-8">
+              <div
+                ref={contentRef}
+                className="prose dark:prose-invert max-w-none pt-10 pb-8"
+                style={{ opacity: 0 }}
+              >
                 {children}
               </div>
               {/* 文章内容后的广告位 */}
@@ -123,11 +148,20 @@ export default function PostLayout({
                 />
               </div>
               <div className="pt-6 pb-6 text-sm text-gray-700 dark:text-gray-300">
-                <Link href={discussUrl(path)} rel="nofollow">
+                <Link
+                  href={discussUrl(path)}
+                  rel="nofollow"
+                  className="transition-colors duration-200"
+                >
                   Discuss on Twitter
                 </Link>
                 {` • `}
-                <Link href={editUrl(filePath)}>View on GitHub</Link>
+                <Link
+                  href={editUrl(filePath)}
+                  className="transition-colors duration-200"
+                >
+                  View on GitHub
+                </Link>
               </div>
               {siteMetadata.comments && (
                 <div
@@ -159,7 +193,7 @@ export default function PostLayout({
                         <h2 className="text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">
                           Previous Article
                         </h2>
-                        <div className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400">
+                        <div className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
                           <Link href={`/${prev.path}`}>{prev.title}</Link>
                         </div>
                       </div>
@@ -169,7 +203,7 @@ export default function PostLayout({
                         <h2 className="text-xs tracking-wide text-gray-500 uppercase dark:text-gray-400">
                           Next Article
                         </h2>
-                        <div className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400">
+                        <div className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200">
                           <Link href={`/${next.path}`}>{next.title}</Link>
                         </div>
                       </div>
@@ -180,7 +214,7 @@ export default function PostLayout({
               <div className="pt-4 xl:pt-8">
                 <Link
                   href={`/${basePath}`}
-                  className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
+                  className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
                   aria-label="Back to the blog"
                 >
                   &larr; Back to the blog

@@ -1,4 +1,6 @@
-import { ReactNode } from 'react';
+'use client';
+
+import { ReactNode, useRef } from 'react';
 import { formatDate } from 'pliny/utils/formatDate';
 import { CoreContent } from 'pliny/utils/contentlayer';
 import type { Blog } from 'contentlayer/generated';
@@ -8,6 +10,8 @@ import PageTitle from '@/components/PageTitle';
 import SectionContainer from '@/components/SectionContainer';
 import siteMetadata from '@/data/siteMetadata';
 import ScrollTopAndComment from '@/components/ScrollTopAndComment';
+import { useAnime } from '@/lib/hooks/useAnime';
+import { fadeInUp } from '@/lib/animations/fadeIn';
 
 interface LayoutProps {
   content: CoreContent<Blog>;
@@ -23,6 +27,12 @@ export default function PostLayout({
   children,
 }: LayoutProps) {
   const { path, slug, date, title } = content;
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useAnime({
+    targets: contentRef,
+    ...fadeInUp(220, 'strong'),
+  });
 
   return (
     <SectionContainer>
@@ -48,7 +58,11 @@ export default function PostLayout({
           </header>
           <div className="grid-rows-[auto_1fr] divide-y divide-gray-200 pb-8 xl:divide-y-0 dark:divide-gray-700">
             <div className="divide-y divide-gray-200 xl:col-span-3 xl:row-span-2 xl:pb-0 dark:divide-gray-700">
-              <div className="prose dark:prose-invert max-w-none pt-10 pb-8">
+              <div
+                ref={contentRef}
+                className="prose dark:prose-invert max-w-none pt-10 pb-8"
+                style={{ opacity: 0 }}
+              >
                 {children}
               </div>
             </div>
@@ -66,7 +80,7 @@ export default function PostLayout({
                   <div className="pt-4 xl:pt-8">
                     <Link
                       href={`/${prev.path}`}
-                      className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
+                      className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
                       aria-label={`Previous post: ${prev.title}`}
                     >
                       &larr; {prev.title}
@@ -77,7 +91,7 @@ export default function PostLayout({
                   <div className="pt-4 xl:pt-8">
                     <Link
                       href={`/${next.path}`}
-                      className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
+                      className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-200"
                       aria-label={`Next post: ${next.title}`}
                     >
                       {next.title} &rarr;
