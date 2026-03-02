@@ -15,7 +15,7 @@ import { fadeIn, fadeInUp } from '@/lib/animations/fadeIn';
 
 const Header = () => {
   const t = useTranslations();
-  const logoRef = useRef<HTMLAnchorElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
 
   let headerClass =
@@ -38,13 +38,12 @@ const Header = () => {
 
   return (
     <header className={headerClass}>
-      <Link
-        ref={logoRef}
-        href="/"
-        aria-label={siteMetadata.headerTitle}
-        style={{ opacity: 0 }}
-      >
-        <div className="flex items-center justify-between">
+      <Link href="/" aria-label={siteMetadata.headerTitle}>
+        <div
+          ref={logoRef}
+          className="flex items-center justify-between"
+          style={{ opacity: 0 }}
+        >
           <div className="mr-3">
             <Logo />
           </div>

@@ -2,12 +2,27 @@ import { RefObject, useEffect, useRef } from 'react';
 import { animate, JSAnimation, AnimationParams, TargetsParam } from 'animejs';
 import { ANIMATION_DURATION, ANIMATION_EASING } from '../animations/fadeIn';
 
+type KnownKeys<T> = {
+  [K in keyof T]: string extends K
+    ? never
+    : number extends K
+      ? never
+      : symbol extends K
+        ? never
+        : K;
+}[keyof T];
+
+type SafeAnimationParams = Partial<
+  Pick<AnimationParams, KnownKeys<AnimationParams>>
+>;
+
 type AnimateParams = {
   targets:
     | TargetsParam
     | RefObject<HTMLElement | null>
     | (() => TargetsParam | RefObject<HTMLElement | null> | null);
-} & Partial<AnimationParams>;
+  [key: string]: unknown;
+} & Omit<SafeAnimationParams, 'targets'>;
 
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
@@ -80,8 +95,8 @@ export function useAnime(params: AnimateParams) {
 }
 
 export function useScrollAnimation(
-  targetRef: RefObject<HTMLElement>,
-  params: Partial<AnimationParams>,
+  targetRef: RefObject<HTMLElement | null>,
+  params: SafeAnimationParams,
   threshold: number = 0.1,
 ) {
   const animationRef = useRef<JSAnimation | null>(null);
