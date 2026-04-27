@@ -5,6 +5,7 @@
     "about": "About",
     "projects": "Projects",
     "tags": "Tags",
+    "knowledge": "Knowledge",
     "search": "Search",
     "theme": "Theme",
     "language": "Language"
@@ -38,6 +39,10 @@
     "description": "Some projects I've worked on",
     "viewProject": "View Project",
     "viewCode": "View Code"
+  },
+  "knowledge": {
+    "title": "Knowledge Graph",
+    "description": "Explore how blog posts and tags connect across the site."
   },
   "footer": {
     "copyright": "All rights reserved",
@@ -81,15 +86,25 @@
     "cursor": "Cursor",
     "manus": "Manus",
     "Contributors": "Contributors",
+    "contributors": "Contributors",
     "GitHub": "GitHub",
+    "github": "GitHub",
     "Tools": "Tools",
+    "tools": "Tools",
     "Open Source": "Open Source",
+    "open-source": "Open Source",
     "MooTool": "MooTool",
+    "mootool": "MooTool",
     "Diff": "Diff",
+    "diff": "Diff",
     "神策数据": "Sensors Data",
     "JavaScript": "JavaScript",
+    "javascript": "JavaScript",
     "MDX": "MDX",
+    "mdx": "MDX",
     "Guide": "Guide",
-    "Tips": "Tips"
+    "guide": "Guide",
+    "Tips": "Tips",
+    "tips": "Tips"
   }
 }

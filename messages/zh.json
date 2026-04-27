@@ -5,6 +5,7 @@
     "about": "关于",
     "projects": "项目",
     "tags": "标签",
+    "knowledge": "知识图谱",
     "search": "搜索",
     "theme": "主题",
     "language": "语言"
@@ -38,6 +39,10 @@
     "description": "我参与的一些项目",
     "viewProject": "查看项目",
     "viewCode": "查看代码"
+  },
+  "knowledge": {
+    "title": "知识图谱",
+    "description": "通过文章与标签的关系网络，探索博客内容之间的连接。"
   },
   "footer": {
     "copyright": "版权所有",
@@ -85,15 +90,25 @@
     "cursor": "Cursor",
     "manus": "Manus",
     "Contributors": "Contributors",
+    "contributors": "Contributors",
     "GitHub": "GitHub",
+    "github": "GitHub",
     "Tools": "Tools",
+    "tools": "Tools",
     "Open Source": "Open Source",
+    "open-source": "Open Source",
     "MooTool": "MooTool",
+    "mootool": "MooTool",
     "Diff": "Diff",
+    "diff": "Diff",
     "神策数据": "神策数据",
     "JavaScript": "JavaScript",
+    "javascript": "JavaScript",
     "MDX": "MDX",
+    "mdx": "MDX",
     "Guide": "指南",
-    "Tips": "Tips"
+    "guide": "指南",
+    "Tips": "Tips",
+    "tips": "Tips"
   }
 }

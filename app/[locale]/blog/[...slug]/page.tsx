@@ -17,6 +17,7 @@ import PostBanner from '@/layouts/PostBanner';
 import { Metadata } from 'next';
 import siteMetadata from '@/data/siteMetadata';
 import { notFound } from 'next/navigation';
+import { buildLocalKnowledgeGraph } from '@/lib/knowledgeGraph';
 
 const defaultLayout = 'PostLayout';
 const layouts = {
@@ -104,6 +105,7 @@ export default async function Page(props: {
     return coreContent(authorResults as Authors);
   });
   const mainContent = coreContent(post);
+  const localKnowledgeGraph = buildLocalKnowledgeGraph(allBlogs, slug);
   const jsonLd = post.structuredData;
   jsonLd['author'] = authorDetails.map((author) => {
     return {
@@ -125,6 +127,7 @@ export default async function Page(props: {
         authorDetails={authorDetails}
         next={next}
         prev={prev}
+        knowledgeGraph={localKnowledgeGraph}
       >
         <MDXLayoutRenderer
           code={post.body.code}

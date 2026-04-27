@@ -15,6 +15,8 @@ import AdSense from '@/components/AdSense';
 import adsenseConfig from '@/data/adsenseConfig';
 import { useAnime } from '@/lib/hooks/useAnime';
 import { fadeInLeft, fadeInUp } from '@/lib/animations/fadeIn';
+import ArticleKnowledgeGraph from '@/components/ArticleKnowledgeGraph';
+import type { KnowledgeGraphData } from '@/lib/knowledgeGraph';
 
 const editUrl = (path) => `${siteMetadata.siteRepo}/blob/main/data/${path}`;
 const discussUrl = (path) =>
@@ -32,6 +34,7 @@ interface LayoutProps {
   authorDetails: CoreContent<Authors>[];
   next?: { path: string; title: string };
   prev?: { path: string; title: string };
+  knowledgeGraph?: KnowledgeGraphData;
   children: ReactNode;
 }
 
@@ -40,6 +43,7 @@ export default function PostLayout({
   authorDetails,
   next,
   prev,
+  knowledgeGraph,
   children,
 }: LayoutProps) {
   const { filePath, path, slug, date, title, tags } = content;
@@ -88,7 +92,7 @@ export default function PostLayout({
               )}
             </div>
           </header>
-          <div className="grid-rows-[auto_1fr] divide-y divide-gray-200/60 pb-8 xl:grid xl:grid-cols-4 xl:gap-x-8 xl:divide-y-0 dark:divide-gray-800/60">
+          <div className="grid-rows-[auto_1fr] divide-y divide-gray-200/60 pb-8 xl:grid xl:grid-cols-5 xl:gap-x-8 xl:divide-y-0 dark:divide-gray-800/60">
             <dl
               ref={authorRef}
               className="pt-6 pb-10 xl:border-b xl:border-gray-200/60 xl:pt-11 xl:dark:border-gray-800/60"
@@ -143,6 +147,13 @@ export default function PostLayout({
               >
                 {children}
               </div>
+              {knowledgeGraph && (
+                <ArticleKnowledgeGraph
+                  graphData={knowledgeGraph}
+                  currentSlug={slug}
+                  className="py-6 xl:hidden"
+                />
+              )}
               {/* 文章内容后的广告位 */}
               <div className="py-6">
                 <AdSense
@@ -177,7 +188,16 @@ export default function PostLayout({
                 </div>
               )}
             </div>
-            <footer>
+            {knowledgeGraph && (
+              <aside className="hidden xl:col-start-5 xl:row-span-2 xl:block xl:pt-11">
+                <ArticleKnowledgeGraph
+                  graphData={knowledgeGraph}
+                  currentSlug={slug}
+                  className="sticky top-8"
+                />
+              </aside>
+            )}
+            <footer className="xl:col-start-1 xl:row-start-2">
               <div className="divide-gray-200/60 text-sm leading-5 xl:col-start-1 xl:row-start-2 xl:divide-y dark:divide-gray-800/60">
                 {(next || prev) && (
                   <div className="flex justify-between py-4 xl:block xl:space-y-6 xl:py-8">
