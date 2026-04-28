@@ -210,13 +210,13 @@ export default function KnowledgeGraphExplorer({
   useEffect(() => {
     const fg = graphRef.current;
     if (!fg) return;
-    fg.d3Force('charge')?.strength(compact ? -200 : -500);
-    fg.d3Force('link')?.distance(compact ? 60 : 120);
-    fg.d3Force('center')?.strength(0.03);
+    fg.d3Force('charge')?.strength(compact ? -250 : -800);
+    fg.d3Force('link')?.distance(compact ? 80 : 160);
+    fg.d3Force('center')?.strength(0.02);
     fg.d3Force(
       'collision',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      forceCollide((node: any) => getNodeRadius(node as GraphNode) + 18) as any,
+      forceCollide((node: any) => getNodeRadius(node as GraphNode) + 25) as any,
     );
   }, [displayGraphData, compact, getNodeRadius]);
 
@@ -233,9 +233,32 @@ export default function KnowledgeGraphExplorer({
         fg.zoom(compact ? 4 : 2.4, 700);
       }
     } else {
-      fg.zoomToFit(400, compact ? 30 : 60);
+      fg.zoomToFit(600, compact ? 20 : 40);
     }
   };
+
+  /* Fallback: ensure graph is visible after mount */
+  const hasFitted = useRef(false);
+  useEffect(() => {
+    if (hasFitted.current) return;
+    const timer = setTimeout(() => {
+      const fg = graphRef.current;
+      if (!fg) return;
+      hasFitted.current = true;
+      if (focusedPost) {
+        const focusNode = displayGraphData.nodes.find(
+          (n) => n.id === `post:${focusedPost}`,
+        ) as GraphNode | undefined;
+        if (focusNode?.x !== undefined && focusNode?.y !== undefined) {
+          fg.centerAt(focusNode.x, focusNode.y, 700);
+          fg.zoom(compact ? 4 : 2.4, 700);
+        }
+      } else {
+        fg.zoomToFit(600, compact ? 20 : 40);
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [displayGraphData, focusedPost, compact]);
 
   return (
     <div
