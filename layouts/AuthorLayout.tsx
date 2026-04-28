@@ -2,6 +2,7 @@
 
 import { ReactNode, useRef } from 'react';
 import type { Authors } from 'contentlayer/generated';
+import { useTranslations } from 'next-intl';
 import SocialIcon from '@/components/social-icons';
 import Image from '@/components/Image';
 import { useAnime } from '@/lib/hooks/useAnime';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function AuthorLayout({ children, content }: Props) {
+  const t = useTranslations('about');
   const {
     name,
     avatar,
@@ -53,7 +55,7 @@ export default function AuthorLayout({ children, content }: Props) {
           style={{ opacity: 0 }}
         >
           <h1 className="text-3xl leading-9 font-extrabold tracking-tight text-gray-900 sm:text-4xl sm:leading-10 md:text-6xl md:leading-14 dark:text-gray-100">
-            About
+            {t('title')}
           </h1>
         </div>
         <div className="items-start space-y-2 xl:grid xl:grid-cols-3 xl:gap-x-8 xl:space-y-0">

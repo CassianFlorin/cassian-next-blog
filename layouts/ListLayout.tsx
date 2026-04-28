@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { formatDate } from 'pliny/utils/formatDate';
 import { CoreContent } from 'pliny/utils/contentlayer';
 import type { Blog } from 'contentlayer/generated';
@@ -25,6 +26,7 @@ interface ListLayoutProps {
 
 function Pagination({ totalPages, currentPage }: PaginationProps) {
   const pathname = usePathname();
+  const t = useTranslations('blog');
   const basePath = pathname
     .replace(/^\//, '')
     .replace(/\/page\/\d+\/?$/, '')
@@ -37,7 +39,7 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
       <nav className="flex items-center justify-between">
         {!prevPage ? (
           <span className="text-sm text-gray-300 dark:text-gray-600">
-            Previous
+            {t('previous')}
           </span>
         ) : (
           <Link
@@ -49,21 +51,23 @@ function Pagination({ totalPages, currentPage }: PaginationProps) {
             rel="prev"
             className="hover:text-primary-600 dark:hover:text-primary-400 text-sm text-gray-500 transition-colors dark:text-gray-400"
           >
-            Previous
+            {t('previous')}
           </Link>
         )}
         <span className="text-sm text-gray-400 dark:text-gray-500">
           {currentPage} / {totalPages}
         </span>
         {!nextPage ? (
-          <span className="text-sm text-gray-300 dark:text-gray-600">Next</span>
+          <span className="text-sm text-gray-300 dark:text-gray-600">
+            {t('next')}
+          </span>
         ) : (
           <Link
             href={`/${basePath}/page/${currentPage + 1}`}
             rel="next"
             className="hover:text-primary-600 dark:hover:text-primary-400 text-sm text-gray-500 transition-colors dark:text-gray-400"
           >
-            Next
+            {t('next')}
           </Link>
         )}
       </nav>
@@ -78,6 +82,7 @@ export default function ListLayout({
   pagination,
 }: ListLayoutProps) {
   const [searchValue, setSearchValue] = useState('');
+  const t = useTranslations('blog');
   const headerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -159,12 +164,12 @@ export default function ListLayout({
           </h1>
           <div className="relative max-w-md">
             <label>
-              <span className="sr-only">Search articles</span>
+              <span className="sr-only">{t('searchArticles')}</span>
               <input
-                aria-label="Search articles"
+                aria-label={t('searchArticles')}
                 type="text"
                 onChange={(e) => setSearchValue(e.target.value)}
-                placeholder="Search articles..."
+                placeholder={t('searchPlaceholder')}
                 className="focus:ring-primary-500/50 dark:focus:ring-primary-400/50 block w-full rounded-xl border-0 bg-white/60 px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 ring-1 ring-gray-200/60 transition-all duration-200 focus:bg-white focus:ring-2 dark:bg-gray-900/40 dark:text-gray-200 dark:placeholder-gray-500 dark:ring-gray-800/60 dark:focus:bg-gray-900/60"
               />
             </label>
@@ -189,7 +194,7 @@ export default function ListLayout({
           className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
         >
           {!filteredBlogPosts.length && (
-            <p className="text-gray-500 dark:text-gray-400">No posts found.</p>
+            <p className="text-gray-500 dark:text-gray-400">{t('noPosts')}</p>
           )}
           {displayPosts.map((post) => {
             const { path, date, title, summary, tags } = post;

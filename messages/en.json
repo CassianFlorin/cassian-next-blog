@@ -28,7 +28,12 @@
     "next": "Next",
     "of": "of",
     "allPosts": "All Posts",
-    "viewPostsTagged": "View posts tagged"
+    "viewPostsTagged": "View posts tagged",
+    "searchArticles": "Search articles",
+    "searchPlaceholder": "Search articles...",
+    "discussOnTwitter": "Discuss on Twitter",
+    "viewOnGitHub": "View on GitHub",
+    "backToBlog": "Back to blog"
   },
   "about": {
     "title": "About Me",
@@ -38,11 +43,18 @@
     "title": "Projects",
     "description": "Some projects I've worked on",
     "viewProject": "View Project",
-    "viewCode": "View Code"
+    "viewCode": "View Code",
+    "learnMore": "Learn more"
   },
   "knowledge": {
     "title": "Knowledge Graph",
-    "description": "Explore how blog posts and tags connect across the site."
+    "description": "Explore how blog posts and tags connect across the site.",
+    "graphLabel": "Knowledge Graph",
+    "stats": "{posts} posts · {tags} tags",
+    "searchGraph": "Search graph",
+    "searchPlaceholder": "Search posts or tags...",
+    "exploreDesc": "Explore tags and related posts connected to this article.",
+    "openFullGraph": "Open full graph"
   },
   "footer": {
     "copyright": "All rights reserved",

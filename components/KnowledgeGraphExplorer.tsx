@@ -4,6 +4,8 @@ import dynamic from 'next/dynamic';
 import { useMemo, useRef, useState } from 'react';
 import type { ComponentType, MutableRefObject } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
+import { useTranslations } from 'next-intl';
 import type {
   ForceGraphMethods,
   ForceGraphProps,
@@ -20,7 +22,7 @@ const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
   ssr: false,
   loading: () => (
     <div className="flex h-full min-h-[360px] items-center justify-center text-sm text-gray-500 dark:text-gray-400">
-      Loading graph...
+      <span className="animate-pulse">...</span>
     </div>
   ),
 }) as unknown as ComponentType<
@@ -105,6 +107,9 @@ export default function KnowledgeGraphExplorer({
   compact = false,
 }: KnowledgeGraphExplorerProps) {
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
+  const t = useTranslations('knowledge');
+  const isDark = resolvedTheme === 'dark';
   const graphRef =
     useRef<ForceGraphMethods<GraphNode, KnowledgeLink>>(undefined);
   const [query, setQuery] = useState('');
@@ -168,19 +173,19 @@ export default function KnowledgeGraphExplorer({
       <div className="flex flex-col gap-3 border-b border-gray-200/70 bg-white/70 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800/80 dark:bg-gray-900/50">
         <div>
           <p className="text-xs font-medium tracking-wide text-teal-700 uppercase dark:text-teal-300">
-            Knowledge Graph
+            {t('graphLabel')}
           </p>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {stats.posts} posts · {stats.tags} tags
+            {t('stats', { posts: stats.posts, tags: stats.tags })}
           </p>
         </div>
         {!compact && (
           <label className="w-full max-w-sm">
-            <span className="sr-only">Search graph</span>
+            <span className="sr-only">{t('searchGraph')}</span>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search posts or tags..."
+              placeholder={t('searchPlaceholder')}
               className="focus:ring-primary-500/50 dark:focus:ring-primary-400/50 block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-gray-700 ring-1 ring-gray-200/80 transition focus:ring-2 dark:bg-gray-950 dark:text-gray-200 dark:ring-gray-800"
             />
           </label>
@@ -200,9 +205,9 @@ export default function KnowledgeGraphExplorer({
               hoverNode &&
               (source === hoverNode.id || target === hoverNode.id)
             ) {
-              return '#0f766e';
+              return isDark ? '#2dd4bf' : '#0f766e';
             }
-            return '#94a3b8';
+            return isDark ? '#475569' : '#94a3b8';
           }}
           linkWidth={(link: LinkObject<GraphNode, KnowledgeLink>) => {
             const source = resolveNodeId(link.source as string | KnowledgeNode);
@@ -232,12 +237,16 @@ export default function KnowledgeGraphExplorer({
 
             ctx.beginPath();
             ctx.arc(node.x || 0, node.y || 0, radius, 0, 2 * Math.PI, false);
-            ctx.fillStyle = isTag ? '#0f766e' : '#334155';
+            ctx.fillStyle = isTag ? '#0f766e' : isDark ? '#64748b' : '#334155';
             ctx.globalAlpha = isHighlighted ? 1 : 0.28;
             ctx.fill();
 
             ctx.lineWidth = 1.5;
-            ctx.strokeStyle = isTag ? '#99f6e4' : '#cbd5e1';
+            ctx.strokeStyle = isTag
+              ? '#99f6e4'
+              : isDark
+                ? '#94a3b8'
+                : '#cbd5e1';
             ctx.stroke();
             ctx.globalAlpha = 1;
 
@@ -246,7 +255,7 @@ export default function KnowledgeGraphExplorer({
             ctx.font = `${fontSize / globalScale}px Inter, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#334155';
+            ctx.fillStyle = isDark ? '#e2e8f0' : '#334155';
             ctx.fillText(label, node.x || 0, (node.y || 0) + radius + 8);
           }}
           nodePointerAreaPaint={(

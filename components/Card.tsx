@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import Image from './Image';
 import Link from './Link';
 import { useScrollAnimation } from '@/lib/hooks/useAnime';
@@ -8,6 +9,7 @@ import { fadeInUp } from '@/lib/animations/fadeIn';
 
 const Card = ({ title, description, imgSrc, href }) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations('projects');
 
   useScrollAnimation(cardRef, fadeInUp(0, 'strong'), 0.12);
 
@@ -65,7 +67,7 @@ const Card = ({ title, description, imgSrc, href }) => {
               className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 inline-flex items-center text-sm font-medium transition-colors duration-200"
               aria-label={`Link to ${title}`}
             >
-              Learn more
+              {t('learnMore')}
               <svg
                 className="ml-1 h-4 w-4"
                 fill="none"

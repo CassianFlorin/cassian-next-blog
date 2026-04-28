@@ -3,6 +3,7 @@
 import { ReactNode, useRef } from 'react';
 import { CoreContent } from 'pliny/utils/contentlayer';
 import type { Blog, Authors } from 'contentlayer/generated';
+import { useTranslations } from 'next-intl';
 import Comments from '@/components/Comments';
 import Link from '@/components/Link';
 import PageTitle from '@/components/PageTitle';
@@ -48,6 +49,7 @@ export default function PostLayout({
 }: LayoutProps) {
   const { filePath, path, slug, date, title, tags } = content;
   const basePath = path.split('/')[0];
+  const t = useTranslations('blog');
 
   const authorRef = useRef<HTMLDListElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -169,14 +171,14 @@ export default function PostLayout({
                   rel="nofollow"
                   className="transition-colors duration-200 hover:text-gray-600 dark:hover:text-gray-300"
                 >
-                  Discuss on Twitter
+                  {t('discussOnTwitter')}
                 </Link>
                 {` · `}
                 <Link
                   href={editUrl(filePath)}
                   className="transition-colors duration-200 hover:text-gray-600 dark:hover:text-gray-300"
                 >
-                  View on GitHub
+                  {t('viewOnGitHub')}
                 </Link>
               </div>
               {siteMetadata.comments && (
@@ -204,7 +206,7 @@ export default function PostLayout({
                     {prev && prev.path && (
                       <div>
                         <h2 className="mb-1 text-xs text-gray-400 dark:text-gray-500">
-                          Previous
+                          {t('previous')}
                         </h2>
                         <div className="hover:text-primary-600 dark:hover:text-primary-400 font-medium text-gray-700 transition-colors duration-200 dark:text-gray-300">
                           <Link href={`/${prev.path}`}>{prev.title}</Link>
@@ -214,7 +216,7 @@ export default function PostLayout({
                     {next && next.path && (
                       <div>
                         <h2 className="mb-1 text-xs text-gray-400 dark:text-gray-500">
-                          Next
+                          {t('next')}
                         </h2>
                         <div className="hover:text-primary-600 dark:hover:text-primary-400 font-medium text-gray-700 transition-colors duration-200 dark:text-gray-300">
                           <Link href={`/${next.path}`}>{next.title}</Link>
@@ -243,7 +245,7 @@ export default function PostLayout({
                       d="M7 16l-4-4m0 0l4-4m-4 4h18"
                     />
                   </svg>
-                  Back to blog
+                  {t('backToBlog')}
                 </Link>
               </div>
               {/* 侧边栏广告位 */}

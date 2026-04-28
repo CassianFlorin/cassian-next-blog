@@ -28,7 +28,12 @@
     "next": "下一页",
     "of": "共",
     "allPosts": "所有文章",
-    "viewPostsTagged": "查看标签为"
+    "viewPostsTagged": "查看标签为",
+    "searchArticles": "搜索文章",
+    "searchPlaceholder": "搜索文章...",
+    "discussOnTwitter": "在 Twitter 上讨论",
+    "viewOnGitHub": "在 GitHub 上查看",
+    "backToBlog": "返回博客"
   },
   "about": {
     "title": "关于我",
@@ -38,11 +43,18 @@
     "title": "项目",
     "description": "我参与的一些项目",
     "viewProject": "查看项目",
-    "viewCode": "查看代码"
+    "viewCode": "查看代码",
+    "learnMore": "了解更多"
   },
   "knowledge": {
     "title": "知识图谱",
-    "description": "通过文章与标签的关系网络，探索博客内容之间的连接。"
+    "description": "通过文章与标签的关系网络，探索博客内容之间的连接。",
+    "graphLabel": "知识图谱",
+    "stats": "{posts} 篇文章 · {tags} 个标签",
+    "searchGraph": "搜索图谱",
+    "searchPlaceholder": "搜索文章或标签...",
+    "exploreDesc": "探索与本文相关的标签和文章。",
+    "openFullGraph": "查看完整图谱"
   },
   "footer": {
     "copyright": "版权所有",
