@@ -19,7 +19,7 @@ const Header = () => {
   const navRef = useRef<HTMLDivElement>(null);
 
   let headerClass =
-    'flex items-center w-full bg-[#FAFAF8] dark:bg-[#1a1a1a] justify-between py-8';
+    'flex items-center w-full bg-[#FAFAF8] dark:bg-[#1a1a1a] justify-between gap-6 py-8';
   if (siteMetadata.stickyNav) {
     headerClass +=
       ' sticky top-0 z-50 backdrop-blur-sm bg-[#FAFAF8]/90 dark:bg-[#1a1a1a]/90';
