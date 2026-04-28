@@ -210,13 +210,13 @@ export default function KnowledgeGraphExplorer({
   useEffect(() => {
     const fg = graphRef.current;
     if (!fg) return;
-    fg.d3Force('charge')?.strength(compact ? -120 : -300);
-    fg.d3Force('link')?.distance(compact ? 40 : 80);
-    fg.d3Force('center')?.strength(0.05);
+    fg.d3Force('charge')?.strength(compact ? -200 : -500);
+    fg.d3Force('link')?.distance(compact ? 60 : 120);
+    fg.d3Force('center')?.strength(0.03);
     fg.d3Force(
       'collision',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      forceCollide((node: any) => getNodeRadius(node as GraphNode) + 4) as any,
+      forceCollide((node: any) => getNodeRadius(node as GraphNode) + 18) as any,
     );
   }, [displayGraphData, compact, getNodeRadius]);
 
@@ -290,10 +290,10 @@ export default function KnowledgeGraphExplorer({
               : 0.5;
           }}
           linkDirectionalParticles={0}
-          d3AlphaDecay={0.02}
-          d3VelocityDecay={0.3}
-          warmupTicks={compact ? 50 : 100}
-          cooldownTicks={200}
+          d3AlphaDecay={0.015}
+          d3VelocityDecay={0.25}
+          warmupTicks={compact ? 80 : 150}
+          cooldownTicks={300}
           minZoom={0.5}
           maxZoom={8}
           onEngineStop={handleEngineStop}
