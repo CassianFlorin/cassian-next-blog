@@ -6,7 +6,7 @@ import type { ComponentType, MutableRefObject } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useTranslations } from 'next-intl';
-import { forceCollide } from 'd3-force-3d';
+import { forceCollide, forceRadial } from 'd3-force-3d';
 import type {
   ForceGraphMethods,
   ForceGraphProps,
@@ -191,9 +191,9 @@ export default function KnowledgeGraphExplorer({
   const getNodeRadius = useCallback(
     (node: GraphNode) => {
       const degree = nodeDegreeMap.get(node.id) || 1;
-      const base = node.type === 'tag' ? 5 : 3.5;
+      const base = node.type === 'tag' ? 4 : 3;
       const scale = compact ? 0.7 : 1;
-      return (base + Math.log2(degree + 1) * 2.5) * scale;
+      return (base + Math.log2(degree + 1) * 2) * scale;
     },
     [nodeDegreeMap, compact],
   );
@@ -206,24 +206,42 @@ export default function KnowledgeGraphExplorer({
     [displayGraphData.nodes],
   );
 
-  /* Configure d3 forces */
+  /* Configure forces: radial layout (tags center, posts outer) + collision */
   useEffect(() => {
     const fg = graphRef.current;
     if (!fg) return;
-    fg.d3Force('charge')?.strength(compact ? -250 : -800);
-    fg.d3Force('link')?.distance(compact ? 80 : 160);
-    fg.d3Force('center')?.strength(0.02);
+    const outerRadius = compact ? 120 : 280;
+    fg.d3Force('charge')?.strength(compact ? -80 : -200);
+    fg.d3Force('link')?.distance(compact ? 50 : 100);
+    fg.d3Force('center')?.strength(0.01);
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    fg.d3Force(
+      'radial',
+      forceRadial((node: any) => {
+        const n = node as GraphNode;
+        return n.type === 'tag' ? 0 : outerRadius;
+      }).strength(0.3) as any,
+    );
     fg.d3Force(
       'collision',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      forceCollide((node: any) => getNodeRadius(node as GraphNode) + 25) as any,
+      forceCollide((node: any) => {
+        const n = node as GraphNode;
+        const r = getNodeRadius(n);
+        const labelW = n.label.length * 5;
+        return Math.max(r + 6, labelW) + 2;
+      })
+        .strength(0.8)
+        .iterations(2) as any,
     );
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    fg.d3ReheatSimulation();
   }, [displayGraphData, compact, getNodeRadius]);
 
   /* Auto-center on engine stop */
   const handleEngineStop = () => {
     const fg = graphRef.current;
     if (!fg) return;
+    hasFitted.current = true;
     if (focusedPost) {
       const focusNode = displayGraphData.nodes.find(
         (n) => n.id === `post:${focusedPost}`,
@@ -233,7 +251,7 @@ export default function KnowledgeGraphExplorer({
         fg.zoom(compact ? 4 : 2.4, 700);
       }
     } else {
-      fg.zoomToFit(600, compact ? 20 : 40);
+      fg.zoomToFit(600, compact ? 10 : 20);
     }
   };
 
@@ -243,7 +261,7 @@ export default function KnowledgeGraphExplorer({
     if (hasFitted.current) return;
     const timer = setTimeout(() => {
       const fg = graphRef.current;
-      if (!fg) return;
+      if (!fg || hasFitted.current) return;
       hasFitted.current = true;
       if (focusedPost) {
         const focusNode = displayGraphData.nodes.find(
@@ -254,9 +272,9 @@ export default function KnowledgeGraphExplorer({
           fg.zoom(compact ? 4 : 2.4, 700);
         }
       } else {
-        fg.zoomToFit(600, compact ? 20 : 40);
+        fg.zoomToFit(600, compact ? 10 : 20);
       }
-    }, 1500);
+    }, 1200);
     return () => clearTimeout(timer);
   }, [displayGraphData, focusedPost, compact]);
 
@@ -296,7 +314,7 @@ export default function KnowledgeGraphExplorer({
           graphData={displayGraphData}
           backgroundColor={palette.bg}
           nodeRelSize={1}
-          linkCurvature={0.15}
+          linkCurvature={0.2}
           linkColor={(link: LinkObject<GraphNode, KnowledgeLink>) => {
             const s = resolveNodeId(link.source as string | KnowledgeNode);
             const tgt = resolveNodeId(link.target as string | KnowledgeNode);
@@ -313,11 +331,9 @@ export default function KnowledgeGraphExplorer({
               : 0.5;
           }}
           linkDirectionalParticles={0}
-          d3AlphaDecay={0.015}
-          d3VelocityDecay={0.25}
           warmupTicks={compact ? 80 : 150}
           cooldownTicks={300}
-          minZoom={0.5}
+          minZoom={0.3}
           maxZoom={8}
           onEngineStop={handleEngineStop}
           onNodeHover={setHoverNode}
@@ -351,7 +367,7 @@ export default function KnowledgeGraphExplorer({
             ctx.globalAlpha = isHighlighted ? 1 : DIMMED_ALPHA;
 
             // Layer 1: outer glow
-            const glowR = radius * 3;
+            const glowR = radius * 2;
             const grd = ctx.createRadialGradient(
               x,
               y,
@@ -377,14 +393,10 @@ export default function KnowledgeGraphExplorer({
             ctx.fillStyle = core;
             ctx.fill();
 
-            // Layer 3: label
+            // Layer 3: label (DAG layout keeps nodes spaced, always show)
             ctx.globalAlpha = isHighlighted ? 0.85 : DIMMED_ALPHA;
-            const showLabel =
-              globalScale > 1.2 ||
-              isTag ||
-              (hoverNode && hoverNode.id === node.id);
-            if (showLabel && !(compact && !isTag)) {
-              const fontSize = Math.min(14, Math.max(10, 12 / globalScale));
+            if (!(compact && !isTag)) {
+              const fontSize = Math.min(12, Math.max(9, 11 / globalScale));
               ctx.font = `${fontSize}px Inter, -apple-system, sans-serif`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'top';
