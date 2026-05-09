@@ -65,11 +65,11 @@ export default function PostLayout({
   });
 
   return (
-    <SectionContainer>
+    <div>
       <ScrollTopAndComment />
       <article>
         <div className="xl:divide-y xl:divide-gray-200/60 xl:dark:divide-gray-800/60">
-          <header className="pt-8 xl:pb-8">
+          <header className="pt-6 xl:pb-8">
             <div className="mx-auto max-w-3xl space-y-3 text-center">
               <div>
                 <time
@@ -144,7 +144,7 @@ export default function PostLayout({
             <div className="divide-y divide-gray-200/60 xl:col-span-3 xl:row-span-2 xl:pb-0 dark:divide-gray-800/60">
               <div
                 ref={contentRef}
-                className="prose prose-gray dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-p:leading-relaxed max-w-none pt-10 pb-8"
+                className="prose prose-gray dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-p:leading-relaxed max-w-none pt-8 pb-6"
                 style={{ opacity: 0 }}
               >
                 {children}
@@ -261,6 +261,6 @@ export default function PostLayout({
           </div>
         </div>
       </article>
-    </SectionContainer>
+    </div>
   );
 }

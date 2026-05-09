@@ -7,7 +7,7 @@ export default function Footer() {
   const t = useTranslations('footer');
 
   return (
-    <footer className="mt-20 border-t border-gray-200/60 dark:border-gray-800/60">
+    <footer className="mt-12 border-t border-gray-200/60 dark:border-gray-800/60">
       <div className="flex flex-col items-center py-10">
         <div className="mb-4 flex space-x-5">
           <SocialIcon
