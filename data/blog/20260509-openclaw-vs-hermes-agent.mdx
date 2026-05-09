@@ -1,0 +1,407 @@
+---
+title: OpenClaw vs Hermes Agent：两种 AI Agent 的设计哲学
+date: '2026-05-09 02:23:00'
+tags:
+  - AI
+  - Agent
+  - OpenClaw
+  - Hermes
+  - 工具对比
+  - Guide
+draft: false
+summary: 深入对比 OpenClaw 和 Hermes Agent 两个开源 AI Agent 框架，探讨它们在渠道覆盖、记忆系统、插件生态等方面的设计差异与适用场景。
+---
+
+<div className="not-prose">
+  <div className="mb-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 p-8 text-white shadow-lg">
+    <h1 className="mb-4 text-4xl font-bold">🤖 OpenClaw vs Hermes Agent</h1>
+    <div className="text-xl opacity-90">
+      两种 AI Agent 的设计哲学：连接一切 vs 深度交互
+    </div>
+  </div>
+</div>
+
+## 📖 核心定位
+
+<div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+  <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-900/20">
+    <div className="mb-4 flex items-center">
+      <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-500 text-white">
+        <span className="text-2xl">🌐</span>
+      </div>
+      <h3 className="text-xl font-bold text-blue-900 dark:text-blue-200">OpenClaw</h3>
+    </div>
+    <div className="mb-3 text-sm font-semibold text-blue-700 dark:text-blue-300">
+      多通道个人 AI 助手
+    </div>
+    <div className="text-sm text-blue-600 dark:text-blue-400">
+      重在<strong>渠道覆盖和插件生态</strong>。设计目标是"连接一切"——无论你在 WhatsApp、Telegram、Discord 还是微信，OpenClaw 都能无缝接入。
+    </div>
+  </div>
+
+  <div className="rounded-lg border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-900/20">
+    <div className="mb-4 flex items-center">
+      <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500 text-white">
+        <span className="text-2xl">💻</span>
+      </div>
+      <h3 className="text-xl font-bold text-purple-900 dark:text-purple-200">Hermes Agent</h3>
+    </div>
+    <div className="mb-3 text-sm font-semibold text-purple-700 dark:text-purple-300">
+      CLI AI Agent
+    </div>
+    <div className="text-sm text-purple-600 dark:text-purple-400">
+      重在<strong>终端交互体验和记忆系统</strong>。为开发者和技术用户打造，提供原生的命令行体验和强大的上下文记忆能力。
+    </div>
+  </div>
+</div>
+
+<div className="my-6 rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50 p-6 dark:border-indigo-800 dark:from-indigo-900/20 dark:to-purple-900/20">
+  <div className="text-center text-indigo-700 dark:text-indigo-300">
+    两者都是 <strong>Harness Engineering</strong>{' '}
+    的优秀实践，但设计重心和擅长领域截然不同。
+  </div>
+</div>
+
+---
+
+## 🌍 渠道覆盖：OpenClaw 的优势
+
+OpenClaw 支持 **20+ 通讯渠道**，这是它最显著的特点。
+
+<div className="my-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+  <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+    <div className="mb-2 font-semibold text-blue-900 dark:text-blue-300">
+      🔵 OpenClaw 独有
+    </div>
+    <ul className="space-y-1 text-sm text-blue-700 dark:text-blue-400">
+      <li>• WhatsApp</li>
+      <li>• WeChat 微信</li>
+      <li>• QQ</li>
+      <li>• LINE</li>
+      <li>• IRC</li>
+      <li>• Google Chat</li>
+      <li>• Microsoft Teams</li>
+      <li>• Mattermost</li>
+      <li>• Nostr</li>
+      <li>• WebChat (Web UI)</li>
+    </ul>
+  </div>
+
+  <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20">
+    <div className="mb-2 font-semibold text-purple-900 dark:text-purple-300">
+      🟣 Hermes Agent 独有
+    </div>
+    <ul className="space-y-1 text-sm text-purple-700 dark:text-purple-400">
+      <li>• Home Assistant</li>
+      <li>• Yuanbao 元宝</li>
+    </ul>
+  </div>
+
+  <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
+    <div className="mb-2 font-semibold text-green-900 dark:text-green-300">
+      🟢 共同支持
+    </div>
+    <ul className="space-y-1 text-sm text-green-700 dark:text-green-400">
+      <li>• Telegram</li>
+      <li>• Discord</li>
+      <li>• Slack</li>
+      <li>• Signal</li>
+      <li>• iMessage</li>
+      <li>• Matrix</li>
+      <li>• Feishu 飞书</li>
+      <li>• CLI</li>
+    </ul>
+  </div>
+</div>
+
+<div className="my-6 rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 dark:bg-blue-900/20">
+  <div className="text-sm text-blue-700 dark:text-blue-300">
+    💡 <strong>结论</strong>：如果你需要一个能在多个平台上统一响应的 AI
+    助手，OpenClaw 是更好的选择。
+  </div>
+</div>
+
+---
+
+## 🧠 记忆系统：Hermes Agent 的深度
+
+Hermes Agent 在记忆系统上投入了更多精力，提供更精细的记忆管理能力。
+
+<div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+  <div className="rounded-lg border border-purple-200 bg-white p-6 shadow-md dark:border-purple-700 dark:bg-gray-800">
+    <div className="mb-4 flex items-center">
+      <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900">
+        <span className="text-2xl">🧠</span>
+      </div>
+      <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Hermes Agent 的记忆优势</h4>
+    </div>
+    <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+      <li className="flex items-start">
+        <span className="mr-2">🔍</span>
+        <div>
+          <strong>PGVector 持久化记忆</strong>：基于 PostgreSQL + pgvector 的向量搜索
+        </div>
+      </li>
+      <li className="flex items-start">
+        <span className="mr-2">🔄</span>
+        <div>
+          <strong>Session Search</strong>：跨会话语义搜索，能回忆过去的对话和决策
+        </div>
+      </li>
+      <li className="flex items-start">
+        <span className="mr-2">📊</span>
+        <div>
+          <strong>Memory 分层存储</strong>：target=user（用户画像）和 target=memory（个人笔记）分离
+        </div>
+      </li>
+      <li className="flex items-start">
+        <span className="mr-2">🔧</span>
+        <div>
+          <strong>Curator 定时维护</strong>：自动清理、合并、优化记忆
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <div className="rounded-lg border border-blue-200 bg-white p-6 shadow-md dark:border-blue-700 dark:bg-gray-800">
+    <div className="mb-4 flex items-center">
+      <div className="mr-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
+        <span className="text-2xl">💾</span>
+      </div>
+      <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">OpenClaw 的记忆方案</h4>
+    </div>
+    <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
+      <li className="flex items-start">
+        <span className="mr-2">📝</span>
+        <div>
+          <strong>会话持久化</strong>：磁盘 transcript
+        </div>
+      </li>
+      <li className="flex items-start">
+        <span className="mr-2">🗄️</span>
+        <div>
+          <strong>长期记忆</strong>：memory 插件
+        </div>
+      </li>
+      <li className="flex items-start">
+        <span className="mr-2">🔍</span>
+        <div>
+          <strong>向量搜索记忆</strong>：memory-lancedb
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div className="my-6 rounded-lg border-l-4 border-purple-500 bg-purple-50 p-4 dark:bg-purple-900/20">
+  <div className="text-sm text-purple-700 dark:text-purple-300">
+    💡 <strong>结论</strong>：两者都支持长期记忆，但 Hermes Agent
+    的记忆系统更精细，更适合需要"记住一切"的场景。
+  </div>
+</div>
+
+---
+
+## 🔌 插件生态：各有千秋
+
+<div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+  <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-900/20">
+    <h4 className="mb-4 text-lg font-semibold text-blue-900 dark:text-blue-200">
+      OpenClaw 的插件体系
+    </h4>
+    <ul className="space-y-2 text-sm text-blue-700 dark:text-blue-400">
+      <li>✅ <strong>Plugin SDK</strong>：完整的 plugin-sdk 公共合约</li>
+      <li>✅ <strong>Manifest-first</strong>：冷启动不加载运行时</li>
+      <li>✅ <strong>第三方插件</strong>：通过 npm 分发</li>
+      <li>✅ <strong>插件热加载</strong>：支持运行时加载</li>
+      <li>✅ <strong>60+ 内置技能</strong></li>
+    </ul>
+  </div>
+
+  <div className="rounded-lg border border-purple-200 bg-purple-50 p-6 dark:border-purple-800 dark:bg-purple-900/20">
+    <h4 className="mb-4 text-lg font-semibold text-purple-900 dark:text-purple-200">
+      Hermes Agent 的技能系统
+    </h4>
+    <ul className="space-y-2 text-sm text-purple-700 dark:text-purple-400">
+      <li>✅ <strong>Skill 系统</strong>：50+ 内置技能</li>
+      <li>✅ <strong>Skill 热编辑</strong>：运行时创建、编辑、删除</li>
+      <li>✅ <strong>skill_manage 工具</strong>：更灵活的技能管理</li>
+      <li>✅ <strong>第三方插件</strong>：in-repo + marketplace</li>
+    </ul>
+  </div>
+</div>
+
+<div className="my-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+  <div className="text-sm text-gray-700 dark:text-gray-300">
+    💡 OpenClaw 更注重插件的<strong>标准化和分发</strong>，Hermes Agent
+    更注重技能的<strong>灵活性和可编辑性</strong>。
+  </div>
+</div>
+
+---
+
+## ⭐ 独特能力对比
+
+<div className="my-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+  <div className="rounded-lg border-l-4 border-blue-500 bg-blue-50 p-4 dark:bg-blue-900/20">
+    <h4 className="mb-3 font-semibold text-blue-800 dark:text-blue-200">
+      🌐 OpenClaw 独有
+    </h4>
+    <ul className="space-y-2 text-sm text-blue-700 dark:text-blue-400">
+      <li>• 多设备节点（iOS/Android/macOS）</li>
+      <li>• Canvas 服务（交互式 HTML）</li>
+      <li>• Provider 自动发现（30+ 供应商）</li>
+      <li>• Typed WebSocket 协议</li>
+      <li>• Node 设备绑定（摄像头、录屏）</li>
+      <li>• Prompt Cache 工程化</li>
+      <li>• 原生 App（移动和桌面）</li>
+    </ul>
+  </div>
+
+  <div className="rounded-lg border-l-4 border-purple-500 bg-purple-50 p-4 dark:bg-purple-900/20">
+    <h4 className="mb-3 font-semibold text-purple-800 dark:text-purple-200">
+      💻 Hermes Agent 独有
+    </h4>
+    <ul className="space-y-2 text-sm text-purple-700 dark:text-purple-400">
+      <li>• CLI 原生体验（TUI 界面）</li>
+      <li>• ACP（Agent Client Protocol）</li>
+      <li>• Vision 分析（截图 + AI 视觉）</li>
+      <li>• Execute Code（Python 执行环境）</li>
+      <li>• Clarify 交互（多轮澄清）</li>
+      <li>• Todo 管理 + Kanban 看板</li>
+      <li>• 上下文压缩双层机制</li>
+    </ul>
+  </div>
+</div>
+
+---
+
+## 🎯 选择指南
+
+<div className="my-8 overflow-x-auto">
+  <table className="w-full border-collapse">
+    <thead>
+      <tr className="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+        <th className="border border-gray-300 p-3 text-left">场景</th>
+        <th className="border border-gray-300 p-3 text-left">推荐</th>
+        <th className="border border-gray-300 p-3 text-left">原因</th>
+      </tr>
+    </thead>
+    <tbody className="text-sm">
+      <tr className="bg-white dark:bg-gray-800">
+        <td className="border border-gray-300 p-3">
+          需要 WhatsApp/WeChat AI 助手
+        </td>
+        <td className="border border-gray-300 p-3 font-semibold text-blue-600 dark:text-blue-400">
+          OpenClaw
+        </td>
+        <td className="border border-gray-300 p-3">渠道覆盖最全</td>
+      </tr>
+      <tr className="bg-gray-50 dark:bg-gray-900">
+        <td className="border border-gray-300 p-3">需要多设备接入的 AI 助手</td>
+        <td className="border border-gray-300 p-3 font-semibold text-blue-600 dark:text-blue-400">
+          OpenClaw
+        </td>
+        <td className="border border-gray-300 p-3">Node 机制 + 原生 App</td>
+      </tr>
+      <tr className="bg-white dark:bg-gray-800">
+        <td className="border border-gray-300 p-3">需要 CLI 编程助手</td>
+        <td className="border border-gray-300 p-3 font-semibold text-purple-600 dark:text-purple-400">
+          Hermes Agent
+        </td>
+        <td className="border border-gray-300 p-3">终端体验更好</td>
+      </tr>
+      <tr className="bg-gray-50 dark:bg-gray-900">
+        <td className="border border-gray-300 p-3">需要能记住一切的 AI</td>
+        <td className="border border-gray-300 p-3 font-semibold text-purple-600 dark:text-purple-400">
+          Hermes Agent
+        </td>
+        <td className="border border-gray-300 p-3">记忆系统更精细</td>
+      </tr>
+      <tr className="bg-white dark:bg-gray-800">
+        <td className="border border-gray-300 p-3">需要快速接入 20+ 渠道</td>
+        <td className="border border-gray-300 p-3 font-semibold text-blue-600 dark:text-blue-400">
+          OpenClaw
+        </td>
+        <td className="border border-gray-300 p-3">插件化渠道，开箱即用</td>
+      </tr>
+      <tr className="bg-gray-50 dark:bg-gray-900">
+        <td className="border border-gray-300 p-3">
+          需要自定义 AI 行为/工作流
+        </td>
+        <td className="border border-gray-300 p-3 font-semibold text-purple-600 dark:text-purple-400">
+          Hermes Agent
+        </td>
+        <td className="border border-gray-300 p-3">Skill 系统更灵活</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+---
+
+## 🎓 总结
+
+<div className="my-8 rounded-xl border border-gray-200 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-8 dark:border-gray-700 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20">
+  <h3 className="mb-6 text-center text-2xl font-bold text-gray-800 dark:text-gray-200">
+    两种设计哲学，各有所长
+  </h3>
+
+  <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+    <div className="rounded-lg border border-blue-200 bg-white/80 p-6 dark:border-blue-800 dark:bg-gray-800/80">
+      <div className="mb-3 flex items-center">
+        <span className="mr-3 text-3xl">🌐</span>
+        <h4 className="text-xl font-bold text-blue-600 dark:text-blue-400">
+          OpenClaw
+        </h4>
+      </div>
+      <p className="text-gray-700 dark:text-gray-300">
+        <strong>渠道覆盖最全的多通道个人 AI 助手</strong>
+      </p>
+      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        重在"连接一切"，让 AI 无处不在
+      </p>
+    </div>
+
+    <div className="rounded-lg border border-purple-200 bg-white/80 p-6 dark:border-purple-800 dark:bg-gray-800/80">
+      <div className="mb-3 flex items-center">
+        <span className="mr-3 text-3xl">💻</span>
+        <h4 className="text-xl font-bold text-purple-600 dark:text-purple-400">
+          Hermes Agent
+        </h4>
+      </div>
+      <p className="text-gray-700 dark:text-gray-300">
+        <strong>终端体验最好的 CLI AI Agent</strong>
+      </p>
+      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        重在"深度交互"，为专业用户打造
+      </p>
+    </div>
+  </div>
+
+  <div className="rounded-lg border-l-4 border-indigo-500 bg-indigo-50 p-4 dark:bg-indigo-900/20">
+    <p className="text-indigo-800 dark:text-indigo-200">
+      两者都是 <strong>Harness Engineering</strong> 的优秀实践，OpenClaw
+      展示了"广度优先"的设计思路，Hermes Agent 展示了"深度优先"的设计思路。
+    </p>
+  </div>
+</div>
+
+<div className="mt-8 text-center">
+  <p className="text-lg text-gray-700 dark:text-gray-300">
+    选择哪个取决于你的使用场景 🎯
+  </p>
+  <p className="mt-2 text-gray-600 dark:text-gray-400">
+    需要多平台统一响应？选{' '}
+    <strong className="text-blue-600 dark:text-blue-400">OpenClaw</strong>
+  </p>
+  <p className="text-gray-600 dark:text-gray-400">
+    需要强大的命令行助手？选{' '}
+    <strong className="text-purple-600 dark:text-purple-400">
+      Hermes Agent
+    </strong>
+  </p>
+  <p className="mt-4 text-xl font-semibold text-indigo-600 dark:text-indigo-400">
+    两者都值得深入研究和使用 🚀
+  </p>
+</div>
