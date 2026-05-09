@@ -117,6 +117,13 @@
     "Guide": "Guide",
     "guide": "Guide",
     "Tips": "Tips",
-    "tips": "Tips"
+    "tips": "Tips",
+    "Agent": "Agent",
+    "OpenClaw": "OpenClaw",
+    "Hermes": "Hermes",
+    "工具对比": "工具对比",
+    "架构设计": "架构设计",
+    "Harness Engineering": "Harness Engineering",
+    "工程方法论": "工程方法论"
   }
 }

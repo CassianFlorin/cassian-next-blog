@@ -83,6 +83,17 @@ const EN_TO_ZH_TRANSLATIONS = {
   'Multi-author': '多作者',
   Hello: '你好',
   Writings: '随笔',
+  Agent: 'Agent',
+  agent: 'Agent',
+  OpenClaw: 'OpenClaw',
+  openclaw: 'OpenClaw',
+  Hermes: 'Hermes',
+  hermes: 'Hermes',
+  '工具对比': '工具对比',
+  '架构设计': '架构设计',
+  'Harness Engineering': 'Harness Engineering',
+  'harness-engineering': 'Harness Engineering',
+  '工程方法论': '工程方法论',
 };
 
 /**
