@@ -89,11 +89,11 @@ const EN_TO_ZH_TRANSLATIONS = {
   openclaw: 'OpenClaw',
   Hermes: 'Hermes',
   hermes: 'Hermes',
-  '工具对比': '工具对比',
-  '架构设计': '架构设计',
+  工具对比: '工具对比',
+  架构设计: '架构设计',
   'Harness Engineering': 'Harness Engineering',
   'harness-engineering': 'Harness Engineering',
-  '工程方法论': '工程方法论',
+  工程方法论: '工程方法论',
 };
 
 /**
