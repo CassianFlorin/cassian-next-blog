@@ -1,0 +1,792 @@
+---
+title: 云服务器配置 Traefik 教程
+date: 2026-05-11
+tags:
+  - traefik
+  - docker
+  - reverse-proxy
+  - devops
+summary: 用 Traefik、Docker Compose 和 Let's Encrypt 在云服务器上搭建统一入口，让多个 Web 服务通过域名、HTTPS 和容器 label 快速接入。
+draft: false
+---
+
+# 云服务器配置 Traefik 教程：用 Docker Compose 搭一个可复用的 HTTPS 入口
+
+如果你有一台云服务器，并且准备在上面陆续部署博客、后台、API、文件服务、WebSocket 服务，迟早会遇到一个问题：每个服务都要自己处理端口、域名、HTTPS 证书和转发规则，维护起来很容易变乱。
+
+我的做法是把 Traefik 放在服务器入口层，让它专门负责反向代理、HTTPS 证书和路由分发。业务容器只需要加入同一个 Docker 网络，再用 labels 声明自己的域名、入口、证书解析器和内部端口，就可以被统一代理。
+
+这篇文章不是单纯罗列命令，而是分享一套可以长期复用的云服务器 Traefik 部署方式。你可以先用 `whoami` 服务验证链路，再逐步接入自己的 Spring Boot、Node.js、Nginx、WebSocket、gRPC、Gitea SSH 等服务。
+
+## 适合什么场景
+
+本文默认你已经具备这些条件：
+
+- 云服务器有公网 IP。
+- 域名已经购买，并且可以配置 DNS 解析。
+- 服务器上使用 Docker Compose 部署服务。
+- 希望使用 Let's Encrypt 自动签发 HTTPS 证书。
+- 服务主要以 Docker 容器方式运行。
+
+最终效果是这样：
+
+```text
+用户浏览器
+    |
+    | HTTPS / TCP
+    v
+Traefik
+    |
+    | Docker network: traefik
+    v
+业务容器：blog / api / file / whoami / gitea ...
+```
+
+Traefik 的核心价值在于：入口只有一个，规则跟着容器走。以后新增服务时，不需要再改一堆 Nginx 配置文件，只要给容器加 labels 即可。
+
+> [!tip]
+> 如果你只是临时跑一个服务，Nginx 当然也能解决问题。但如果一台服务器上会持续增加服务，Traefik 的 Docker provider 会让后续维护轻很多。
+
+## 整体方案
+
+这套方案分成几个部分：
+
+1. 服务器只开放必要端口：`22`、`80`、`443`，以及按需开放 TCP 服务端口。
+2. Traefik 使用 Docker provider 读取容器 labels。
+3. 所有被代理的容器加入同一个外部 Docker 网络：`traefik`。
+4. HTTPS 证书由 Let's Encrypt 自动签发。
+5. Dashboard 只通过域名、HTTPS 和 Basic Auth 访问。
+6. Cloudflare 用户可以选择 DNS-01 挑战，方便开启橙云代理和泛域名证书。
+
+我推荐把 Traefik 放在 `/opt/traefik`：
+
+```text
+/opt/traefik
+├── .env
+├── docker-compose.yml
+├── whoami.yml
+└── letsencrypt
+    └── acme.json
+```
+
+其中 `acme.json` 保存证书信息，`.env` 保存域名、邮箱、Basic Auth 和 Cloudflare Token 等敏感配置。
+
+## 准备服务器环境
+
+先登录服务器：
+
+```bash
+ssh root@你的服务器IP
+```
+
+更新系统并安装常用工具：
+
+```bash
+apt update && apt upgrade -y
+apt install -y curl vim ufw apache2-utils dnsutils
+```
+
+如果服务器还没有 Docker，可以使用官方安装脚本：
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+确认 Docker 和 Compose 可用：
+
+```bash
+docker version
+docker compose version
+```
+
+然后配置防火墙：
+
+```bash
+ufw allow OpenSSH
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw enable
+ufw status
+```
+
+> [!warning]
+> 不要把 Traefik Dashboard 的 `8080` 端口直接开放到公网。Dashboard 应该通过域名、HTTPS 和 Basic Auth 访问。
+
+## 配置域名解析
+
+先在 DNS 服务商中添加 A 记录，把域名指向服务器公网 IP。
+
+| 记录名                | 类型 | 值            |
+| --------------------- | ---- | ------------- |
+| `traefik.example.com` | A    | 服务器公网 IP |
+| `whoami.example.com`  | A    | 服务器公网 IP |
+| `app.example.com`     | A    | 服务器公网 IP |
+
+把 `example.com` 替换成你自己的域名。
+
+验证解析是否生效：
+
+```bash
+dig traefik.example.com +short
+dig whoami.example.com +short
+```
+
+返回服务器公网 IP 后再继续配置 Traefik。
+
+### Cloudflare 用户的选择
+
+如果域名托管在 Cloudflare，可以先把域名接入 Cloudflare，再用 Cloudflare 管理 DNS 记录。
+
+基本流程：
+
+1. 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)。
+2. 点击 `Add a domain`，输入根域名，例如 `example.com`。
+3. 选择套餐，免费套餐通常已经够用。
+4. 确认 Cloudflare 扫描到的 DNS 记录是否正确。
+5. 到域名注册商后台，把 NS 服务器改成 Cloudflare 给出的两个 nameserver。
+6. 等 Cloudflare 显示域名状态为 `Active`。
+
+DNS 记录建议如下：
+
+| 记录名    | 类型 | 值            | Proxy status        |
+| --------- | ---- | ------------- | ------------------- |
+| `traefik` | A    | 服务器公网 IP | DNS only 或 Proxied |
+| `whoami`  | A    | 服务器公网 IP | DNS only 或 Proxied |
+| `app`     | A    | 服务器公网 IP | DNS only 或 Proxied |
+
+如果使用 HTTP-01 证书挑战，调试阶段建议先设为 `DNS only`，避免 Cloudflare 代理层干扰排查。等证书签发和访问链路都正常后，再按需要开启 `Proxied`。
+
+Cloudflare 的 SSL/TLS 模式建议设置为：
+
+```text
+SSL/TLS -> Overview -> Full (strict)
+```
+
+`Full (strict)` 要求源站也有有效证书，正好由 Traefik 和 Let's Encrypt 提供。
+
+## 创建 Traefik 工作目录
+
+```bash
+mkdir -p /opt/traefik/letsencrypt
+cd /opt/traefik
+touch letsencrypt/acme.json
+chmod 600 letsencrypt/acme.json
+```
+
+`acme.json` 的权限必须收紧，否则 Traefik 可能拒绝使用这个文件。
+
+然后创建外部 Docker 网络：
+
+```bash
+docker network create traefik
+```
+
+以后需要被 Traefik 代理的业务容器，都加入这个网络。
+
+## 生成 Dashboard 登录密码
+
+Dashboard 一定要加 Basic Auth。先生成账号密码：
+
+```bash
+htpasswd -nbB admin '换成你的强密码'
+```
+
+命令会输出类似：
+
+```text
+admin:$2y$05$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Docker Compose 的 label 中 `$` 需要转义成 `$$`。如果把密码哈希放进 `.env` 并用单引号包起来，可以保留原始格式：
+
+```dotenv
+TRAEFIK_BASIC_AUTH_USERS='admin:$2y$05$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+```
+
+## 编写 Traefik 配置
+
+先创建 `/opt/traefik/.env`：
+
+```dotenv
+TRAEFIK_IMAGE=traefik:v3.6
+TRAEFIK_DOMAIN=traefik.example.com
+ACME_EMAIL=你的邮箱@example.com
+TRAEFIK_BASIC_AUTH_USERS='admin:$2y$05$替换成你生成的密码哈希'
+```
+
+如果使用 Cloudflare DNS-01 挑战，再增加：
+
+```dotenv
+CF_DNS_API_TOKEN=替换成你的Cloudflare_API_Token
+```
+
+收紧 `.env` 权限：
+
+```bash
+chmod 600 /opt/traefik/.env
+```
+
+> [!warning] > `.env` 里不要放到公开仓库，也不要把真实 token 贴到笔记、群聊或截图里。Basic Auth 哈希不是明文密码，但仍然建议按敏感信息管理。
+
+### HTTP-01 版本：适合大多数入门场景
+
+如果你没有使用 Cloudflare，或者只是想先跑通基础链路，可以使用 HTTP-01。它需要公网可以访问服务器的 `80` 端口。
+
+创建 `/opt/traefik/docker-compose.yml`：
+
+```yaml
+services:
+  traefik:
+    image: ${TRAEFIK_IMAGE}
+    container_name: traefik
+    restart: unless-stopped
+    env_file:
+      - .env
+    command:
+      - '--api.dashboard=true'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--providers.docker.network=traefik'
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.websecure.address=:443'
+      - '--entrypoints.ssh.address=:2222'
+      - '--entrypoints.web.http.redirections.entrypoint.to=websecure'
+      - '--entrypoints.web.http.redirections.entrypoint.scheme=https'
+      - '--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}'
+      - '--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json'
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge=true'
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web'
+    ports:
+      - '80:80'
+      - '443:443'
+      - '2222:2222'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN}`)'
+      - 'traefik.http.routers.traefik.entrypoints=websecure'
+      - 'traefik.http.routers.traefik.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.traefik.service=api@internal'
+      - 'traefik.http.routers.traefik.middlewares=traefik-auth'
+      - 'traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS}'
+
+networks:
+  traefik:
+    external: true
+```
+
+这里有几个关键点：
+
+- `exposedbydefault=false`：默认不暴露任何容器，必须显式加 `traefik.enable=true`。
+- `providers.docker.network=traefik`：告诉 Traefik 优先使用这个 Docker 网络访问后端容器。
+- `web` 和 `websecure`：分别对应 `80` 和 `443`。
+- `entrypoints.web.http.redirections...`：把 HTTP 自动跳转到 HTTPS。
+- `api@internal`：把 Traefik 自己的 Dashboard 暴露成一个内部服务，再通过 router 绑定到域名。
+
+### DNS-01 版本：适合 Cloudflare 和泛域名证书
+
+如果域名在 Cloudflare，推荐使用 DNS-01。它有三个优点：
+
+- 不依赖 `80` 端口完成证书验证。
+- 可以在 Cloudflare 开启橙云代理。
+- 可以申请泛域名证书，例如 `*.example.com`。
+
+先创建 Cloudflare API Token：
+
+1. 进入 [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)。
+2. 点击 `Create Token`。
+3. 可以选择 `Edit zone DNS` 模板，也可以自定义 token。
+4. 权限至少包含 `Zone / Zone / Read` 和 `Zone / DNS / Edit`。
+5. Zone Resources 限制到需要管理的域名，例如 `example.com`。
+6. 创建后复制 token，写入 `/opt/traefik/.env` 的 `CF_DNS_API_TOKEN`。
+
+然后把 ACME challenge 相关命令替换成 DNS-01：
+
+```yaml
+command:
+  - '--api.dashboard=true'
+  - '--providers.docker=true'
+  - '--providers.docker.exposedbydefault=false'
+  - '--providers.docker.network=traefik'
+  - '--entrypoints.web.address=:80'
+  - '--entrypoints.websecure.address=:443'
+  - '--entrypoints.ssh.address=:2222'
+  - '--entrypoints.web.http.redirections.entrypoint.to=websecure'
+  - '--entrypoints.web.http.redirections.entrypoint.scheme=https'
+  - '--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}'
+  - '--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json'
+  - '--certificatesresolvers.letsencrypt.acme.dnschallenge=true'
+  - '--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare'
+  - '--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53'
+```
+
+如果某个服务需要泛域名证书，可以在对应 router 上加：
+
+```yaml
+labels:
+  - 'traefik.http.routers.app.tls.domains[0].main=example.com'
+  - 'traefik.http.routers.app.tls.domains[0].sans=*.example.com'
+```
+
+> [!note]
+> Traefik 的 DNS-01 能力底层依赖 Lego。Cloudflare provider 支持 `CF_DNS_API_TOKEN`，也支持把 Zone Read 和 DNS Edit 拆成 `CF_ZONE_API_TOKEN` 与 `CF_DNS_API_TOKEN` 两个更细权限的 token。
+
+## 启动 Traefik
+
+```bash
+cd /opt/traefik
+docker compose up -d
+docker compose logs -f traefik
+```
+
+然后访问：
+
+```text
+https://traefik.example.com/dashboard/
+```
+
+如果可以看到 Basic Auth 登录框，并且登录后能看到 Dashboard，说明入口代理已经成功跑起来。
+
+> [!tip]
+> 第一次启动时证书签发可能需要等一会儿。排障时优先看 `docker compose logs -f traefik`，不要盲目重启太多次，避免触发 Let's Encrypt 频率限制。
+
+## 用 whoami 验证代理链路
+
+正式接入业务前，我习惯先部署一个 `whoami` 测试服务。它足够简单，可以快速判断域名、证书、路由、Docker 网络是否都正常。
+
+创建 `/opt/traefik/whoami.yml`：
+
+```yaml
+services:
+  whoami:
+    image: traefik/whoami
+    container_name: whoami
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.whoami.rule=Host(`whoami.example.com`)'
+      - 'traefik.http.routers.whoami.entrypoints=websecure'
+      - 'traefik.http.routers.whoami.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.whoami.loadbalancer.server.port=80'
+
+networks:
+  traefik:
+    external: true
+```
+
+启动测试服务：
+
+```bash
+docker compose -f /opt/traefik/whoami.yml up -d
+```
+
+验证：
+
+```bash
+curl -I https://whoami.example.com
+```
+
+返回 `HTTP/2 200` 或 `HTTP/1.1 200 OK`，说明 HTTPS 代理正常。
+
+## 接入自己的业务服务
+
+业务服务接入 Traefik 的关键点只有三个：
+
+1. 加入 `traefik` 外部网络。
+2. 设置 `traefik.enable=true`。
+3. 用 labels 声明域名、入口、证书解析器、容器内部端口。
+
+最小示例：
+
+```yaml
+services:
+  app:
+    image: your-app:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.app.rule=Host(`app.example.com`)'
+      - 'traefik.http.routers.app.entrypoints=websecure'
+      - 'traefik.http.routers.app.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.app.loadbalancer.server.port=8080'
+
+networks:
+  traefik:
+    external: true
+```
+
+`loadbalancer.server.port=8080` 指的是容器内部监听端口，不是宿主机端口。接入 Traefik 后，业务容器通常不需要再写：
+
+```yaml
+ports:
+  - '8080:8080'
+```
+
+除非这个端口确实需要绕过 Traefik 直接暴露。
+
+## 常见服务接入模板
+
+### 普通 Web 服务
+
+Spring Boot、Node.js、Nginx、前端静态站点、管理后台都可以使用这一类模板：
+
+```yaml
+services:
+  app:
+    image: your-app:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.app.rule=Host(`app.example.com`)'
+      - 'traefik.http.routers.app.entrypoints=websecure'
+      - 'traefik.http.routers.app.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.app.loadbalancer.server.port=8080'
+
+networks:
+  traefik:
+    external: true
+```
+
+### 文件上传服务
+
+Traefik 默认不会像 Nginx 那样用 `client_max_body_size` 限制上传大小。真正的上传大小限制通常在业务应用、Nginx、Spring Boot、网关、对象存储 SDK 或 Cloudflare 上。
+
+如果希望在 Traefik 层主动限制上传大小，可以使用 `buffering` middleware：
+
+```yaml
+services:
+  file-api:
+    image: your-file-api:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.file-api.rule=Host(`file.example.com`)'
+      - 'traefik.http.routers.file-api.entrypoints=websecure'
+      - 'traefik.http.routers.file-api.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.file-api.middlewares=file-upload-limit'
+      - 'traefik.http.middlewares.file-upload-limit.buffering.maxRequestBodyBytes=104857600'
+      - 'traefik.http.middlewares.file-upload-limit.buffering.memRequestBodyBytes=10485760'
+      - 'traefik.http.services.file-api.loadbalancer.server.port=8080'
+
+networks:
+  traefik:
+    external: true
+```
+
+上面配置的含义：
+
+- `maxRequestBodyBytes=104857600`：最大上传请求体 100 MB。
+- `memRequestBodyBytes=10485760`：超过 10 MB 后不全部放内存。
+
+> [!warning]
+> 如果 Cloudflare 开了橙云代理，还要注意 Cloudflare 自身的上传大小限制。大文件上传场景更推荐客户端直传对象存储，例如 S3、R2、OSS，再由业务服务保存文件 URL。
+
+### 文件下载服务
+
+普通下载服务可以直接用 HTTP router。下载文件较大时，重点是避免应用层一次性把文件读入内存。
+
+```yaml
+services:
+  download:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./downloads:/usr/share/nginx/html:ro
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.download.rule=Host(`download.example.com`)'
+      - 'traefik.http.routers.download.entrypoints=websecure'
+      - 'traefik.http.routers.download.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.download.loadbalancer.server.port=80'
+
+networks:
+  traefik:
+    external: true
+```
+
+如果需要限制下载响应大小，也可以使用 `buffering.maxResponseBodyBytes`：
+
+```yaml
+labels:
+  - 'traefik.http.routers.download.middlewares=download-limit'
+  - 'traefik.http.middlewares.download-limit.buffering.maxResponseBodyBytes=524288000'
+```
+
+大文件下载不建议随便设置 `maxResponseBodyBytes`，否则超过限制会被 Traefik 拒绝。更多时候应该把限制放在业务鉴权、对象存储签名 URL 或 CDN 规则里。
+
+### WebSocket 服务
+
+Traefik 会自动处理 WebSocket 的 HTTP Upgrade，一般不需要额外配置 `Upgrade` 或 `Connection` 请求头。
+
+```yaml
+services:
+  ws-app:
+    image: your-ws-app:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.ws-app.rule=Host(`ws.example.com`)'
+      - 'traefik.http.routers.ws-app.entrypoints=websecure'
+      - 'traefik.http.routers.ws-app.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.ws-app.loadbalancer.server.port=3000'
+
+networks:
+  traefik:
+    external: true
+```
+
+客户端连接示例：
+
+```javascript
+const socket = new WebSocket('wss://ws.example.com/socket');
+```
+
+如果 WebSocket 和普通 API 在同一个域名下，可以按路径拆路由：
+
+```yaml
+labels:
+  - 'traefik.http.routers.app-api.rule=Host(`app.example.com`) && PathPrefix(`/api`)'
+  - 'traefik.http.routers.app-api.entrypoints=websecure'
+  - 'traefik.http.routers.app-api.tls.certresolver=letsencrypt'
+  - 'traefik.http.routers.app-api.service=app-api'
+  - 'traefik.http.services.app-api.loadbalancer.server.port=8080'
+  - 'traefik.http.routers.app-ws.rule=Host(`app.example.com`) && PathPrefix(`/socket`)'
+  - 'traefik.http.routers.app-ws.entrypoints=websecure'
+  - 'traefik.http.routers.app-ws.tls.certresolver=letsencrypt'
+  - 'traefik.http.routers.app-ws.service=app-ws'
+  - 'traefik.http.services.app-ws.loadbalancer.server.port=3000'
+```
+
+> [!note]
+> Cloudflare 代理 WebSocket 时也需要在 Cloudflare 侧允许 WebSocket。大多数账号默认支持，但如果连接经常断开，需要检查 Cloudflare 规则、服务端心跳和应用超时设置。
+
+### gRPC 服务
+
+gRPC 走 HTTP/2。Traefik 接 HTTPS 后，再转发到后端 gRPC 服务时，通常需要声明服务 scheme 为 `h2c`。
+
+```yaml
+services:
+  grpc-api:
+    image: your-grpc-api:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.grpc-api.rule=Host(`grpc.example.com`)'
+      - 'traefik.http.routers.grpc-api.entrypoints=websecure'
+      - 'traefik.http.routers.grpc-api.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.grpc-api.loadbalancer.server.scheme=h2c'
+      - 'traefik.http.services.grpc-api.loadbalancer.server.port=50051'
+
+networks:
+  traefik:
+    external: true
+```
+
+### SSH 服务
+
+SSH 不是 HTTP，不能用 `traefik.http.*` 标签，需要使用 TCP router。因为宿主机通常已经占用 `22` 端口，建议 Traefik 对外使用 `2222`，容器内部仍然转发到 `22`。
+
+Traefik 主配置需要有 SSH entrypoint：
+
+```yaml
+command:
+  - '--entrypoints.ssh.address=:2222'
+ports:
+  - '2222:2222'
+```
+
+Gitea SSH 示例：
+
+```yaml
+services:
+  gitea:
+    image: gitea/gitea:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    volumes:
+      - ./gitea:/data
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.gitea.rule=Host(`git.example.com`)'
+      - 'traefik.http.routers.gitea.entrypoints=websecure'
+      - 'traefik.http.routers.gitea.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.gitea.loadbalancer.server.port=3000'
+      - 'traefik.tcp.routers.gitea-ssh.rule=HostSNI(`*`)'
+      - 'traefik.tcp.routers.gitea-ssh.entrypoints=ssh'
+      - 'traefik.tcp.routers.gitea-ssh.service=gitea-ssh'
+      - 'traefik.tcp.services.gitea-ssh.loadbalancer.server.port=22'
+
+networks:
+  traefik:
+    external: true
+```
+
+连接方式：
+
+```bash
+ssh -p 2222 git@git.example.com
+git clone ssh://git@git.example.com:2222/用户名/仓库名.git
+```
+
+> [!warning]
+> TCP router 的 `HostSNI` 只有在 TLS 连接中才能按域名区分。SSH 本身没有 SNI，所以常见做法是一个 SSH entrypoint 对应一个 SSH 服务；如果有多个 SSH 服务，就分配多个外部端口，例如 `2222`、`2223`。
+
+### 数据库、Redis、MQTT 这类 TCP 服务
+
+数据库、Redis、MQTT 等也属于 TCP 服务，配置方式和 SSH 类似。但它们通常不应该直接暴露到公网，更适合通过内网、VPN、堡垒机或 Cloudflare Tunnel 访问。
+
+如果确实要临时暴露 PostgreSQL，配置类似这样：
+
+```yaml
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: 强密码
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.tcp.routers.postgres.rule=HostSNI(`*`)'
+      - 'traefik.tcp.routers.postgres.entrypoints=postgres'
+      - 'traefik.tcp.routers.postgres.service=postgres'
+      - 'traefik.tcp.services.postgres.loadbalancer.server.port=5432'
+
+networks:
+  traefik:
+    external: true
+```
+
+Traefik 主配置需要增加：
+
+```yaml
+command:
+  - '--entrypoints.postgres.address=:5432'
+ports:
+  - '5432:5432'
+```
+
+> [!danger]
+> 数据库直接暴露公网风险很高。至少要限制安全组来源 IP、使用强密码、开启数据库自身 TLS，并优先考虑 VPN 或内网访问。
+
+## 常用运维命令
+
+查看 Traefik 日志：
+
+```bash
+docker logs -f traefik
+```
+
+检查 Traefik 版本：
+
+```bash
+docker exec traefik traefik version
+```
+
+重启 Traefik：
+
+```bash
+cd /opt/traefik
+docker compose restart traefik
+```
+
+更新 Traefik：
+
+```bash
+cd /opt/traefik
+docker compose pull
+docker compose up -d
+```
+
+更新前建议先备份证书文件：
+
+```bash
+cp /opt/traefik/letsencrypt/acme.json /opt/traefik/letsencrypt/acme.json.bak
+```
+
+检查 Compose 最终配置：
+
+```bash
+cd /opt/traefik
+docker compose config
+```
+
+这个命令在排查 `.env` 变量是否生效时很有用。
+
+## 常见问题排查
+
+| 问题                        | 可能原因                                                      | 处理方式                                                          |
+| --------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 证书一直签发失败            | 域名没有解析到服务器、80 端口未开放、DNS 未生效               | 检查 `dig 域名 +short`、安全组、`ufw status`                      |
+| 访问域名 404                | 容器没有设置 `traefik.enable=true` 或 Host 规则写错           | 检查容器 labels 和 Traefik Dashboard 的 Routers                   |
+| 访问域名 502                | Traefik 找不到业务容器端口或网络不通                          | 检查 `loadbalancer.server.port` 和容器是否加入 `traefik` 网络     |
+| Dashboard 无法访问          | Dashboard 域名未解析、Basic Auth 配置错误、路由 label 写错    | 查看 `docker logs -f traefik`                                     |
+| HTTP 没有跳转 HTTPS         | 缺少 entrypoint redirection 配置                              | 检查 `entrypoints.web.http.redirections.entrypoint.*`             |
+| Let's Encrypt 频率限制      | 反复失败后频繁重试                                            | 排查配置后再启动；调试阶段可先使用 ACME staging server            |
+| Cloudflare DNS-01 失败      | API Token 权限不足或 Zone 范围不对                            | 确认 token 有 `Zone:Read` 和 `DNS:Edit`，并绑定到正确域名         |
+| Cloudflare 开橙云后访问异常 | SSL/TLS 模式不是 Full strict，或源站证书未签发                | 设置 Cloudflare `SSL/TLS -> Full (strict)`，检查 Traefik 证书日志 |
+| `.env` 变量没有生效         | 文件不在 Compose 同目录，或变量名写错                         | 在 `/opt/traefik` 执行 `docker compose config`                    |
+| WebSocket 连接失败          | 后端路径错误、服务端没有处理 Upgrade、Cloudflare 规则影响     | 先绕过 Cloudflare 测试，再检查应用日志和路由规则                  |
+| 文件上传失败                | 后端限制、Cloudflare 上传限制、Traefik buffering 限制         | 分别检查应用配置、Cloudflare 计划限制和 `maxRequestBodyBytes`     |
+| SSH 连不上                  | 没有开放 TCP entrypoint，宿主机端口冲突，TCP service 端口写错 | 检查 `ports`、安全组、`ufw` 和 `traefik.tcp.services.*.port`      |
+| 多个 SSH 服务无法按域名分流 | SSH 没有 SNI                                                  | 给不同 SSH 服务配置不同 entrypoint 和外部端口                     |
+
+## 最小安全清单
+
+把 Traefik 放到公网入口层之后，安全配置要认真做。我的最小清单是：
+
+- 不要开启 `--api.insecure=true` 给公网使用。
+- 不要开放 `8080` 到公网。
+- Docker socket 使用只读挂载：`/var/run/docker.sock:/var/run/docker.sock:ro`。
+- 默认关闭自动暴露：`--providers.docker.exposedbydefault=false`。
+- Dashboard 必须加 HTTPS 和 Basic Auth。
+- `.env` 权限设置为 `600`，不要公开 Cloudflare API Token。
+- Cloudflare API Token 只给需要的域名和最小权限。
+- 使用固定版本镜像，例如 `traefik:v3.6`，不要长期使用 `latest`。
+- 业务容器优先只加入 Traefik 网络，不直接暴露宿主机端口。
+- SSH、数据库、MQTT 这类 TCP 服务要单独评估是否真的需要暴露公网。
+- 能用 VPN、内网、Cloudflare Tunnel 的场景，不要直接把数据库端口暴露公网。
+
+## 总结
+
+Traefik 最适合解决的是“云服务器上服务越来越多之后，入口配置越来越难维护”的问题。它把反向代理规则从集中配置文件里拆出来，放到每个容器自己的 labels 上，让服务的部署声明和路由声明放在一起。
+
+这套方案跑通之后，后续新增服务通常只需要做四件事：
+
+1. 给域名加 DNS 解析。
+2. 让容器加入 `traefik` 网络。
+3. 在容器 labels 中声明 Host、entrypoint、证书解析器和内部端口。
+4. `docker compose up -d` 启动服务。
+
+从维护体验上看，这比每次都手写 Nginx server block 更适合个人服务器、小团队服务器和多服务实验环境。入口清晰、证书自动续签、接入方式统一，后面扩展 WebSocket、gRPC、SSH 或 TCP 服务时也不会推倒重来。
+
+## 参考资料
+
+- [Traefik Docker Quick Start](https://doc.traefik.io/traefik/getting-started/docker/)
+- [Traefik Install Documentation](https://doc.traefik.io/traefik/master/getting-started/install-traefik/)
+- [Traefik ACME Certificate Resolver](https://doc.traefik.io/traefik/master/reference/install-configuration/tls/certificate-resolvers/acme/)
+- [Traefik TCP Router](https://doc.traefik.io/traefik/reference/routing-configuration/tcp/routing/router/)
+- [Traefik WebSocket Guide](https://doc.traefik.io/traefik/v3.4/user-guides/websocket/)
+- [Traefik Buffering Middleware](https://doc.traefik.io/traefik/v2.9/middlewares/http/buffering/)
+- [Lego Cloudflare DNS Provider](https://go-acme.github.io/lego/dns/cloudflare/)
+- [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
