@@ -63,6 +63,8 @@ const COLORS = {
 } as const;
 
 const DIMMED_ALPHA = 0.08;
+const NODE_GLOW_ALPHA = '30';
+const LABEL_ZOOM_THRESHOLD = 1.2;
 
 /* ── Types ── */
 interface KnowledgeGraphExplorerProps {
@@ -332,7 +334,7 @@ export default function KnowledgeGraphExplorer({
           }}
           linkDirectionalParticles={0}
           warmupTicks={compact ? 80 : 150}
-          cooldownTicks={300}
+          cooldownTicks={compact ? 120 : 180}
           minZoom={0.3}
           maxZoom={8}
           onEngineStop={handleEngineStop}
@@ -366,36 +368,26 @@ export default function KnowledgeGraphExplorer({
 
             ctx.globalAlpha = isHighlighted ? 1 : DIMMED_ALPHA;
 
-            // Layer 1: outer glow
+            // Layer 1: outer glow. Keep this cheap because it runs every canvas frame.
             const glowR = radius * 2;
-            const grd = ctx.createRadialGradient(
-              x,
-              y,
-              radius * 0.5,
-              x,
-              y,
-              glowR,
-            );
-            grd.addColorStop(0, glowColor + '40');
-            grd.addColorStop(0.5, glowColor + '15');
-            grd.addColorStop(1, glowColor + '00');
             ctx.beginPath();
             ctx.arc(x, y, glowR, 0, 2 * Math.PI);
-            ctx.fillStyle = grd;
+            ctx.fillStyle = `${glowColor}${NODE_GLOW_ALPHA}`;
             ctx.fill();
 
             // Layer 2: core node
-            const core = ctx.createRadialGradient(x, y, 0, x, y, radius);
-            core.addColorStop(0, glowColor);
-            core.addColorStop(1, nodeColor);
             ctx.beginPath();
             ctx.arc(x, y, radius, 0, 2 * Math.PI);
-            ctx.fillStyle = core;
+            ctx.fillStyle = nodeColor;
             ctx.fill();
 
-            // Layer 3: label (DAG layout keeps nodes spaced, always show)
+            // Layer 3: label
             ctx.globalAlpha = isHighlighted ? 0.85 : DIMMED_ALPHA;
-            if (!(compact && !isTag)) {
+            const showLabel =
+              globalScale > LABEL_ZOOM_THRESHOLD ||
+              isTag ||
+              (hoverNode && hoverNode.id === node.id);
+            if (showLabel && !(compact && !isTag)) {
               const fontSize = Math.min(12, Math.max(9, 11 / globalScale));
               ctx.font = `${fontSize}px Inter, -apple-system, sans-serif`;
               ctx.textAlign = 'center';
