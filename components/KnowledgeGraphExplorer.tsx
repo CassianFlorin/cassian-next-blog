@@ -63,8 +63,9 @@ const COLORS = {
 } as const;
 
 const DIMMED_ALPHA = 0.08;
-const NODE_GLOW_ALPHA = '30';
 const LABEL_ZOOM_THRESHOLD = 1.2;
+const NODE_SPRITE_SCALE = 4;
+const NODE_GLOW_SCALE = 2.8;
 
 /* ── Types ── */
 interface KnowledgeGraphExplorerProps {
@@ -97,6 +98,59 @@ const nodeMatchesQuery = (node: KnowledgeNode, query: string) => {
     .join(' ')
     .toLowerCase();
   return text.includes(query);
+};
+
+const getSpriteColorKey = (color: string) => color.replace('#', '');
+
+const createNodeSprite = (
+  radius: number,
+  nodeColor: string,
+  glowColor: string,
+) => {
+  const size = Math.ceil(radius * NODE_GLOW_SCALE * 2 * NODE_SPRITE_SCALE);
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  const center = size / 2;
+  const scaledRadius = radius * NODE_SPRITE_SCALE;
+  const glowRadius = scaledRadius * NODE_GLOW_SCALE;
+
+  const glow = ctx.createRadialGradient(
+    center,
+    center,
+    scaledRadius * 0.45,
+    center,
+    center,
+    glowRadius,
+  );
+  glow.addColorStop(0, `${glowColor}55`);
+  glow.addColorStop(0.45, `${glowColor}22`);
+  glow.addColorStop(1, `${glowColor}00`);
+  ctx.beginPath();
+  ctx.arc(center, center, glowRadius, 0, 2 * Math.PI);
+  ctx.fillStyle = glow;
+  ctx.fill();
+
+  const core = ctx.createRadialGradient(
+    center,
+    center,
+    0,
+    center,
+    center,
+    scaledRadius,
+  );
+  core.addColorStop(0, glowColor);
+  core.addColorStop(1, nodeColor);
+  ctx.beginPath();
+  ctx.arc(center, center, scaledRadius, 0, 2 * Math.PI);
+  ctx.fillStyle = core;
+  ctx.fill();
+
+  return canvas;
 };
 
 const filterGraphData = (
@@ -147,6 +201,7 @@ export default function KnowledgeGraphExplorer({
   const palette = isDark ? COLORS.dark : COLORS.light;
   const graphRef =
     useRef<ForceGraphMethods<GraphNode, KnowledgeLink>>(undefined);
+  const nodeSpriteCache = useRef(new Map<string, HTMLCanvasElement>());
   const [query, setQuery] = useState('');
   const [hoverNode, setHoverNode] = useState<KnowledgeNode | null>(null);
 
@@ -206,6 +261,20 @@ export default function KnowledgeGraphExplorer({
       tags: displayGraphData.nodes.filter((n) => n.type === 'tag').length,
     }),
     [displayGraphData.nodes],
+  );
+
+  const getNodeSprite = useCallback(
+    (radius: number, nodeColor: string, glowColor: string) => {
+      const radiusKey = Math.round(radius * 10) / 10;
+      const key = `${radiusKey}:${getSpriteColorKey(nodeColor)}:${getSpriteColorKey(glowColor)}`;
+      const cached = nodeSpriteCache.current.get(key);
+      if (cached) return cached;
+
+      const sprite = createNodeSprite(radiusKey, nodeColor, glowColor);
+      nodeSpriteCache.current.set(key, sprite);
+      return sprite;
+    },
+    [],
   );
 
   /* Configure forces: radial layout (tags center, posts outer) + collision */
@@ -334,7 +403,7 @@ export default function KnowledgeGraphExplorer({
           }}
           linkDirectionalParticles={0}
           warmupTicks={compact ? 80 : 150}
-          cooldownTicks={compact ? 120 : 180}
+          cooldownTicks={300}
           minZoom={0.3}
           maxZoom={8}
           onEngineStop={handleEngineStop}
@@ -368,20 +437,16 @@ export default function KnowledgeGraphExplorer({
 
             ctx.globalAlpha = isHighlighted ? 1 : DIMMED_ALPHA;
 
-            // Layer 1: outer glow. Keep this cheap because it runs every canvas frame.
-            const glowR = radius * 2;
-            ctx.beginPath();
-            ctx.arc(x, y, glowR, 0, 2 * Math.PI);
-            ctx.fillStyle = `${glowColor}${NODE_GLOW_ALPHA}`;
-            ctx.fill();
+            const sprite = getNodeSprite(radius, nodeColor, glowColor);
+            const spriteSize = sprite.width / NODE_SPRITE_SCALE;
+            ctx.drawImage(
+              sprite,
+              x - spriteSize / 2,
+              y - spriteSize / 2,
+              spriteSize,
+              spriteSize,
+            );
 
-            // Layer 2: core node
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, 2 * Math.PI);
-            ctx.fillStyle = nodeColor;
-            ctx.fill();
-
-            // Layer 3: label
             ctx.globalAlpha = isHighlighted ? 0.85 : DIMMED_ALPHA;
             const showLabel =
               globalScale > LABEL_ZOOM_THRESHOLD ||

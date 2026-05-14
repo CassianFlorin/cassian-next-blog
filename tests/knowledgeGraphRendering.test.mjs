@@ -9,10 +9,25 @@ const componentSource = readFileSync(
   'utf8',
 );
 
+assert.match(
+  componentSource,
+  /const getNodeSprite =/,
+  'Knowledge graph node drawing should cache gradient node sprites.',
+);
+
+const nodeCanvasObjectSource =
+  componentSource.split('nodeCanvasObject={(')[1] || '';
+
+assert.match(
+  nodeCanvasObjectSource,
+  /ctx\.drawImage/,
+  'Knowledge graph node drawing should draw cached sprites per frame.',
+);
+
 assert.equal(
-  componentSource.includes('createRadialGradient'),
+  nodeCanvasObjectSource.includes('createRadialGradient'),
   false,
-  'Knowledge graph node drawing should avoid per-frame radial gradients.',
+  'Knowledge graph node drawing should avoid creating gradients inside the per-frame canvas callback.',
 );
 
 assert.match(
