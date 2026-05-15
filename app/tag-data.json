@@ -19,14 +19,14 @@
   "intellij-idea": 1,
   "开发工具": 3,
   "技术分享": 2,
-  "ai": 3,
+  "ai": 4,
   "cursor": 1,
   "manus": 1,
   "效率提升": 1,
   "contributors": 1,
   "mootool": 1,
   "神策数据": 1,
-  "agent": 2,
+  "agent": 3,
   "openclaw": 1,
   "hermes": 1,
   "工具对比": 1,
@@ -36,5 +36,8 @@
   "traefik": 1,
   "docker": 1,
   "reverse-proxy": 1,
-  "devops": 1
+  "devops": 1,
+  "obsidian": 1,
+  "个人知识管理": 1,
+  "工作流": 1
 }
