@@ -15,7 +15,7 @@ export interface KnowledgeNode {
 export interface KnowledgeLink {
   source: string;
   target: string;
-  type: 'has-tag';
+  type: 'has-tag' | 'wikilink';
 }
 
 export interface KnowledgeGraphData {
@@ -122,3 +122,35 @@ export function buildLocalKnowledgeGraph(
     ),
   };
 }
+
+export function mergeKnowledgeGraphs(
+  ...graphs: KnowledgeGraphData[]
+): KnowledgeGraphData {
+  const nodes = new Map<string, KnowledgeNode>();
+  const links = new Map<string, KnowledgeLink>();
+
+  graphs.forEach((graph) => {
+    graph.nodes.forEach((node) => {
+      if (!nodes.has(node.id)) {
+        nodes.set(node.id, { ...node });
+      }
+    });
+
+    graph.links.forEach((link) => {
+      const source = resolveLinkId(link.source);
+      const target = resolveLinkId(link.target);
+      const key = `${source}->${target}:${link.type}`;
+      if (!links.has(key)) {
+        links.set(key, { ...link, source, target });
+      }
+    });
+  });
+
+  return {
+    nodes: [...nodes.values()],
+    links: [...links.values()],
+  };
+}
+
+const resolveLinkId = (node: string | { id?: string }) =>
+  typeof node === 'string' ? node : node.id || '';

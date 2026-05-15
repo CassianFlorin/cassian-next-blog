@@ -1,8 +1,12 @@
 import KnowledgeGraphExplorer from '@/components/KnowledgeGraphExplorer';
-import { buildKnowledgeGraph } from '@/lib/knowledgeGraph';
+import {
+  buildKnowledgeGraph,
+  mergeKnowledgeGraphs,
+} from '@/lib/knowledgeGraph';
 import { allBlogs } from 'contentlayer/generated';
 import { genPageMetadata } from 'app/seo';
 import { getTranslations } from 'next-intl/server';
+import obsidianGraph from '@/generated/obsidian-graph.json';
 
 export const metadata = genPageMetadata({
   title: 'Knowledge Graph',
@@ -18,7 +22,10 @@ export default async function KnowledgePage({
     searchParams,
     getTranslations('knowledge'),
   ]);
-  const graphData = buildKnowledgeGraph(allBlogs);
+  const graphData = mergeKnowledgeGraphs(
+    buildKnowledgeGraph(allBlogs),
+    obsidianGraph,
+  );
 
   return (
     <div className="space-y-6 pt-6 pb-12">

@@ -119,11 +119,19 @@
     "Tips": "Tips",
     "tips": "Tips",
     "Agent": "Agent",
+    "agent": "Agent",
     "OpenClaw": "OpenClaw",
+    "openclaw": "OpenClaw",
     "Hermes": "Hermes",
+    "hermes": "Hermes",
     "工具对比": "工具对比",
     "架构设计": "架构设计",
     "Harness Engineering": "Harness Engineering",
-    "工程方法论": "工程方法论"
+    "harness-engineering": "Harness Engineering",
+    "工程方法论": "工程方法论",
+    "traefik": "Traefik",
+    "docker": "Docker",
+    "reverse-proxy": "Reverse Proxy",
+    "devops": "DevOps"
   }
 }

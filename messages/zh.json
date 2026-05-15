@@ -132,6 +132,10 @@
     "架构设计": "架构设计",
     "Harness Engineering": "Harness Engineering",
     "harness-engineering": "Harness Engineering",
-    "工程方法论": "工程方法论"
+    "工程方法论": "工程方法论",
+    "traefik": "Traefik",
+    "docker": "Docker",
+    "reverse-proxy": "反向代理",
+    "devops": "DevOps"
   }
 }

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
   buildKnowledgeGraph,
   buildLocalKnowledgeGraph,
+  mergeKnowledgeGraphs,
 } from '../lib/knowledgeGraph';
 
 const posts = [
@@ -66,6 +67,52 @@ assert.deepEqual(localGraph.nodes.map((node) => node.id).sort(), [
 assert.equal(
   localGraph.links.some(
     (link) => link.source === 'post:java-guide' && link.target === 'tag:java',
+  ),
+  true,
+);
+
+const mergedGraph = mergeKnowledgeGraphs(graph, {
+  nodes: [
+    {
+      id: 'obsidian:java-guide',
+      type: 'post',
+      label: 'Java Guide Note',
+      href: '#obsidian-java-guide',
+      slug: 'java-guide-note',
+      tags: ['Java'],
+    },
+    {
+      id: 'tag:java',
+      type: 'tag',
+      label: 'Java',
+      href: '/tags/java',
+      slug: 'java',
+    },
+  ],
+  links: [
+    {
+      source: 'obsidian:java-guide',
+      target: 'tag:java',
+      type: 'has-tag',
+    },
+    {
+      source: 'obsidian:java-guide',
+      target: 'post:java-guide',
+      type: 'wikilink',
+    },
+  ],
+});
+
+assert.equal(
+  mergedGraph.nodes.filter((node) => node.id === 'tag:java').length,
+  1,
+);
+assert.equal(
+  mergedGraph.links.some(
+    (link) =>
+      link.source === 'obsidian:java-guide' &&
+      link.target === 'post:java-guide' &&
+      link.type === 'wikilink',
   ),
   true,
 );

@@ -92,6 +92,19 @@ const cloneGraphData = (g: KnowledgeGraphData): KnowledgeGraphData => ({
 const resolveNodeId = (node: string | KnowledgeNode) =>
   typeof node === 'string' ? node : node.id;
 
+const addAdjacentNode = (
+  map: Map<string, Set<string>>,
+  source: string,
+  target: string,
+) => {
+  const adjacent = map.get(source);
+  if (adjacent) {
+    adjacent.add(target);
+  } else {
+    map.set(source, new Set([target]));
+  }
+};
+
 const nodeMatchesQuery = (node: KnowledgeNode, query: string) => {
   const text = [node.label, node.summary, node.slug, ...(node.tags || [])]
     .filter(Boolean)
@@ -205,19 +218,6 @@ export default function KnowledgeGraphExplorer({
   const [query, setQuery] = useState('');
   const [hoverNode, setHoverNode] = useState<KnowledgeNode | null>(null);
 
-  /* Highlighted neighbours */
-  const highlightedNodeIds = useMemo(() => {
-    if (!hoverNode) return new Set<string>();
-    const ids = new Set([hoverNode.id]);
-    graphData.links.forEach((link) => {
-      const s = resolveNodeId(link.source as string | KnowledgeNode);
-      const tgt = resolveNodeId(link.target as string | KnowledgeNode);
-      if (s === hoverNode.id) ids.add(tgt);
-      if (tgt === hoverNode.id) ids.add(s);
-    });
-    return ids;
-  }, [graphData.links, hoverNode]);
-
   /* Filtered + focused graph data */
   const displayGraphData = useMemo(() => {
     const filtered = filterGraphData(graphData, query);
@@ -233,27 +233,47 @@ export default function KnowledgeGraphExplorer({
     };
   }, [compact, focusedPost, graphData, query]);
 
-  /* Node degree map for dynamic sizing */
-  const nodeDegreeMap = useMemo(() => {
-    const map = new Map<string, number>();
+  const graphTopology = useMemo(() => {
+    const degreeMap = new Map<string, number>();
+    const adjacencyMap = new Map<string, Set<string>>();
+
     displayGraphData.links.forEach((link) => {
       const s = resolveNodeId(link.source as string | KnowledgeNode);
       const tgt = resolveNodeId(link.target as string | KnowledgeNode);
-      map.set(s, (map.get(s) || 0) + 1);
-      map.set(tgt, (map.get(tgt) || 0) + 1);
+      degreeMap.set(s, (degreeMap.get(s) || 0) + 1);
+      degreeMap.set(tgt, (degreeMap.get(tgt) || 0) + 1);
+      addAdjacentNode(adjacencyMap, s, tgt);
+      addAdjacentNode(adjacencyMap, tgt, s);
     });
-    return map;
+
+    return { adjacencyMap, degreeMap };
   }, [displayGraphData.links]);
+
+  /* Highlighted neighbours */
+  const highlightedNodeIds = useMemo(() => {
+    if (!hoverNode) return new Set<string>();
+    return new Set([
+      hoverNode.id,
+      ...(graphTopology.adjacencyMap.get(hoverNode.id) || []),
+    ]);
+  }, [graphTopology.adjacencyMap, hoverNode]);
 
   const getNodeRadius = useCallback(
     (node: GraphNode) => {
-      const degree = nodeDegreeMap.get(node.id) || 1;
+      const degree = graphTopology.degreeMap.get(node.id) || 1;
       const base = node.type === 'tag' ? 4 : 3;
       const scale = compact ? 0.7 : 1;
       return (base + Math.log2(degree + 1) * 2) * scale;
     },
-    [nodeDegreeMap, compact],
+    [graphTopology.degreeMap, compact],
   );
+
+  const handleNodeHover = useCallback((node: KnowledgeNode | null) => {
+    setHoverNode((current) => {
+      if (current?.id === node?.id) return current;
+      return node;
+    });
+  }, []);
 
   const stats = useMemo(
     () => ({
@@ -407,7 +427,7 @@ export default function KnowledgeGraphExplorer({
           minZoom={0.3}
           maxZoom={8}
           onEngineStop={handleEngineStop}
-          onNodeHover={setHoverNode}
+          onNodeHover={handleNodeHover}
           onNodeClick={(node: KnowledgeNode) => router.push(node.href)}
           nodeCanvasObject={(
             node: NodeObject<GraphNode>,

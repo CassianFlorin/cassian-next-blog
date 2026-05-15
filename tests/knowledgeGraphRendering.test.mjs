@@ -36,4 +36,16 @@ assert.match(
   'Knowledge graph labels should be gated by zoom or hover instead of always drawn.',
 );
 
+assert.match(
+  componentSource,
+  /const graphTopology = useMemo/,
+  'Knowledge graph should precompute topology from visible links.',
+);
+
+assert.match(
+  componentSource,
+  /const handleNodeHover = useCallback[\s\S]*current\?\.id === node\?\.id/,
+  'Knowledge graph hover handling should skip state updates when the hovered node is unchanged.',
+);
+
 console.log('knowledgeGraphRendering tests passed');
