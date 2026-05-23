@@ -136,6 +136,9 @@
     "traefik": "Traefik",
     "docker": "Docker",
     "reverse-proxy": "反向代理",
-    "devops": "DevOps"
+    "devops": "DevOps",
+    "Obsidian": "Obsidian",
+    "个人知识管理": "个人知识管理",
+    "工作流": "工作流"
   }
 }

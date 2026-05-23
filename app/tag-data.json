@@ -7,8 +7,8 @@
   "开发习惯": 5,
   "解决方案": 3,
   "github": 6,
-  "tools": 6,
-  "guide": 7,
+  "tools": 7,
+  "guide": 8,
   "java": 7,
   "diff": 2,
   "sdkman": 1,
@@ -37,7 +37,7 @@
   "docker": 1,
   "reverse-proxy": 1,
   "devops": 1,
-  "obsidian": 1,
-  "个人知识管理": 1,
+  "obsidian": 2,
+  "个人知识管理": 2,
   "工作流": 1
 }

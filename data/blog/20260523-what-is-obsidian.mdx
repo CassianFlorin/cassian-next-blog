@@ -1,0 +1,289 @@
+---
+title: 什么是 Obsidian：从安装到命令行打开知识库
+date: '2026-05-23'
+tags:
+  - Obsidian
+  - 个人知识管理
+  - Tools
+  - Guide
+summary: >-
+  Obsidian 是一个基于本地 Markdown 文件的知识管理工具。这篇文章介绍它的核心概念、安装方式、Vault 的创建方法，以及如何通过
+  Obsidian CLI 从命令行读取和写入笔记。
+draft: false
+---
+
+# 什么是 Obsidian：从安装到命令行打开知识库
+
+如果你第一次听到 Obsidian，可以先不要把它想得太复杂。
+
+它本质上是一个用来管理本地 Markdown 文件的笔记工具。你写下来的每一篇笔记，通常就是电脑里的一个 `.md` 文件；这些文件放在一个普通文件夹里，Obsidian 把这个文件夹称为 Vault。
+
+所以 Obsidian 的起点不是“又一个云笔记产品”，而是一个更接近文件系统的知识库：内容在本地，格式是开放的，目录自己可见，笔记之间可以用链接连接。
+
+## Obsidian 解决什么问题
+
+普通笔记软件通常强调记录：今天想到什么，就写下来。Obsidian 更适合长期积累：今天写下来的内容，未来还能被搜索、链接、整理、复用。
+
+它有几个很关键的特点。
+
+第一，**笔记是本地文件**。你的知识不是只存在某个在线产品的数据库里，而是放在自己电脑上的文件夹中。你可以备份、同步、迁移，也可以用其他编辑器打开。
+
+第二，**格式是 Markdown**。Markdown 是一种很轻量的文本格式，既适合人阅读，也适合程序处理。标题、列表、代码块、引用、链接，都可以用普通文本表达。
+
+第三，**笔记之间可以互相链接**。在 Obsidian 中输入 `[[项目复盘]]`，就可以链接到另一篇笔记。时间久了，你不是只得到一堆孤立文档，而是得到一个互相连接的知识网络。
+
+第四，**它适合和自动化工具配合**。因为笔记本质上是文件，脚本、Agent、命令行工具都可以读取和写入这些内容。这也是它适合成为个人知识库底座的原因。
+
+## 几个基础概念
+
+在安装之前，先理解几个词会轻松很多。
+
+### Vault
+
+Vault 是 Obsidian 管理的一整个知识库。你可以把它理解成一个普通文件夹，例如：
+
+```text
+我的知识库/
+├── 工作/
+├── 学习/
+├── 项目/
+└── 日记/
+```
+
+Obsidian 打开的不是某一篇笔记，而是整个 Vault。一个人可以有多个 Vault，但刚开始建议只建一个。
+
+### Note
+
+Note 就是一篇笔记，通常对应一个 `.md` 文件。
+
+比如你在 Obsidian 里创建一篇叫 `什么是 Agent` 的笔记，文件系统里通常会看到：
+
+```text
+什么是 Agent.md
+```
+
+这点很重要：Obsidian 没有把你的内容锁在一个奇怪格式里。
+
+### Link
+
+Link 是笔记之间的连接。
+
+```markdown
+这篇文章和 [[Agent 与 Obsidian 工作流]] 有关。
+```
+
+当你点击这个链接时，Obsidian 会打开对应笔记。如果这篇笔记还不存在，也可以直接创建。
+
+### Graph View
+
+Graph View 是 Obsidian 的图谱视图。它会把笔记画成点，把链接画成线。
+
+很多人第一次接触 Obsidian 会被图谱吸引，但图谱不是核心。真正有价值的是你在写笔记时主动建立了连接，图谱只是这些连接的可视化结果。
+
+## 安装 Obsidian
+
+最稳妥的方式是从 Obsidian 官网下载：
+
+[https://obsidian.md/download](https://obsidian.md/download)
+
+选择自己的系统版本：
+
+- macOS：下载 `.dmg`，拖到 Applications。
+- Windows：下载安装包，按照安装向导完成。
+- Linux：根据自己的发行版选择 AppImage、deb、rpm 或其他格式。
+
+安装完成后，打开 Obsidian。第一次启动时，它会让你选择：创建新 Vault，或者打开已有文件夹。
+
+如果你是新用户，建议选择创建新 Vault。
+
+## 创建第一个 Vault
+
+我建议刚开始不要设计复杂目录，先建一个能跑起来的结构。
+
+例如创建一个 Vault，名字叫：
+
+```text
+My Knowledge Base
+```
+
+然后在里面建几个目录：
+
+```text
+Inbox/
+Projects/
+Knowledge/
+Outputs/
+```
+
+这四个目录足够开始使用：
+
+- `Inbox`：临时输入，先放还没整理的内容。
+- `Projects`：项目过程、会议记录、排查记录。
+- `Knowledge`：长期复用的概念、方法、经验。
+- `Outputs`：准备输出成博客、文档、方案的内容。
+
+目录不需要一开始完美。Obsidian 的好处是它就是文件夹，后面随时可以调整。
+
+## 写第一篇笔记
+
+先创建一篇最简单的笔记，比如：
+
+```text
+我的第一篇 Obsidian 笔记
+```
+
+内容可以这样写：
+
+```markdown
+# 我的第一篇 Obsidian 笔记
+
+今天开始用 Obsidian 管理自己的知识库。
+
+## 我想解决的问题
+
+- 不想让有价值的讨论只留在聊天记录里。
+- 希望项目经验下次还能被找回来。
+- 希望长期积累可以变成文章、文档或方案。
+
+## 相关笔记
+
+- [[个人知识管理]]
+- [[Agent 与 Obsidian 工作流]]
+```
+
+写到这里，你已经用到了 Obsidian 最核心的能力：Markdown、文件、链接。
+
+## 什么是 Obsidian CLI
+
+桌面版 Obsidian 主要面向人使用：打开 App、编辑笔记、搜索内容、查看链接。
+
+而 CLI 面向命令行和自动化场景：在终端里读取笔记、创建笔记、搜索笔记、追加内容。这样 Agent 或脚本就可以和你的知识库协作。
+
+需要注意一点：Obsidian 支持两种常见的自动化入口。
+
+第一种是 `obsidian://` URI。它可以通过链接打开 Vault、打开笔记、创建笔记或触发搜索，适合跨应用联动。
+
+第二种是 Obsidian CLI，也就是在终端里使用 `obsidian` 命令。它适合脚本、Agent 和更复杂的自动化流程。
+
+要启用 CLI，先确保自己安装的是较新的 Obsidian 桌面版，然后在 Obsidian 里打开：
+
+```text
+Settings -> General -> Command line interface
+```
+
+启用之后，按照界面提示把 CLI 注册到系统 PATH。注册完成后，重启终端。
+
+在 macOS 上，注册后通常会创建这个入口：
+
+```bash
+/usr/local/bin/obsidian
+```
+
+在 Windows 上，安装器会提供终端转发入口；在 Linux 上，CLI 通常会放到 `~/.local/bin/obsidian`，需要确认 `~/.local/bin` 已经在 `PATH` 里。
+
+可以先检查：
+
+```bash
+command -v obsidian
+obsidian help
+```
+
+如果 `command -v obsidian` 没有输出，也可以检查：
+
+```bash
+ls -l /usr/local/bin/obsidian
+/usr/local/bin/obsidian help
+```
+
+如果这些命令都不存在，说明你的系统还没有可直接调用的 Obsidian CLI。此时先保证桌面版 Obsidian 正常安装和打开，再回到 Settings 里启用并注册 CLI。
+
+另外，执行 CLI 命令时，Obsidian App 本身需要处于运行状态。
+
+## 用 CLI 查看 Vault
+
+CLI 能正常运行后，可以先看有哪些命令：
+
+```bash
+obsidian help
+```
+
+如果你有多个 Vault，可以指定 Vault 名称：
+
+```bash
+obsidian vault="My Knowledge Base" files
+```
+
+列出文件后，可以读取某一篇笔记：
+
+```bash
+obsidian vault="My Knowledge Base" read path="Knowledge/个人知识管理.md"
+```
+
+也可以查看某个文件的信息：
+
+```bash
+obsidian vault="My Knowledge Base" file path="Knowledge/个人知识管理.md"
+```
+
+这里有两个常见参数需要区分：
+
+- `file=` 更像按笔记名查找，接近 Obsidian 里的 wikilink 体验。
+- `path=` 是精确文件路径，适合脚本和 Agent 使用。
+
+自动化场景下，我更推荐使用 `path=`，因为它更明确。
+
+## 用 CLI 创建和追加笔记
+
+创建一篇新笔记：
+
+```bash
+obsidian vault="My Knowledge Base" create path="Inbox/今天的想法.md" content="今天开始整理 Obsidian 工作流。"
+```
+
+向已有笔记追加内容：
+
+```bash
+obsidian vault="My Knowledge Base" append path="Inbox/今天的想法.md" content="\n\n## 后续行动\n\n- 整理目录结构\n- 建立第一组链接"
+```
+
+读取验证：
+
+```bash
+obsidian vault="My Knowledge Base" read path="Inbox/今天的想法.md"
+```
+
+这三个命令连起来，就是最小的命令行闭环：创建、追加、读取。
+
+## 用 CLI 搜索笔记
+
+当 Vault 变大后，搜索会变得很重要。
+
+```bash
+obsidian vault="My Knowledge Base" search query="Agent"
+```
+
+如果你想让 Agent 帮你找历史上下文，通常可以让它先搜索，再读取相关笔记，最后总结已有结论。
+
+这个流程比单纯依赖聊天记录稳定得多，因为知识保存在你能看见、能修改、能验证的地方。
+
+## 推荐的入门顺序
+
+如果你是第一次用 Obsidian，我建议按这个顺序来：
+
+1. 安装桌面版 Obsidian。
+2. 创建一个 Vault。
+3. 写第一篇 Markdown 笔记。
+4. 学会用 `[[笔记名]]` 建立链接。
+5. 确认本机是否能运行 `obsidian help`。
+6. 用 CLI 创建、读取、搜索一篇笔记。
+7. 再考虑让 Agent 参与整理和复用。
+
+不要一开始就装很多插件，也不要一开始就设计复杂分类。先让一条真实信息从输入、整理、保存、复用走完一次。
+
+## 下一步：让 Agent 使用 Obsidian
+
+当你已经理解 Vault、Markdown、链接和 CLI 之后，Agent 与 Obsidian 的结合就很好理解了。
+
+Obsidian 保存长期知识，Agent 负责读取、提炼、连接和改写。你可以把一次讨论整理成笔记，也可以让 Agent 从旧笔记里找回上下文，再生成新的文章、文档或方案。
+
+下一篇可以继续看：[Agent 与 Obsidian：把个人知识库变成可执行的第二大脑](/blog/20260515-agent-obsidian-knowledge-workflow)。
