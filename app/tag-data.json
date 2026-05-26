@@ -17,16 +17,16 @@
   "工具类": 1,
   "验证": 1,
   "intellij-idea": 1,
-  "开发工具": 3,
+  "开发工具": 4,
   "技术分享": 2,
-  "ai": 4,
+  "ai": 5,
   "cursor": 1,
   "manus": 1,
   "效率提升": 1,
   "contributors": 1,
   "mootool": 1,
   "神策数据": 1,
-  "agent": 3,
+  "agent": 4,
   "openclaw": 1,
   "hermes": 1,
   "工具对比": 1,
@@ -39,5 +39,7 @@
   "devops": 1,
   "obsidian": 2,
   "个人知识管理": 2,
-  "工作流": 1
+  "工作流": 1,
+  "codegraph": 1,
+  "工程效率": 1
 }
