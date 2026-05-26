@@ -216,6 +216,35 @@ CodeGraph 适合找结构。
 
 因为很多工程问题的失败，并不是代码写错一行，而是改错位置、漏看调用方、误判边界。结构化理解能减少这类错误。
 
+## 如何安装 CodeGraph
+
+如果想自己试一下，可以从官方安装器开始：
+
+```bash
+npx @colbymchenry/codegraph
+```
+
+安装器会引导你选择要配置的 Agent，比如 Claude Code、Cursor、Codex CLI、opencode 或 Hermes Agent。配置完成后，重启对应的 Agent，让 MCP server 被重新加载。
+
+然后在具体项目里初始化索引：
+
+```bash
+cd your-project
+codegraph init -i
+```
+
+这一步会在当前项目下生成 `.codegraph/` 索引目录。这个目录属于本地生成物，通常应该加入 `.gitignore`：
+
+```gitignore
+.codegraph/
+```
+
+如果你想看完整文档和源码，可以直接看：
+
+- 官方文档：[colbymchenry.github.io/codegraph](https://colbymchenry.github.io/codegraph/)
+- GitHub 仓库：[colbymchenry/codegraph](https://github.com/colbymchenry/codegraph)
+- 作者本人：[Colby Mchenry](https://github.com/colbymchenry)
+
 ## 结论
 
 CodeGraph 给 AI 编程带来的真实提升，不是让 Agent “更会搜索”，而是让 Agent 更容易理解代码结构。
