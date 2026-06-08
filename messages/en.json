@@ -5,14 +5,50 @@
     "about": "About",
     "projects": "Projects",
     "tags": "Tags",
-    "knowledge": "Knowledge",
+    "knowledge": "Knowledge Map",
     "search": "Search",
     "theme": "Theme",
     "language": "Language"
   },
   "home": {
-    "title": "Welcome to My Blog",
-    "description": "Sharing technology, life and thoughts",
+    "title": "AI Engineering Tool Builder",
+    "description": "I use AI to expand the boundaries of software development, turning engineering experience into tools, writing, and reusable workflows.",
+    "projectsAction": "View Projects",
+    "blogAction": "Read Articles",
+    "githubAction": "GitHub",
+    "focusAreas": {
+      "aiAgent": "AI Agent",
+      "developerTools": "Developer Tools",
+      "knowledgeWorkflows": "Knowledge Workflows",
+      "systemDesign": "System Design"
+    },
+    "featuredProjects": "Featured Projects",
+    "featuredProjectsDescription": "Public tools and workflows that turn repeated engineering work into reusable systems.",
+    "projectProblem": "Problem",
+    "projectProvides": "Provides",
+    "viewProject": "View Project",
+    "relatedArticle": "Related article",
+    "writingTopics": "Writing Topics",
+    "writingTopicsDescription": "Curated paths through the blog, organized around tools, systems, and long-term knowledge workflows.",
+    "writingTopicCards": {
+      "aiTools": {
+        "title": "AI Agents and Developer Tools",
+        "description": "Notes on CodeGraph, skill-hub, agent frameworks, and AI-assisted development practice."
+      },
+      "engineeringEfficiency": {
+        "title": "System Design and Engineering Efficiency",
+        "description": "Backend systems, development environments, deployment entry points, and engineering toolchain practice."
+      },
+      "knowledgeManagement": {
+        "title": "Personal Knowledge Management and Obsidian",
+        "description": "How agents, Obsidian, and knowledge graphs can form a durable knowledge workflow."
+      }
+    },
+    "knowledgeMapTitle": "My Knowledge Map",
+    "knowledgeMapDescription": "Explore how posts, tags, and knowledge notes connect across AI tools, engineering systems, and personal workflows.",
+    "openKnowledgeMap": "Open Knowledge Map",
+    "selectedArticles": "Selected Articles",
+    "selectedArticlesDescription": "Representative writing on agent tooling, engineering workflows, and knowledge systems.",
     "readMore": "Read More",
     "viewAllPosts": "View All Posts"
   },
@@ -44,11 +80,20 @@
     "description": "Some projects I've worked on",
     "viewProject": "View Project",
     "viewCode": "View Code",
-    "learnMore": "Learn more"
+    "learnMore": "Learn more",
+    "featuredProjects": "Featured Projects",
+    "builderEcosystem": "Builder Ecosystem",
+    "openSourceParticipation": "Open Source Participation",
+    "projectType": "Project",
+    "problem": "Problem",
+    "solution": "Solution",
+    "techStack": "Tech Stack",
+    "relatedPosts": "Related Posts",
+    "github": "GitHub"
   },
   "knowledge": {
-    "title": "Knowledge Graph",
-    "description": "Explore how blog posts and tags connect across the site.",
+    "title": "Knowledge Map",
+    "description": "Explore how posts, tags, and knowledge notes connect across the site.",
     "graphLabel": "Knowledge Graph",
     "stats": "{posts} posts · {tags} tags",
     "searchGraph": "Search graph",
@@ -91,6 +136,10 @@
     "Cursor": "Cursor",
     "Manus": "Manus",
     "效率提升": "Efficiency Improvement",
+    "随笔记录": "Reflection Notes",
+    "反思": "Reflection",
+    "工作": "Work",
+    "心情随笔": "Mood Notes",
     "java": "Java",
     "sdkman": "SDKMAN",
     "intellij-idea": "IntelliJ IDEA",
@@ -129,11 +178,15 @@
     "Harness Engineering": "Harness Engineering",
     "harness-engineering": "Harness Engineering",
     "工程方法论": "工程方法论",
+    "工程效率": "Engineering Efficiency",
     "traefik": "Traefik",
     "docker": "Docker",
     "reverse-proxy": "Reverse Proxy",
     "devops": "DevOps",
     "Obsidian": "Obsidian",
+    "obsidian": "Obsidian",
+    "CodeGraph": "CodeGraph",
+    "codegraph": "CodeGraph",
     "个人知识管理": "Personal Knowledge Management",
     "工作流": "Workflow"
   }

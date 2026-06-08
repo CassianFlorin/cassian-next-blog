@@ -5,14 +5,50 @@
     "about": "关于",
     "projects": "项目",
     "tags": "标签",
-    "knowledge": "知识图谱",
+    "knowledge": "知识地图",
     "search": "搜索",
     "theme": "主题",
     "language": "语言"
   },
   "home": {
-    "title": "欢迎来到我的博客",
-    "description": "分享技术、生活和想法",
+    "title": "AI 工程工具 Builder",
+    "description": "我用 AI 扩展软件开发边界，把日常工程经验沉淀成工具、文章和可复用的工作流。",
+    "projectsAction": "查看项目",
+    "blogAction": "阅读文章",
+    "githubAction": "GitHub",
+    "focusAreas": {
+      "aiAgent": "AI Agent",
+      "developerTools": "开发者工具",
+      "knowledgeWorkflows": "知识工作流",
+      "systemDesign": "系统设计"
+    },
+    "featuredProjects": "精选项目",
+    "featuredProjectsDescription": "把重复工程工作沉淀为可复用系统的公开工具和工作流。",
+    "projectProblem": "问题",
+    "projectProvides": "提供能力",
+    "viewProject": "查看项目",
+    "relatedArticle": "相关文章",
+    "writingTopics": "写作主题",
+    "writingTopicsDescription": "围绕工具、系统和长期知识工作流整理的博客阅读路径。",
+    "writingTopicCards": {
+      "aiTools": {
+        "title": "AI Agent 与开发者工具",
+        "description": "记录 CodeGraph、skill-hub、Agent 框架和 AI 辅助开发的实践。"
+      },
+      "engineeringEfficiency": {
+        "title": "系统设计与工程效率",
+        "description": "沉淀后端系统、开发环境、部署入口和工程工具链经验。"
+      },
+      "knowledgeManagement": {
+        "title": "个人知识管理与 Obsidian",
+        "description": "探索 Agent、Obsidian 和知识图谱如何组成长期知识工作流。"
+      }
+    },
+    "knowledgeMapTitle": "我的知识地图",
+    "knowledgeMapDescription": "探索文章、标签和知识笔记如何在 AI 工具、工程系统和个人工作流之间连接。",
+    "openKnowledgeMap": "打开知识地图",
+    "selectedArticles": "精选文章",
+    "selectedArticlesDescription": "关于 Agent 工具、工程工作流和知识系统的代表性写作。",
     "readMore": "阅读更多",
     "viewAllPosts": "查看所有文章"
   },
@@ -44,11 +80,20 @@
     "description": "我参与的一些项目",
     "viewProject": "查看项目",
     "viewCode": "查看代码",
-    "learnMore": "了解更多"
+    "learnMore": "了解更多",
+    "featuredProjects": "精选项目",
+    "builderEcosystem": "Builder 生态",
+    "openSourceParticipation": "开源参与",
+    "projectType": "项目",
+    "problem": "问题",
+    "solution": "解决方案",
+    "techStack": "技术栈",
+    "relatedPosts": "相关文章",
+    "github": "GitHub"
   },
   "knowledge": {
-    "title": "知识图谱",
-    "description": "通过文章与标签的关系网络，探索博客内容之间的连接。",
+    "title": "知识地图",
+    "description": "通过文章、标签和知识笔记之间的连接，探索这个站点的内容脉络。",
     "graphLabel": "知识图谱",
     "stats": "{posts} 篇文章 · {tags} 个标签",
     "searchGraph": "搜索图谱",
@@ -133,11 +178,15 @@
     "Harness Engineering": "Harness Engineering",
     "harness-engineering": "Harness Engineering",
     "工程方法论": "工程方法论",
+    "工程效率": "工程效率",
     "traefik": "Traefik",
     "docker": "Docker",
     "reverse-proxy": "反向代理",
     "devops": "DevOps",
     "Obsidian": "Obsidian",
+    "obsidian": "Obsidian",
+    "CodeGraph": "CodeGraph",
+    "codegraph": "CodeGraph",
     "个人知识管理": "个人知识管理",
     "工作流": "工作流"
   }

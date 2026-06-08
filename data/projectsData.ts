@@ -1,26 +1,85 @@
-interface Project {
+export interface Project {
   title: string;
   description: string;
-  href?: string;
   imgSrc?: string;
+  problem: string;
+  solution: string;
+  href: string;
+  sourceHref: string;
+  category: 'featured' | 'ecosystem' | 'open-source';
+  status: string;
+  techStack: string[];
+  relatedPosts?: Array<{
+    title: string;
+    href: string;
+  }>;
 }
 
 const projectsData: Project[] = [
   {
-    title: 'A Search Engine',
-    description: `What if you could look up any information in the world? Webpages, images, videos
-    and more. Google has many features to help you find exactly what you're looking
-    for.`,
-    imgSrc: '/static/images/google.png',
-    href: 'https://www.google.com',
+    title: 'skill-hub',
+    description:
+      'The package manager for AI agent skills. Install, update, sync, and govern skills across coding agents.',
+    problem:
+      'AI coding agents are becoming part of daily development, but their reusable skills are still scattered across repos, local folders, and different agent ecosystems.',
+    solution:
+      'skill-hub turns skills into manageable packages so they can be installed, updated, synchronized, and governed across Codex, Claude, Gemini, and similar workflows.',
+    href: 'https://github.com/CassianFlorin/skill-hub',
+    sourceHref: 'https://github.com/CassianFlorin/skill-hub',
+    category: 'featured',
+    status: 'Active',
+    techStack: ['Go', 'CLI', 'AI Agent', 'Developer Tools'],
+    relatedPosts: [
+      {
+        title: 'Agent 光会 grep 还不够：CodeGraph 让它先看懂代码结构',
+        href: '/blog/20260526-codegraph-agent-coding',
+      },
+    ],
   },
   {
-    title: 'The Time Machine',
-    description: `Imagine being able to travel back in time or to the future. Simple turn the knob
-    to the desired date and press "Go". No more worrying about lost keys or
-    forgotten headphones with this simple yet affordable solution.`,
-    imgSrc: '/static/images/time-machine.jpg',
-    href: '/blog/the-time-machine',
+    title: 'database-cli',
+    description: 'Read-only database CLI skill for Codex.',
+    problem:
+      'Real production debugging often needs schema lookup, safe read-only SQL, and cross-environment comparison without turning an AI session into an unsafe database client.',
+    solution:
+      'database-cli gives Codex a controlled database investigation workflow: inspect schema, search metadata, run read-only queries, and compare records with guardrails.',
+    href: 'https://github.com/CassianFlorin/database-cli',
+    sourceHref: 'https://github.com/CassianFlorin/database-cli',
+    category: 'featured',
+    status: 'Active',
+    techStack: ['Python', 'CLI', 'Codex Skill', 'Database'],
+  },
+  {
+    title: 'skill-hub-registry',
+    description: 'Official catalog registry for skill-hub.',
+    problem:
+      'A package manager needs a trusted source of skill metadata so users can discover installable skills without copying raw repository paths by hand.',
+    solution:
+      'skill-hub-registry provides the catalog layer for skill-hub, separating registry metadata from the CLI runtime.',
+    href: 'https://github.com/CassianFlorin/skill-hub-registry',
+    sourceHref: 'https://github.com/CassianFlorin/skill-hub-registry',
+    category: 'ecosystem',
+    status: 'Active',
+    techStack: ['Python', 'Registry', 'Catalog', 'Automation'],
+  },
+  {
+    title: 'MooTool',
+    description: 'Handy tool set for developers. 开发者常备小工具。',
+    problem:
+      'Developers repeatedly need small local utilities for text, encoding, diffing, and daily engineering tasks.',
+    solution:
+      'MooTool collects practical developer utilities in a Java desktop tool. This site presents it as open-source participation in developer tooling.',
+    href: 'https://github.com/CassianFlorin/MooTool',
+    sourceHref: 'https://github.com/CassianFlorin/MooTool',
+    category: 'open-source',
+    status: 'Open-source participation',
+    techStack: ['Java', 'Developer Tools', 'Desktop Utility'],
+    relatedPosts: [
+      {
+        title: '今天成为了 MooTool 贡献者',
+        href: '/blog/20250927-MooToolContributors',
+      },
+    ],
   },
 ];
 
