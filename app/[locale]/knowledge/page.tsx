@@ -9,8 +9,9 @@ import { getTranslations } from 'next-intl/server';
 import obsidianGraph from '@/generated/obsidian-graph.json';
 
 export const metadata = genPageMetadata({
-  title: 'Knowledge Graph',
-  description: 'Explore blog posts and tags as a connected knowledge graph.',
+  title: 'Knowledge Map',
+  description:
+    'Explore how posts, tags, and knowledge notes connect across the site.',
 });
 
 export default async function KnowledgePage({
