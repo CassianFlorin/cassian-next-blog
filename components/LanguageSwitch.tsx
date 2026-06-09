@@ -32,7 +32,7 @@ export default function LanguageSwitch() {
       <select
         value={locale}
         onChange={(e) => handleLanguageChange(e.target.value)}
-        className="border-primary-900/10 focus:ring-primary-500 h-9 min-w-[5.9rem] appearance-none rounded-full border bg-transparent py-1.5 pr-7 pl-3 text-sm font-medium text-gray-700 transition-colors hover:bg-white/50 focus:ring-2 focus:outline-none dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/5"
+        className="border-primary-900/10 focus:ring-primary-500 h-9 min-w-[5.9rem] rounded-full border bg-transparent py-1.5 pr-2 pl-3 text-sm font-medium text-gray-700 transition-colors hover:bg-white/50 focus:ring-2 focus:outline-none dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/5"
       >
         {locales.map((loc) => (
           <option key={loc} value={loc}>
@@ -40,10 +40,6 @@ export default function LanguageSwitch() {
           </option>
         ))}
       </select>
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute right-3 h-1.5 w-1.5 rotate-45 border-r border-b border-gray-500 dark:border-gray-400"
-      />
     </div>
   );
 }
