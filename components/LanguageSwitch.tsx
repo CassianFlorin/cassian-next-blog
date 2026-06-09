@@ -1,20 +1,24 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
-import { locales, localeConfig } from '../i18n';
+import { locales, localeConfig } from '@/lib/i18nRouting';
 
 export default function LanguageSwitch() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const t = useTranslations('common');
 
   const handleLanguageChange = (newLocale: string) => {
-    // 移除当前语言前缀
-    const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/';
-    // 构建新的路径
+    const localePrefix = `/${locale}`;
+    const pathWithoutLocale =
+      pathname === localePrefix
+        ? '/'
+        : pathname.startsWith(`${localePrefix}/`)
+          ? pathname.slice(localePrefix.length)
+          : pathname;
     const newPath = `/${newLocale}${pathWithoutLocale}`;
+    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; samesite=lax`;
     router.push(newPath);
   };
 

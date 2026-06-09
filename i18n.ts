@@ -1,31 +1,21 @@
 import { getRequestConfig } from 'next-intl/server';
+import {
+  defaultLocale,
+  isLocale,
+  locales,
+  type Locale,
+} from './lib/i18nRouting';
 
-// 支持的语言列表
-export const locales = ['zh', 'en'] as const;
-export type Locale = (typeof locales)[number];
-
-// 默认语言
-export const defaultLocale: Locale = 'zh';
-
-// 语言配置
-export const localeConfig = {
-  zh: {
-    name: '中文',
-    flag: '🇨🇳',
-    dir: 'ltr' as const,
-  },
-  en: {
-    name: 'English',
-    flag: '🇺🇸',
-    dir: 'ltr' as const,
-  },
-};
+export {
+  defaultLocale,
+  localeConfig,
+  locales,
+  type Locale,
+} from './lib/i18nRouting';
 
 export default getRequestConfig(async ({ locale }) => {
   // 验证语言是否支持，如果不支持则使用默认语言
-  const validLocale = locales.includes(locale as Locale)
-    ? locale
-    : defaultLocale;
+  const validLocale = isLocale(locale) ? locale : defaultLocale;
 
   return {
     locale: validLocale as string,

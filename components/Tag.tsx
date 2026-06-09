@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { slug } from 'github-slugger';
 import { useTranslations } from 'next-intl';
+import Link from './Link';
 
 interface Props {
   text: string;
