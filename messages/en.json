@@ -11,8 +11,8 @@
     "language": "Language"
   },
   "home": {
-    "title": "AI Engineering Tool Builder",
-    "description": "I use AI to expand the boundaries of software development, turning engineering experience into tools, writing, and reusable workflows.",
+    "title": "Cassian Florin",
+    "description": "I build AI engineering tools, developer workflows, and knowledge systems for serious software work.",
     "projectsAction": "View Projects",
     "blogAction": "Read Articles",
     "githubAction": "GitHub",
@@ -23,13 +23,13 @@
       "systemDesign": "System Design"
     },
     "featuredProjects": "Featured Projects",
-    "featuredProjectsDescription": "Public tools and workflows that turn repeated engineering work into reusable systems.",
+    "featuredProjectsDescription": "Public tools shaped around agents, database investigation, and skill distribution.",
     "projectProblem": "Problem",
     "projectProvides": "Provides",
     "viewProject": "View Project",
     "relatedArticle": "Related article",
     "writingTopics": "Writing Topics",
-    "writingTopicsDescription": "Curated paths through the blog, organized around tools, systems, and long-term knowledge workflows.",
+    "writingTopicsDescription": "Long-running notes on tool building, engineering efficiency, and Obsidian workflows.",
     "writingTopicCards": {
       "aiTools": {
         "title": "AI Agents and Developer Tools",
@@ -45,10 +45,10 @@
       }
     },
     "knowledgeMapTitle": "My Knowledge Map",
-    "knowledgeMapDescription": "Explore how posts, tags, and knowledge notes connect across AI tools, engineering systems, and personal workflows.",
+    "knowledgeMapDescription": "Browse the real connections between posts, tags, and knowledge notes.",
     "openKnowledgeMap": "Open Knowledge Map",
     "selectedArticles": "Selected Articles",
-    "selectedArticlesDescription": "Representative writing on agent tooling, engineering workflows, and knowledge systems.",
+    "selectedArticlesDescription": "Recent writing on agent coding, engineering workflows, and knowledge systems.",
     "readMore": "Read More",
     "viewAllPosts": "View All Posts"
   },

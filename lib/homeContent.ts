@@ -1,10 +1,6 @@
 export const heroActions = [
   { href: '/projects', labelKey: 'projectsAction' },
   { href: '/blog', labelKey: 'blogAction' },
-  {
-    href: 'https://github.com/CassianFlorin',
-    labelKey: 'githubAction',
-  },
 ] as const;
 
 export const focusAreaKeys = [

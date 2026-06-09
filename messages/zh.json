@@ -11,8 +11,8 @@
     "language": "语言"
   },
   "home": {
-    "title": "AI 工程工具 Builder",
-    "description": "我用 AI 扩展软件开发边界，把日常工程经验沉淀成工具、文章和可复用的工作流。",
+    "title": "Cassian Florin",
+    "description": "我构建 AI 工程工具、开发者工作流和个人知识系统，把实践沉淀成可复用资产。",
     "projectsAction": "查看项目",
     "blogAction": "阅读文章",
     "githubAction": "GitHub",
@@ -23,13 +23,13 @@
       "systemDesign": "系统设计"
     },
     "featuredProjects": "精选项目",
-    "featuredProjectsDescription": "把重复工程工作沉淀为可复用系统的公开工具和工作流。",
+    "featuredProjectsDescription": "围绕 Agent、数据库排查和技能分发沉淀的公开工具。",
     "projectProblem": "问题",
     "projectProvides": "提供能力",
     "viewProject": "查看项目",
     "relatedArticle": "相关文章",
     "writingTopics": "写作主题",
-    "writingTopicsDescription": "围绕工具、系统和长期知识工作流整理的博客阅读路径。",
+    "writingTopicsDescription": "从工具建设、工程效率到 Obsidian 工作流的长期记录。",
     "writingTopicCards": {
       "aiTools": {
         "title": "AI Agent 与开发者工具",
@@ -45,10 +45,10 @@
       }
     },
     "knowledgeMapTitle": "我的知识地图",
-    "knowledgeMapDescription": "探索文章、标签和知识笔记如何在 AI 工具、工程系统和个人工作流之间连接。",
+    "knowledgeMapDescription": "用图谱查看文章、标签和知识笔记之间的真实连接。",
     "openKnowledgeMap": "打开知识地图",
     "selectedArticles": "精选文章",
-    "selectedArticlesDescription": "关于 Agent 工具、工程工作流和知识系统的代表性写作。",
+    "selectedArticlesDescription": "近期关于 Agent 编程、工程工作流和知识系统的写作。",
     "readMore": "阅读更多",
     "viewAllPosts": "查看所有文章"
   },

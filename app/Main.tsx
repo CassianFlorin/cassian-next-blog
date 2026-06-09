@@ -81,12 +81,23 @@ export default function Home({ posts }: { posts: HomePost[] }) {
     <>
       <section
         ref={headerRef}
-        className="grid gap-10 pt-6 pb-8 lg:min-h-[560px] lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.72fr)] lg:items-center lg:gap-14"
-        style={{ opacity: 0 }}
+        className="grid gap-10 pt-8 pb-12 md:pt-12 lg:min-h-[calc(100dvh-88px)] lg:grid-cols-[minmax(0,0.92fr)_minmax(360px,0.78fr)] lg:items-center lg:gap-16"
       >
         <div className="max-w-3xl space-y-7">
+          <div className="border-primary-900/10 text-primary-900 dark:text-primary-100 inline-flex items-center gap-3 rounded-full border bg-white/55 px-3 py-2 text-sm font-semibold shadow-[0_14px_40px_rgba(36,75,67,0.08)] dark:border-white/10 dark:bg-white/5">
+            <Image
+              src="/static/images/logo.png"
+              alt=""
+              width={28}
+              height={28}
+              priority
+              className="h-7 w-7 rounded-full object-cover"
+            />
+            AI Engineering Tool Builder
+          </div>
+
           <div className="space-y-5">
-            <h1 className="max-w-3xl text-4xl leading-[1.05] font-semibold tracking-tight text-gray-900 sm:text-5xl md:text-6xl dark:text-gray-50">
+            <h1 className="max-w-3xl text-4xl leading-[1.04] font-semibold tracking-tight text-gray-950 sm:text-5xl md:text-6xl dark:text-gray-50">
               {t('home.title')}
             </h1>
             <p className="max-w-2xl text-base leading-7 text-gray-600 sm:text-lg sm:leading-8 dark:text-gray-300">
@@ -101,8 +112,8 @@ export default function Home({ posts }: { posts: HomePost[] }) {
                 href={action.href}
                 className={
                   index === 0
-                    ? 'bg-primary-600 hover:bg-primary-700 active:bg-primary-800 shadow-primary-900/10 dark:bg-primary-400 dark:hover:bg-primary-300 inline-flex min-h-11 items-center rounded-full px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-white shadow-sm transition-all duration-200 active:translate-y-px dark:text-gray-950'
-                    : 'hover:border-primary-300 hover:text-primary-700 dark:hover:border-primary-700 dark:hover:text-primary-300 inline-flex min-h-11 items-center rounded-full border border-gray-200/90 bg-white/75 px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-gray-700 transition-all duration-200 hover:bg-white active:translate-y-px dark:border-gray-800 dark:bg-gray-950/50 dark:text-gray-200 dark:hover:bg-gray-900'
+                    ? 'bg-primary-700 hover:bg-primary-800 active:bg-primary-900 dark:bg-primary-200 dark:hover:bg-primary-100 dark:text-primary-950 inline-flex min-h-11 items-center rounded-full px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-white shadow-[0_16px_45px_rgba(23,55,49,0.16)] transition-all duration-200 active:translate-y-px'
+                    : 'hover:border-primary-400 hover:text-primary-800 dark:hover:border-primary-400 dark:hover:text-primary-100 border-primary-900/15 inline-flex min-h-11 items-center rounded-full border bg-white/65 px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-gray-700 transition-all duration-200 hover:bg-white active:translate-y-px dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/[0.08]'
                 }
               >
                 {t(`home.${action.labelKey}`)}
@@ -111,24 +122,36 @@ export default function Home({ posts }: { posts: HomePost[] }) {
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-[1.75rem] border border-gray-200/70 bg-white/70 p-3 shadow-[0_24px_80px_rgba(74,65,54,0.10)] dark:border-gray-800/80 dark:bg-gray-950/55 dark:shadow-none">
-          <Image
-            src="https://picsum.photos/seed/cassian-agent-workbench/960/1120"
-            alt=""
-            width={960}
-            height={1120}
-            priority
-            className="aspect-[6/7] w-full rounded-[1.35rem] object-cover"
-          />
+        <div className="relative">
+          <div className="border-primary-900/10 dark:bg-primary-950 absolute -top-4 -left-4 hidden h-28 w-28 rounded-[1.5rem] border bg-[#f2ecd8] p-3 shadow-[0_20px_70px_rgba(36,75,67,0.16)] md:block dark:border-white/10">
+            <Image
+              src="/static/images/logo.png"
+              alt=""
+              width={160}
+              height={160}
+              priority
+              className="h-full w-full rounded-[1.15rem] object-cover"
+            />
+          </div>
+          <div className="border-primary-900/10 overflow-hidden rounded-[2rem] border bg-white/45 p-3 shadow-[0_30px_90px_rgba(36,75,67,0.14)] dark:border-white/10 dark:bg-white/5 dark:shadow-none">
+            <Image
+              src="/static/images/avatar.png"
+              alt="Cassian Florin portrait over misty mountains"
+              width={1024}
+              height={1024}
+              priority
+              className="aspect-square w-full rounded-[1.6rem] object-cover"
+            />
+          </div>
         </div>
       </section>
 
-      <section className="border-y border-gray-200/70 py-5 dark:border-gray-800/80">
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="border-primary-900/10 border-y py-5 dark:border-white/10">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {focusAreaKeys.map((area) => (
             <div
               key={area}
-              className="rounded-2xl bg-white/45 px-4 py-3 text-sm font-medium text-gray-700 ring-1 ring-gray-200/70 dark:bg-gray-950/30 dark:text-gray-300 dark:ring-gray-800/80"
+              className="border-primary-900/15 border-l px-4 py-2 text-sm font-semibold text-gray-700 dark:border-white/10 dark:text-gray-300"
             >
               {t(`home.focusAreas.${area}`)}
             </div>
@@ -138,7 +161,7 @@ export default function Home({ posts }: { posts: HomePost[] }) {
 
       <section className="space-y-7 py-14">
         <div className="max-w-2xl space-y-3">
-          <h2 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
+          <h2 className="text-3xl font-semibold tracking-tight text-gray-950 dark:text-gray-50">
             {t('home.featuredProjects')}
           </h2>
           <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">
@@ -146,31 +169,33 @@ export default function Home({ posts }: { posts: HomePost[] }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.25fr_0.75fr]">
           {featuredProjects.map((project, index) => (
             <article
               key={project.title}
               className={
                 index === 0
-                  ? 'group overflow-hidden rounded-[1.75rem] bg-white/70 ring-1 ring-gray-200/80 transition-all duration-300 hover:-translate-y-1 hover:bg-white dark:bg-gray-950/45 dark:ring-gray-800/80 dark:hover:bg-gray-950'
-                  : 'group bg-primary-50/70 ring-primary-200/70 hover:bg-primary-50 dark:bg-primary-950/20 dark:ring-primary-900/40 rounded-[1.75rem] p-6 ring-1 transition-all duration-300 hover:-translate-y-1'
+                  ? 'group ring-primary-900/10 overflow-hidden rounded-[1.5rem] bg-white/62 ring-1 transition-all duration-300 hover:-translate-y-1 hover:bg-white dark:bg-white/[0.045] dark:ring-white/10 dark:hover:bg-white/[0.065]'
+                  : 'group bg-primary-950 ring-primary-900/20 dark:bg-primary-100 dark:text-primary-950 rounded-[1.5rem] p-6 text-white ring-1 transition-all duration-300 hover:-translate-y-1 dark:ring-white/10'
               }
             >
               {index === 0 ? (
-                <div className="grid h-full md:grid-cols-[0.92fr_1fr]">
-                  <Image
-                    src="https://picsum.photos/seed/skill-hub-agent-tools/900/900"
-                    alt=""
-                    width={900}
-                    height={900}
-                    className="h-full min-h-72 w-full object-cover"
-                  />
+                <div className="grid h-full md:grid-cols-[0.85fr_1fr]">
+                  <div className="dark:bg-primary-950 flex min-h-72 items-center justify-center bg-[#f2ecd8] p-8">
+                    <Image
+                      src="/static/images/logo.png"
+                      alt=""
+                      width={420}
+                      height={420}
+                      className="w-full max-w-64 rounded-[1.5rem] object-cover shadow-[0_18px_60px_rgba(36,75,67,0.18)]"
+                    />
+                  </div>
                   <div className="flex flex-col p-6 md:p-7">
                     <ProjectContent project={project} t={t} />
                   </div>
                 </div>
               ) : (
-                <ProjectContent project={project} t={t} compact />
+                <ProjectContent project={project} t={t} compact inverted />
               )}
             </article>
           ))}
@@ -179,7 +204,7 @@ export default function Home({ posts }: { posts: HomePost[] }) {
 
       <section className="space-y-7 py-14">
         <div className="max-w-2xl space-y-3">
-          <h2 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
+          <h2 className="text-3xl font-semibold tracking-tight text-gray-950 dark:text-gray-50">
             {t('home.writingTopics')}
           </h2>
           <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">
@@ -187,22 +212,22 @@ export default function Home({ posts }: { posts: HomePost[] }) {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-[1fr_0.82fr]">
           {writingTopics.map((topic, index) => (
             <Link
               key={topic.href}
               href={topic.href}
               className={
                 index === 0
-                  ? 'group rounded-[1.75rem] bg-gray-900 p-7 text-white transition-all duration-300 hover:-translate-y-1 md:row-span-2 dark:bg-gray-50 dark:text-gray-950'
-                  : 'group rounded-[1.75rem] bg-white/60 p-7 ring-1 ring-gray-200/70 transition-all duration-300 hover:-translate-y-1 hover:bg-white dark:bg-gray-950/40 dark:ring-gray-800/80 dark:hover:bg-gray-950'
+                  ? 'group bg-primary-900 dark:bg-primary-100 dark:text-primary-950 rounded-[1.5rem] p-7 text-white transition-all duration-300 hover:-translate-y-1 md:row-span-2'
+                  : 'group ring-primary-900/10 rounded-[1.5rem] bg-white/55 p-7 ring-1 transition-all duration-300 hover:-translate-y-1 hover:bg-white dark:bg-white/[0.045] dark:ring-white/10 dark:hover:bg-white/[0.065]'
               }
             >
               <h3
                 className={
                   index === 0
-                    ? 'mb-4 text-2xl leading-tight font-semibold tracking-tight text-white transition-colors duration-200 dark:text-gray-950'
-                    : 'group-hover:text-primary-700 dark:group-hover:text-primary-300 mb-3 text-xl leading-tight font-semibold tracking-tight text-gray-900 transition-colors duration-200 dark:text-gray-50'
+                    ? 'dark:text-primary-950 mb-4 text-2xl leading-tight font-semibold tracking-tight text-white transition-colors duration-200'
+                    : 'group-hover:text-primary-800 dark:group-hover:text-primary-200 mb-3 text-xl leading-tight font-semibold tracking-tight text-gray-950 transition-colors duration-200 dark:text-gray-50'
                 }
               >
                 {t(`home.writingTopicCards.${topic.id}.title`)}
@@ -210,7 +235,7 @@ export default function Home({ posts }: { posts: HomePost[] }) {
               <p
                 className={
                   index === 0
-                    ? 'text-sm leading-6 text-gray-200 dark:text-gray-700'
+                    ? 'text-primary-50 dark:text-primary-900 text-sm leading-6'
                     : 'text-sm leading-6 text-gray-600 dark:text-gray-400'
                 }
               >
@@ -222,17 +247,19 @@ export default function Home({ posts }: { posts: HomePost[] }) {
       </section>
 
       <section className="py-14">
-        <div className="grid overflow-hidden rounded-[1.75rem] bg-white/70 ring-1 ring-gray-200/80 md:grid-cols-[0.85fr_1fr] dark:bg-gray-950/45 dark:ring-gray-800/80">
-          <Image
-            src="https://picsum.photos/seed/obsidian-knowledge-map/900/700"
-            alt=""
-            width={900}
-            height={700}
-            className="h-full min-h-64 w-full object-cover"
-          />
+        <div className="ring-primary-900/10 grid overflow-hidden rounded-[1.5rem] bg-white/62 ring-1 md:grid-cols-[0.72fr_1fr] dark:bg-white/[0.045] dark:ring-white/10">
+          <div className="flex min-h-64 items-center justify-center bg-[linear-gradient(135deg,#244b43,#7f9785)] p-8 dark:bg-[linear-gradient(135deg,#13201c,#31534a)]">
+            <Image
+              src="/static/images/avatar.png"
+              alt=""
+              width={520}
+              height={520}
+              className="w-full max-w-72 rounded-[1.5rem] object-cover shadow-[0_24px_80px_rgba(13,29,25,0.22)]"
+            />
+          </div>
           <div className="flex flex-col justify-center gap-6 p-7 md:p-9">
             <div className="max-w-2xl space-y-3">
-              <h2 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
+              <h2 className="text-3xl font-semibold tracking-tight text-gray-950 dark:text-gray-50">
                 {t('home.knowledgeMapTitle')}
               </h2>
               <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">
@@ -241,7 +268,7 @@ export default function Home({ posts }: { posts: HomePost[] }) {
             </div>
             <Link
               href="/knowledge"
-              className="bg-primary-600 hover:bg-primary-700 active:bg-primary-800 dark:bg-primary-400 dark:hover:bg-primary-300 inline-flex min-h-11 w-fit items-center rounded-full px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-white transition-all duration-200 active:translate-y-px dark:text-gray-950"
+              className="bg-primary-700 hover:bg-primary-800 active:bg-primary-900 dark:bg-primary-200 dark:hover:bg-primary-100 dark:text-primary-950 inline-flex min-h-11 w-fit items-center rounded-full px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-white transition-all duration-200 active:translate-y-px"
             >
               {t('home.openKnowledgeMap')}
             </Link>
@@ -251,7 +278,7 @@ export default function Home({ posts }: { posts: HomePost[] }) {
 
       <section className="space-y-7 py-14">
         <div className="max-w-2xl space-y-3">
-          <h2 className="text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
+          <h2 className="text-3xl font-semibold tracking-tight text-gray-950 dark:text-gray-50">
             {t('home.selectedArticles')}
           </h2>
           <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">
@@ -280,7 +307,7 @@ export default function Home({ posts }: { posts: HomePost[] }) {
         <div className="flex justify-start pt-5">
           <Link
             href="/blog"
-            className="hover:border-primary-300 hover:text-primary-700 dark:hover:border-primary-700 dark:hover:text-primary-300 inline-flex min-h-11 items-center rounded-full border border-gray-200/90 bg-white/70 px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-gray-700 transition-all duration-200 hover:bg-white active:translate-y-px dark:border-gray-800 dark:bg-gray-950/45 dark:text-gray-200 dark:hover:bg-gray-950"
+            className="hover:border-primary-400 hover:text-primary-800 dark:hover:border-primary-400 dark:hover:text-primary-100 border-primary-900/15 inline-flex min-h-11 items-center rounded-full border bg-white/65 px-5 py-2.5 text-sm font-semibold whitespace-nowrap text-gray-700 transition-all duration-200 hover:bg-white active:translate-y-px dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/[0.08]"
             aria-label={t('home.viewAllPosts')}
           >
             {t('home.viewAllPosts')}
@@ -295,44 +322,52 @@ function ProjectContent({
   project,
   t,
   compact = false,
+  inverted = false,
 }: {
   project: (typeof projectsData)[number];
   t: ReturnType<typeof useTranslations>;
   compact?: boolean;
+  inverted?: boolean;
 }) {
+  const headingClass = inverted
+    ? 'text-2xl font-semibold tracking-tight text-white dark:text-primary-950'
+    : 'text-2xl font-semibold tracking-tight text-gray-950 dark:text-gray-50';
+  const bodyClass = inverted
+    ? 'text-sm leading-6 text-primary-50 dark:text-primary-900'
+    : 'text-sm leading-6 text-gray-600 dark:text-gray-400';
+  const labelClass = inverted
+    ? 'mb-1 font-semibold text-white dark:text-primary-950'
+    : 'mb-1 font-semibold text-gray-800 dark:text-gray-200';
+  const chipClass = inverted
+    ? 'rounded-full bg-white/[0.12] px-2.5 py-0.5 text-xs font-medium text-primary-50 ring-1 ring-white/[0.18] dark:bg-primary-950/[0.08] dark:text-primary-900 dark:ring-primary-950/10'
+    : 'rounded-full bg-white/70 px-2.5 py-0.5 text-xs font-medium text-gray-700 ring-1 ring-primary-900/10 dark:bg-white/[0.06] dark:text-gray-400 dark:ring-white/10';
+  const linkClass = inverted
+    ? 'text-primary-50 transition-colors duration-200 hover:text-white dark:text-primary-900 dark:hover:text-primary-950'
+    : 'text-primary-800 hover:text-primary-950 dark:text-primary-200 dark:hover:text-primary-100 transition-colors duration-200';
+
   return (
     <div className="flex h-full flex-col space-y-5">
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
-            {project.title}
-          </h3>
-          <span className="rounded-full bg-white/70 px-2.5 py-0.5 text-xs font-medium text-gray-600 ring-1 ring-gray-200/80 dark:bg-gray-900/60 dark:text-gray-400 dark:ring-gray-800">
-            {project.status}
-          </span>
+          <h3 className={headingClass}>{project.title}</h3>
+          <span className={chipClass}>{project.status}</span>
         </div>
-        <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">
-          {project.description}
-        </p>
+        <p className={bodyClass}>{project.description}</p>
       </div>
 
       <div
         className={
           compact
-            ? 'grid gap-4 text-sm leading-6 text-gray-600 dark:text-gray-400'
-            : 'grid gap-4 text-sm leading-6 text-gray-600 sm:grid-cols-2 dark:text-gray-400'
+            ? `grid gap-4 ${bodyClass}`
+            : `grid gap-4 sm:grid-cols-2 ${bodyClass}`
         }
       >
         <div>
-          <p className="mb-1 font-semibold text-gray-800 dark:text-gray-200">
-            {t('home.projectProblem')}
-          </p>
+          <p className={labelClass}>{t('home.projectProblem')}</p>
           <p>{project.problem}</p>
         </div>
         <div>
-          <p className="mb-1 font-semibold text-gray-800 dark:text-gray-200">
-            {t('home.projectProvides')}
-          </p>
+          <p className={labelClass}>{t('home.projectProvides')}</p>
           <p>{project.solution}</p>
         </div>
       </div>
@@ -340,28 +375,18 @@ function ProjectContent({
       <div className="mt-auto space-y-4">
         <div className="flex flex-wrap gap-2">
           {project.techStack.map((tech) => (
-            <span
-              key={tech}
-              className="rounded-full bg-white/70 px-2.5 py-0.5 text-xs font-medium text-gray-700 ring-1 ring-gray-200/80 dark:bg-gray-900/55 dark:text-gray-400 dark:ring-gray-800"
-            >
+            <span key={tech} className={chipClass}>
               {tech}
             </span>
           ))}
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
-          <Link
-            href={project.href}
-            className="text-primary-700 hover:text-primary-900 dark:text-primary-300 dark:hover:text-primary-200 transition-colors duration-200"
-          >
+          <Link href={project.href} className={linkClass}>
             {t('home.viewProject')}
           </Link>
           {project.relatedPosts?.map((post) => (
-            <Link
-              key={post.href}
-              href={post.href}
-              className="text-primary-700 hover:text-primary-900 dark:text-primary-300 dark:hover:text-primary-200 transition-colors duration-200"
-            >
+            <Link key={post.href} href={post.href} className={linkClass}>
               {t('home.relatedArticle')}
             </Link>
           ))}
@@ -375,10 +400,7 @@ function ArticleFeature({ post }: { post: HomePost }) {
   const { slug, date, title, summary, tags } = post;
 
   return (
-    <article
-      className="group rounded-[1.75rem] bg-white/70 p-7 ring-1 ring-gray-200/80 transition-all duration-300 hover:-translate-y-1 hover:bg-white dark:bg-gray-950/45 dark:ring-gray-800/80 dark:hover:bg-gray-950"
-      style={{ opacity: 0 }}
-    >
+    <article className="group ring-primary-900/10 rounded-[1.5rem] bg-white/62 p-7 ring-1 transition-all duration-300 hover:-translate-y-1 hover:bg-white dark:bg-white/[0.045] dark:ring-white/10 dark:hover:bg-white/[0.065]">
       <div className="flex h-full flex-col">
         <time dateTime={date} className="mb-5 text-sm text-gray-500">
           {formatDate(date, siteMetadata.locale)}
@@ -387,7 +409,7 @@ function ArticleFeature({ post }: { post: HomePost }) {
         <h3 className="mb-4 text-2xl leading-tight font-semibold tracking-tight">
           <Link
             href={`/blog/${slug}`}
-            className="group-hover:text-primary-700 dark:group-hover:text-primary-300 text-gray-900 transition-colors duration-200 dark:text-gray-50"
+            className="group-hover:text-primary-800 dark:group-hover:text-primary-200 text-gray-950 transition-colors duration-200 dark:text-gray-50"
           >
             {title}
           </Link>
@@ -411,10 +433,7 @@ function ArticleRow({ post }: { post: HomePost }) {
   const { slug, date, title, summary, tags } = post;
 
   return (
-    <article
-      className="group rounded-[1.75rem] border border-gray-200/80 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white/60 dark:border-gray-800/80 dark:hover:bg-gray-950/35"
-      style={{ opacity: 0 }}
-    >
+    <article className="group border-primary-900/10 rounded-[1.5rem] border p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white/50 dark:border-white/10 dark:hover:bg-white/[0.045]">
       <time dateTime={date} className="mb-3 block text-sm text-gray-500">
         {formatDate(date, siteMetadata.locale)}
       </time>
@@ -422,7 +441,7 @@ function ArticleRow({ post }: { post: HomePost }) {
       <h3 className="mb-2 text-lg leading-snug font-semibold tracking-tight">
         <Link
           href={`/blog/${slug}`}
-          className="group-hover:text-primary-700 dark:group-hover:text-primary-300 text-gray-900 transition-colors duration-200 dark:text-gray-50"
+          className="group-hover:text-primary-800 dark:group-hover:text-primary-200 text-gray-950 transition-colors duration-200 dark:text-gray-50"
         >
           {title}
         </Link>

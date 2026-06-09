@@ -111,18 +111,18 @@ export default async function RootLayout({
       <link
         rel="mask-icon"
         href={`${basePath}/static/favicons/safari-pinned-tab.svg`}
-        color="#5bbad5"
+        color="#244b43"
       />
       <meta name="msapplication-TileColor" content="#000000" />
       <meta
         name="theme-color"
         media="(prefers-color-scheme: light)"
-        content="#FAFAF8"
+        content="#F5F7F0"
       />
       <meta
         name="theme-color"
         media="(prefers-color-scheme: dark)"
-        content="#1a1a1a"
+        content="#121916"
       />
       <link
         rel="alternate"
@@ -134,7 +134,7 @@ export default async function RootLayout({
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5441938758887409"
         crossOrigin="anonymous"
       />
-      <body className="bg-[#FAFAF8] pl-[calc(100vw-100%)] text-gray-800 antialiased dark:bg-[#1a1a1a] dark:text-gray-200">
+      <body className="bg-[#F5F7F0] pl-[calc(100vw-100%)] text-gray-800 antialiased dark:bg-[#121916] dark:text-gray-200">
         <ThemeProviders>{children}</ThemeProviders>
       </body>
     </html>

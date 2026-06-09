@@ -19,10 +19,10 @@ const Header = () => {
   const navRef = useRef<HTMLDivElement>(null);
 
   let headerClass =
-    'flex items-center w-full bg-[#FAFAF8] dark:bg-[#1a1a1a] justify-between gap-6 py-3.5';
+    'flex items-center w-full bg-[#F5F7F0] dark:bg-[#121916] justify-between gap-6 py-3.5';
   if (siteMetadata.stickyNav) {
     headerClass +=
-      ' sticky top-0 z-50 backdrop-blur-sm bg-[#FAFAF8]/90 dark:bg-[#1a1a1a]/90';
+      ' sticky top-0 z-50 backdrop-blur-sm bg-[#F5F7F0]/90 dark:bg-[#121916]/90';
   }
 
   useAnime({
@@ -40,16 +40,12 @@ const Header = () => {
   return (
     <header className={headerClass}>
       <Link href="/" aria-label={siteMetadata.headerTitle}>
-        <div
-          ref={logoRef}
-          className="flex items-center justify-between"
-          style={{ opacity: 0 }}
-        >
-          <div className="mr-3">
+        <div ref={logoRef} className="flex items-center justify-between">
+          <div className="ring-primary-900/10 mr-3 overflow-hidden rounded-2xl ring-1 dark:ring-white/10">
             <Logo />
           </div>
           {typeof siteMetadata.headerTitle === 'string' ? (
-            <div className="hidden h-6 text-xl font-medium text-gray-700 sm:block dark:text-gray-200">
+            <div className="hidden h-6 text-xl font-semibold tracking-tight text-gray-800 sm:block dark:text-gray-100">
               {siteMetadata.headerTitle}
             </div>
           ) : (
@@ -60,7 +56,6 @@ const Header = () => {
       <div
         ref={navRef}
         className="flex items-center space-x-4 leading-5 sm:-mr-6 sm:space-x-6"
-        style={{ opacity: 0 }}
       >
         <div className="no-scrollbar hidden max-w-40 items-center gap-x-5 overflow-x-auto sm:flex md:max-w-72 lg:max-w-96">
           {headerNavLinks
@@ -69,7 +64,7 @@ const Header = () => {
               <Link
                 key={link.title}
                 href={link.href}
-                className="hover:text-primary-600 dark:hover:text-primary-400 text-sm font-normal text-gray-600 transition-colors duration-200 dark:text-gray-300"
+                className="hover:text-primary-700 dark:hover:text-primary-300 text-sm font-medium text-gray-600 transition-colors duration-200 dark:text-gray-300"
               >
                 {t(link.title)}
               </Link>

@@ -1,10 +1,10 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  title: 'Cassian Florin · AI Engineering Tool Builder',
+  title: 'Cassian Florin | AI Engineering Tool Builder',
   author: 'Cassian Florin',
   headerTitle: 'Cassian Florin',
   description:
-    'Cassian Florin writes about AI engineering tools, developer workflows, system design, and personal knowledge systems.',
+    'Cassian Florin builds AI engineering tools, developer workflows, and personal knowledge systems.',
   language: 'zh-cn',
   theme: 'system', // system, dark or light
   siteUrl: 'https://cassianflorin.com',
