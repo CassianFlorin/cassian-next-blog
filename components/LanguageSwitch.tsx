@@ -27,7 +27,7 @@ export default function LanguageSwitch() {
       <select
         value={locale}
         onChange={(e) => handleLanguageChange(e.target.value)}
-        className="focus:ring-primary-500 focus:border-primary-500 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+        className="focus:ring-primary-500 focus:border-primary-500 block min-w-[8.25rem] rounded-md border border-gray-300 py-2 pr-9 pl-3 text-sm shadow-sm focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
       >
         {locales.map((loc) => (
           <option key={loc} value={loc}>
