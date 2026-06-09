@@ -2,7 +2,12 @@
 
 import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
-import { locales, localeConfig } from '@/lib/i18nRouting';
+import { locales } from '@/lib/i18nRouting';
+
+const navLanguageLabels = {
+  zh: '🇨🇳 中文',
+  en: '🇺🇸 EN',
+} as const;
 
 export default function LanguageSwitch() {
   const locale = useLocale();
@@ -23,18 +28,22 @@ export default function LanguageSwitch() {
   };
 
   return (
-    <div className="relative inline-block text-left">
+    <div className="relative inline-flex items-center text-left">
       <select
         value={locale}
         onChange={(e) => handleLanguageChange(e.target.value)}
-        className="focus:ring-primary-500 focus:border-primary-500 block min-w-[8.25rem] rounded-md border border-gray-300 py-2 pr-9 pl-3 text-sm shadow-sm focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+        className="border-primary-900/10 focus:ring-primary-500 h-9 min-w-[5.9rem] appearance-none rounded-full border bg-transparent py-1.5 pr-7 pl-3 text-sm font-medium text-gray-700 transition-colors hover:bg-white/50 focus:ring-2 focus:outline-none dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/5"
       >
         {locales.map((loc) => (
           <option key={loc} value={loc}>
-            {localeConfig[loc].flag} {localeConfig[loc].name}
+            {navLanguageLabels[loc]}
           </option>
         ))}
       </select>
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute right-3 h-1.5 w-1.5 rotate-45 border-r border-b border-gray-500 dark:border-gray-400"
+      />
     </div>
   );
 }
