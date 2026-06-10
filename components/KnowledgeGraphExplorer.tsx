@@ -66,9 +66,9 @@ const COLORS = {
 } as const;
 
 const DIMMED_ALPHA = 0.12;
-const LABEL_ZOOM_THRESHOLD = 2.2;
+const LABEL_ZOOM_THRESHOLD = 3.1;
 const NODE_SPRITE_SCALE = 4;
-const NODE_GLOW_SCALE = 2.8;
+const NODE_GLOW_SCALE = 2.25;
 const DEFAULT_GRAPH_SIZE = { width: 960, height: 660 };
 
 interface KnowledgeGraphExplorerProps {
@@ -116,6 +116,20 @@ const nodeMatchesQuery = (node: KnowledgeNode, query: string) => {
 };
 
 const getSpriteColorKey = (color: string) => color.replace('#', '');
+
+const getHash = (input: string) => {
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = Math.imul(31, hash) + input.charCodeAt(i);
+  }
+  return Math.abs(hash);
+};
+
+const getSeededAngle = (id: string, index: number, total: number) => {
+  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+  const jitter = (getHash(id) % 1000) / 1000;
+  return index * goldenAngle + jitter * ((Math.PI * 2) / Math.max(total, 1));
+};
 
 const clampLabel = (label: string, compact: boolean) => {
   const limit = compact ? 16 : 28;
@@ -284,6 +298,37 @@ export default function KnowledgeGraphExplorer({
     return { adjacencyMap, degreeMap };
   }, [displayGraphData.links]);
 
+  const getRingRadius = useCallback(
+    (node: KnowledgeNode) => {
+      const outerRadius = compact
+        ? 116
+        : Math.min(graphSize.width, graphSize.height, 760) * 0.42;
+      const degree = graphTopology.degreeMap.get(node.id) || 1;
+
+      if (node.type === 'post') return outerRadius;
+      if (degree >= 6) return outerRadius * 0.44;
+      if (degree >= 3) return outerRadius * 0.66;
+      return outerRadius * 0.84;
+    },
+    [compact, graphSize.height, graphSize.width, graphTopology.degreeMap],
+  );
+
+  const graphLayoutData = useMemo(() => {
+    const total = Math.max(displayGraphData.nodes.length, 1);
+    return {
+      nodes: displayGraphData.nodes.map((node, index) => {
+        const angle = getSeededAngle(node.id, index, total);
+        const ringRadius = getRingRadius(node);
+        return {
+          ...node,
+          x: Math.cos(angle) * ringRadius,
+          y: Math.sin(angle) * ringRadius,
+        };
+      }),
+      links: displayGraphData.links,
+    };
+  }, [displayGraphData.links, displayGraphData.nodes, getRingRadius]);
+
   const highlightedNodeIds = useMemo(() => {
     if (!hoverNode) return new Set<string>();
     return new Set([
@@ -307,6 +352,9 @@ export default function KnowledgeGraphExplorer({
     )[0];
   }, [displayGraphData.nodes, focusedPost, graphTopology.degreeMap, hoverNode]);
 
+  const shouldShowDetailCard =
+    !compact && !!activeNode && (!!hoverNode || !!focusedPost);
+
   const activeConnectionCount = activeNode
     ? graphTopology.degreeMap.get(activeNode.id) || 0
     : 0;
@@ -314,11 +362,20 @@ export default function KnowledgeGraphExplorer({
   const getNodeRadius = useCallback(
     (node: GraphNode) => {
       const degree = graphTopology.degreeMap.get(node.id) || 1;
-      const base = node.type === 'tag' ? 4.2 : 3.2;
+      const base = node.type === 'tag' ? 3.6 : 3;
       const scale = compact ? 0.72 : 1;
-      return (base + Math.log2(degree + 1) * 2) * scale;
+      return (base + Math.log2(degree + 1) * 1.45) * scale;
     },
     [compact, graphTopology.degreeMap],
+  );
+
+  const getNodeFootprintRadius = useCallback(
+    (node: GraphNode) => {
+      const radius = getNodeRadius(node);
+      const glowRoom = radius * (node.type === 'tag' ? 2.45 : 2.15);
+      return glowRoom + (compact ? 7 : 15);
+    },
+    [compact, getNodeRadius],
   );
 
   const handleNodeHover = useCallback((node: KnowledgeNode | null) => {
@@ -373,32 +430,47 @@ export default function KnowledgeGraphExplorer({
   useEffect(() => {
     const fg = graphRef.current;
     if (!fg) return;
-    const outerRadius = compact ? 105 : Math.min(graphSize.width, 720) * 0.36;
-    fg.d3Force('charge')?.strength(compact ? -90 : -260);
-    fg.d3Force('link')?.distance(compact ? 48 : 96);
-    fg.d3Force('center')?.strength(0.01);
+    fg.d3Force('charge')?.strength((node: GraphNode) => {
+      const degree = graphTopology.degreeMap.get(node.id) || 1;
+      const base = node.type === 'tag' ? -180 : -130;
+      return (base - Math.min(degree, 8) * 14) * (compact ? 0.45 : 1);
+    });
+    fg.d3Force('link')?.distance((link: KnowledgeLink) => {
+      const source = resolveNodeId(link.source as string | KnowledgeNode);
+      const target = resolveNodeId(link.target as string | KnowledgeNode);
+      const degree = Math.max(
+        graphTopology.degreeMap.get(source) || 1,
+        graphTopology.degreeMap.get(target) || 1,
+      );
+      return (compact ? 52 : 112) + Math.min(degree, 8) * (compact ? 3 : 7);
+    });
+    fg.d3Force('center')?.strength(0.018);
     /* eslint-disable @typescript-eslint/no-explicit-any */
     fg.d3Force(
       'radial',
       forceRadial((node: any) => {
         const n = node as GraphNode;
-        return n.type === 'tag' ? 0 : outerRadius;
-      }).strength(0.28) as any,
+        return getRingRadius(n);
+      }).strength(compact ? 0.18 : 0.12) as any,
     );
     fg.d3Force(
       'collision',
       forceCollide((node: any) => {
         const n = node as GraphNode;
-        const r = getNodeRadius(n);
-        const labelW = clampLabel(n.label, compact).length * 5.6;
-        return Math.max(r + 10, labelW) + 2;
+        return getNodeFootprintRadius(n);
       })
-        .strength(0.86)
-        .iterations(2) as any,
+        .strength(1)
+        .iterations(compact ? 3 : 5) as any,
     );
     /* eslint-enable @typescript-eslint/no-explicit-any */
     fg.d3ReheatSimulation();
-  }, [compact, displayGraphData, getNodeRadius, graphSize.width]);
+  }, [
+    compact,
+    getNodeFootprintRadius,
+    getRingRadius,
+    graphLayoutData,
+    graphTopology.degreeMap,
+  ]);
 
   const fitGraph = useCallback(
     (duration = 700) => {
@@ -406,7 +478,7 @@ export default function KnowledgeGraphExplorer({
       if (!fg) return;
       hasFitted.current = true;
       if (focusedPost) {
-        const focusNode = displayGraphData.nodes.find(
+        const focusNode = graphLayoutData.nodes.find(
           (n) => n.id === `post:${focusedPost}`,
         ) as GraphNode | undefined;
         if (focusNode?.x !== undefined && focusNode?.y !== undefined) {
@@ -415,9 +487,9 @@ export default function KnowledgeGraphExplorer({
           return;
         }
       }
-      fg.zoomToFit(duration, compact ? 16 : 42);
+      fg.zoomToFit(duration, compact ? 18 : 24);
     },
-    [compact, displayGraphData.nodes, focusedPost],
+    [compact, focusedPost, graphLayoutData.nodes],
   );
 
   const handleEngineStop = useCallback(() => {
@@ -489,7 +561,7 @@ export default function KnowledgeGraphExplorer({
         {displayGraphData.nodes.length ? (
           <ForceGraph2D
             ref={graphRef}
-            graphData={displayGraphData}
+            graphData={graphLayoutData}
             width={graphSize.width}
             height={graphSize.height}
             backgroundColor="rgba(0,0,0,0)"
@@ -511,8 +583,10 @@ export default function KnowledgeGraphExplorer({
                 : 0.55;
             }}
             linkDirectionalParticles={0}
-            warmupTicks={compact ? 80 : 150}
-            cooldownTicks={320}
+            warmupTicks={compact ? 140 : 260}
+            cooldownTicks={compact ? 120 : 180}
+            d3AlphaDecay={0.055}
+            d3VelocityDecay={0.58}
             minZoom={0.35}
             maxZoom={8}
             onEngineStop={handleEngineStop}
@@ -531,6 +605,8 @@ export default function KnowledgeGraphExplorer({
                 highlightedNodeIds.size === 0 ||
                 highlightedNodeIds.has(node.id);
               const radius = getNodeRadius(node as GraphNode);
+              const renderRadius =
+                radius / Math.max(1, Math.min(globalScale, 2.6));
               const x = node.x || 0;
               const y = node.y || 0;
 
@@ -547,7 +623,7 @@ export default function KnowledgeGraphExplorer({
 
               ctx.globalAlpha = isHighlighted ? 1 : DIMMED_ALPHA;
 
-              const sprite = getNodeSprite(radius, nodeColor, glowColor);
+              const sprite = getNodeSprite(renderRadius, nodeColor, glowColor);
               const spriteSize = sprite.width / NODE_SPRITE_SCALE;
               ctx.drawImage(
                 sprite,
@@ -559,15 +635,16 @@ export default function KnowledgeGraphExplorer({
 
               if (isTag || isFocused) {
                 ctx.beginPath();
-                ctx.arc(x, y, radius + 3, 0, 2 * Math.PI);
+                ctx.arc(x, y, renderRadius + 2.5 / globalScale, 0, 2 * Math.PI);
                 ctx.strokeStyle = glowColor;
                 ctx.lineWidth = Math.max(1, 1.4 / globalScale);
                 ctx.stroke();
               }
 
+              const degree = graphTopology.degreeMap.get(node.id) || 0;
               const showLabel =
                 globalScale > LABEL_ZOOM_THRESHOLD ||
-                (isTag && (graphTopology.degreeMap.get(node.id) || 0) > 2) ||
+                (isTag && degree >= 7 && globalScale > 1.8) ||
                 (hoverNode && hoverNode.id === node.id);
               if (showLabel && !(compact && !isTag)) {
                 const fontSize = Math.min(
@@ -579,7 +656,7 @@ export default function KnowledgeGraphExplorer({
                 const labelWidth = ctx.measureText(label).width;
                 const labelHeight = fontSize + 7;
                 const labelX = x - labelWidth / 2 - 7;
-                const labelY = y + radius + 5;
+                const labelY = y + renderRadius + 5 / globalScale;
 
                 ctx.globalAlpha = isHighlighted ? 0.92 : DIMMED_ALPHA;
                 ctx.fillStyle = palette.labelBg;
@@ -627,7 +704,7 @@ export default function KnowledgeGraphExplorer({
           </div>
         )}
 
-        {!compact && activeNode && (
+        {shouldShowDetailCard && activeNode && (
           <aside className="pointer-events-none absolute right-4 bottom-4 left-4 hidden sm:right-auto sm:block sm:w-80">
             <div className="border-primary-900/10 pointer-events-auto rounded-xl border bg-white/86 p-4 shadow-[0_18px_54px_rgba(34,58,44,0.16)] backdrop-blur-md dark:border-white/10 dark:bg-[#17221c]/88 dark:shadow-[0_18px_54px_rgba(0,0,0,0.28)]">
               <div className="flex items-center justify-between gap-3">
