@@ -10,7 +10,7 @@ const siteMetadata = {
   siteUrl: 'https://cassianflorin.com',
   siteRepo: 'https://github.com/CassianFlorin/cassian-next-blog',
   siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
-  socialBanner: `${process.env.BASE_PATH || ''}/static/images/twitter-card.png`,
+  socialBanner: `${process.env.BASE_PATH || ''}/static/images/social-card.png`,
   mastodon: '',
   email: 'flowercard591@gmail.com',
   github: 'https://github.com/CassianFlorin',

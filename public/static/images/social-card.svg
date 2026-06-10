@@ -1,0 +1,318 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="1200"
+  height="630"
+  viewBox="0 0 1200 630"
+  role="img"
+  aria-labelledby="title desc"
+>
+  <title id="title">Cassian Florin social sharing card</title>
+  <desc id="desc">
+    A branded social card for Cassian Florin, AI Engineering Tool Builder.
+  </desc>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbfaf6" />
+      <stop offset="0.55" stop-color="#f5f1e8" />
+      <stop offset="1" stop-color="#eee5d5" />
+    </linearGradient>
+    <linearGradient id="inkGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#183f3c" />
+      <stop offset="1" stop-color="#2e5b55" />
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d6a15f" />
+      <stop offset="1" stop-color="#9f6a33" />
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow
+        dx="0"
+        dy="22"
+        stdDeviation="24"
+        flood-color="#5b4a33"
+        flood-opacity="0.13"
+      />
+    </filter>
+    <filter id="lineGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow
+        dx="0"
+        dy="0"
+        stdDeviation="7"
+        flood-color="#d6a15f"
+        flood-opacity="0.24"
+      />
+    </filter>
+    <pattern id="dotGrid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.6" fill="#234946" opacity="0.14" />
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#paper)" />
+  <rect
+    x="0"
+    y="0"
+    width="1200"
+    height="630"
+    fill="url(#dotGrid)"
+    opacity="0.55"
+  />
+  <path
+    d="M0 505 C170 440 260 570 438 508 C600 452 688 300 878 328 C1008 347 1095 433 1200 392 L1200 630 L0 630 Z"
+    fill="#234946"
+    opacity="0.055"
+  />
+  <path
+    d="M-40 92 C155 32 263 105 392 69 C520 34 628 -34 778 23 C943 86 1032 24 1235 4"
+    fill="none"
+    stroke="#d6a15f"
+    stroke-width="2"
+    opacity="0.28"
+  />
+
+  <g transform="translate(80 72)">
+    <g transform="translate(0 0)">
+      <rect x="0" y="0" width="84" height="84" rx="22" fill="#234946" />
+      <path
+        d="M42 19 L72 35.5 L72 69.5 L42 86 L12 69.5 L12 35.5 Z"
+        transform="translate(0 -10)"
+        fill="#f9efd2"
+        opacity="0.96"
+      />
+      <path d="M42 23 C31 38 34 55 42 66 C50 55 53 38 42 23 Z" fill="#234946" />
+      <path d="M42 53 C28 43 16 43 7 48 C19 58 32 62 42 67 Z" fill="#234946" />
+      <path d="M42 53 C56 43 68 43 77 48 C65 58 52 62 42 67 Z" fill="#234946" />
+      <path
+        d="M42 70 L42 42"
+        stroke="#234946"
+        stroke-width="7"
+        stroke-linecap="round"
+      />
+    </g>
+
+    <text
+      x="112"
+      y="30"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="22"
+      font-weight="700"
+      fill="#234946"
+    >
+      cassianflorin.com
+    </text>
+    <text
+      x="112"
+      y="66"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="18"
+      font-weight="600"
+      fill="#86623a"
+    >
+      AI engineering tools and knowledge systems
+    </text>
+  </g>
+
+  <g transform="translate(80 218)">
+    <text
+      x="0"
+      y="0"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="72"
+      font-weight="800"
+      fill="#173936"
+    >
+      Cassian Florin
+    </text>
+    <text
+      x="0"
+      y="70"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="44"
+      font-weight="700"
+      fill="#2c5853"
+    >
+      AI Engineering Tool Builder
+    </text>
+    <text
+      x="0"
+      y="132"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="27"
+      font-weight="500"
+      fill="#5c625e"
+    >
+      Developer tools · Agent workflows · Knowledge systems
+    </text>
+  </g>
+
+  <g transform="translate(80 462)">
+    <rect x="0" y="0" width="172" height="48" rx="24" fill="#234946" />
+    <text
+      x="28"
+      y="31"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="18"
+      font-weight="700"
+      fill="#fbfaf6"
+    >
+      skill-hub
+    </text>
+
+    <rect
+      x="190"
+      y="0"
+      width="188"
+      height="48"
+      rx="24"
+      fill="#ffffff"
+      opacity="0.76"
+      stroke="#d6c8ae"
+    />
+    <text
+      x="218"
+      y="31"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="18"
+      font-weight="700"
+      fill="#234946"
+    >
+      database-cli
+    </text>
+
+    <rect
+      x="396"
+      y="0"
+      width="158"
+      height="48"
+      rx="24"
+      fill="#ffffff"
+      opacity="0.76"
+      stroke="#d6c8ae"
+    />
+    <text
+      x="424"
+      y="31"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="18"
+      font-weight="700"
+      fill="#234946"
+    >
+      CodeGraph
+    </text>
+  </g>
+
+  <g transform="translate(704 104)" filter="url(#softShadow)">
+    <rect
+      x="0"
+      y="0"
+      width="402"
+      height="362"
+      rx="34"
+      fill="#fbfaf6"
+      opacity="0.88"
+      stroke="#ded4bf"
+    />
+    <rect x="32" y="34" width="338" height="64" rx="18" fill="#234946" />
+    <circle cx="62" cy="66" r="8" fill="#d6a15f" />
+    <circle cx="88" cy="66" r="8" fill="#f0d19f" />
+    <circle cx="114" cy="66" r="8" fill="#6c8a84" />
+    <text
+      x="148"
+      y="73"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="18"
+      font-weight="700"
+      fill="#fbfaf6"
+    >
+      agent-workbench
+    </text>
+
+    <g
+      filter="url(#lineGlow)"
+      fill="none"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path
+        d="M88 182 L168 132 L252 176 L312 128"
+        stroke="#d6a15f"
+        stroke-width="5"
+      />
+      <path
+        d="M88 182 L156 244 L250 226 L312 278"
+        stroke="#2e5b55"
+        stroke-width="5"
+      />
+      <path
+        d="M168 132 L156 244 M252 176 L250 226"
+        stroke="#94714a"
+        stroke-width="3"
+        opacity="0.52"
+      />
+    </g>
+
+    <g>
+      <circle cx="88" cy="182" r="28" fill="#234946" />
+      <circle cx="168" cy="132" r="26" fill="#d6a15f" />
+      <circle
+        cx="252"
+        cy="176"
+        r="30"
+        fill="#fbfaf6"
+        stroke="#234946"
+        stroke-width="5"
+      />
+      <circle cx="312" cy="128" r="24" fill="#2e5b55" />
+      <circle
+        cx="156"
+        cy="244"
+        r="26"
+        fill="#fbfaf6"
+        stroke="#d6a15f"
+        stroke-width="5"
+      />
+      <circle cx="250" cy="226" r="24" fill="#234946" />
+      <circle cx="312" cy="278" r="28" fill="#d6a15f" />
+    </g>
+
+    <g
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="18"
+      font-weight="700"
+    >
+      <text x="75" y="188" fill="#fbfaf6">AI</text>
+      <text x="156" y="138" fill="#173936">CLI</text>
+      <text x="235" y="183" fill="#234946">API</text>
+      <text x="300" y="135" fill="#fbfaf6">DB</text>
+      <text x="143" y="251" fill="#234946">KG</text>
+      <text x="238" y="233" fill="#fbfaf6">UX</text>
+      <text x="301" y="285" fill="#173936">OSS</text>
+    </g>
+  </g>
+
+  <g transform="translate(916 510)">
+    <path
+      d="M0 18 L150 18"
+      stroke="#234946"
+      stroke-width="3"
+      stroke-linecap="round"
+      opacity="0.55"
+    />
+    <path
+      d="M150 18 L132 6 M150 18 L132 30"
+      stroke="#234946"
+      stroke-width="3"
+      stroke-linecap="round"
+      opacity="0.55"
+    />
+    <text
+      x="0"
+      y="58"
+      font-family="Arial, Helvetica, sans-serif"
+      font-size="18"
+      font-weight="700"
+      fill="#86623a"
+    >
+      Build · Write · Systematize
+    </text>
+  </g>
+</svg>
