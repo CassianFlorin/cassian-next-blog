@@ -11,8 +11,8 @@ const componentSource = readFileSync(
 
 assert.match(
   componentSource,
-  /const getNodeSprite =/,
-  'Knowledge graph node drawing should cache gradient node sprites.',
+  /buildKnowledgeMapModel/,
+  'Knowledge graph rendering should use the semantic map model.',
 );
 
 const nodeCanvasObjectSource =
@@ -20,8 +20,8 @@ const nodeCanvasObjectSource =
 
 assert.match(
   nodeCanvasObjectSource,
-  /ctx\.drawImage/,
-  'Knowledge graph node drawing should draw cached sprites per frame.',
+  /drawRoundedRect/,
+  'Knowledge graph node drawing should use rounded rectangular nodes.',
 );
 
 assert.equal(
@@ -30,16 +30,34 @@ assert.equal(
   'Knowledge graph node drawing should avoid creating gradients inside the per-frame canvas callback.',
 );
 
+assert.equal(
+  nodeCanvasObjectSource.includes('ctx.drawImage'),
+  false,
+  'Knowledge graph node drawing should not render old point sprites.',
+);
+
 assert.match(
-  componentSource,
-  /const showLabel =[\s\S]*globalScale >[\s\S]*hoverNode/,
-  'Knowledge graph labels should be gated by zoom or hover instead of always drawn.',
+  nodeCanvasObjectSource,
+  /graphNode\.visualType === 'category'[\s\S]*graphNode\.visualType === 'tag'[\s\S]*globalScale > LABEL_ZOOM_THRESHOLD \+ 0\.8/,
+  'Knowledge graph text should prioritize categories, important tags, and focused or zoomed nodes.',
 );
 
 assert.match(
   componentSource,
   /const graphTopology = useMemo/,
   'Knowledge graph should precompute topology from visible links.',
+);
+
+assert.match(
+  componentSource,
+  /forceX[\s\S]*categoryAnchors[\s\S]*forceY/,
+  'Knowledge graph should pull tags and posts toward their category anchors.',
+);
+
+assert.match(
+  componentSource,
+  /link\.type === 'category-tag'/,
+  'Knowledge graph should render category-to-tag links distinctly.',
 );
 
 assert.match(
