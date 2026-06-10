@@ -34,40 +34,43 @@ const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), {
   }
 >;
 
-/* ── Obsidian-inspired color palette ── */
 const COLORS = {
   dark: {
-    bg: '#0f0f1a',
-    tag: '#a78bfa',
-    tagGlow: '#c4b5fd',
-    post: '#7dd3fc',
-    postGlow: '#bae6fd',
-    focused: '#34d399',
-    focusedGlow: '#6ee7b7',
-    link: 'rgba(148,163,184,0.12)',
-    linkHover: 'rgba(167,139,250,0.55)',
-    label: 'rgba(226,232,240,0.85)',
+    bg: '#111915',
+    grid: 'rgba(148, 163, 184, 0.08)',
+    tag: '#8bd7b2',
+    tagGlow: '#bbf7d0',
+    post: '#6ab7c8',
+    postGlow: '#a7f3d0',
+    focused: '#f0b35d',
+    focusedGlow: '#fed7aa',
+    link: 'rgba(160, 181, 170, 0.16)',
+    linkHover: 'rgba(139, 215, 178, 0.62)',
+    label: 'rgba(240, 247, 242, 0.88)',
+    labelBg: 'rgba(17, 25, 21, 0.78)',
   },
   light: {
-    bg: '#f8fafc',
-    tag: '#7c3aed',
-    tagGlow: '#a78bfa',
-    post: '#0284c7',
-    postGlow: '#38bdf8',
-    focused: '#059669',
-    focusedGlow: '#34d399',
-    link: 'rgba(100,116,139,0.18)',
-    linkHover: 'rgba(124,58,237,0.45)',
-    label: 'rgba(30,41,59,0.85)',
+    bg: '#f6f8f2',
+    grid: 'rgba(64, 92, 78, 0.08)',
+    tag: '#2f7d5f',
+    tagGlow: '#77c69d',
+    post: '#2a7f95',
+    postGlow: '#67c8d8',
+    focused: '#b66b1f',
+    focusedGlow: '#f4b46d',
+    link: 'rgba(64, 92, 78, 0.18)',
+    linkHover: 'rgba(47, 125, 95, 0.58)',
+    label: 'rgba(31, 47, 39, 0.9)',
+    labelBg: 'rgba(246, 248, 242, 0.84)',
   },
 } as const;
 
-const DIMMED_ALPHA = 0.08;
-const LABEL_ZOOM_THRESHOLD = 1.2;
+const DIMMED_ALPHA = 0.12;
+const LABEL_ZOOM_THRESHOLD = 2.2;
 const NODE_SPRITE_SCALE = 4;
 const NODE_GLOW_SCALE = 2.8;
+const DEFAULT_GRAPH_SIZE = { width: 960, height: 660 };
 
-/* ── Types ── */
 interface KnowledgeGraphExplorerProps {
   graphData: KnowledgeGraphData;
   focusedPost?: string;
@@ -83,7 +86,6 @@ type GraphNode = KnowledgeNode & {
   fy?: number;
 };
 
-/* ── Helpers ── */
 const cloneGraphData = (g: KnowledgeGraphData): KnowledgeGraphData => ({
   nodes: g.nodes.map((n) => ({ ...n })),
   links: g.links.map((l) => ({ ...l })),
@@ -114,6 +116,33 @@ const nodeMatchesQuery = (node: KnowledgeNode, query: string) => {
 };
 
 const getSpriteColorKey = (color: string) => color.replace('#', '');
+
+const clampLabel = (label: string, compact: boolean) => {
+  const limit = compact ? 16 : 28;
+  return label.length > limit ? `${label.slice(0, limit - 1)}...` : label;
+};
+
+const drawRoundedRect = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) => {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+};
 
 const createNodeSprite = (
   radius: number,
@@ -201,7 +230,6 @@ const filterGraphData = (
   };
 };
 
-/* ── Component ── */
 export default function KnowledgeGraphExplorer({
   graphData,
   focusedPost,
@@ -210,15 +238,22 @@ export default function KnowledgeGraphExplorer({
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const t = useTranslations('knowledge');
-  const isDark = resolvedTheme === 'dark';
+  const [mounted, setMounted] = useState(false);
+  const isDark = mounted && resolvedTheme === 'dark';
   const palette = isDark ? COLORS.dark : COLORS.light;
   const graphRef =
     useRef<ForceGraphMethods<GraphNode, KnowledgeLink>>(undefined);
   const nodeSpriteCache = useRef(new Map<string, HTMLCanvasElement>());
+  const graphShellRef = useRef<HTMLDivElement>(null);
+  const hasFitted = useRef(false);
   const [query, setQuery] = useState('');
   const [hoverNode, setHoverNode] = useState<KnowledgeNode | null>(null);
+  const [graphSize, setGraphSize] = useState(DEFAULT_GRAPH_SIZE);
 
-  /* Filtered + focused graph data */
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const displayGraphData = useMemo(() => {
     const filtered = filterGraphData(graphData, query);
     if (!focusedPost) return filtered;
@@ -249,7 +284,6 @@ export default function KnowledgeGraphExplorer({
     return { adjacencyMap, degreeMap };
   }, [displayGraphData.links]);
 
-  /* Highlighted neighbours */
   const highlightedNodeIds = useMemo(() => {
     if (!hoverNode) return new Set<string>();
     return new Set([
@@ -258,14 +292,33 @@ export default function KnowledgeGraphExplorer({
     ]);
   }, [graphTopology.adjacencyMap, hoverNode]);
 
+  const activeNode = useMemo(() => {
+    if (hoverNode) return hoverNode;
+    if (focusedPost) {
+      const focused = displayGraphData.nodes.find(
+        (n) => n.id === `post:${focusedPost}`,
+      );
+      if (focused) return focused;
+    }
+    return [...displayGraphData.nodes].sort(
+      (a, b) =>
+        (graphTopology.degreeMap.get(b.id) || 0) -
+        (graphTopology.degreeMap.get(a.id) || 0),
+    )[0];
+  }, [displayGraphData.nodes, focusedPost, graphTopology.degreeMap, hoverNode]);
+
+  const activeConnectionCount = activeNode
+    ? graphTopology.degreeMap.get(activeNode.id) || 0
+    : 0;
+
   const getNodeRadius = useCallback(
     (node: GraphNode) => {
       const degree = graphTopology.degreeMap.get(node.id) || 1;
-      const base = node.type === 'tag' ? 4 : 3;
-      const scale = compact ? 0.7 : 1;
+      const base = node.type === 'tag' ? 4.2 : 3.2;
+      const scale = compact ? 0.72 : 1;
       return (base + Math.log2(degree + 1) * 2) * scale;
     },
-    [graphTopology.degreeMap, compact],
+    [compact, graphTopology.degreeMap],
   );
 
   const handleNodeHover = useCallback((node: KnowledgeNode | null) => {
@@ -297,13 +350,32 @@ export default function KnowledgeGraphExplorer({
     [],
   );
 
-  /* Configure forces: radial layout (tags center, posts outer) + collision */
+  useEffect(() => {
+    const shell = graphShellRef.current;
+    if (!shell || typeof ResizeObserver === 'undefined') return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setGraphSize({
+        width: Math.max(320, Math.round(width)),
+        height: Math.max(compact ? 220 : 460, Math.round(height)),
+      });
+    });
+
+    observer.observe(shell);
+    return () => observer.disconnect();
+  }, [compact]);
+
+  useEffect(() => {
+    hasFitted.current = false;
+  }, [displayGraphData.nodes.length, displayGraphData.links.length, query]);
+
   useEffect(() => {
     const fg = graphRef.current;
     if (!fg) return;
-    const outerRadius = compact ? 120 : 280;
-    fg.d3Force('charge')?.strength(compact ? -80 : -200);
-    fg.d3Force('link')?.distance(compact ? 50 : 100);
+    const outerRadius = compact ? 105 : Math.min(graphSize.width, 720) * 0.36;
+    fg.d3Force('charge')?.strength(compact ? -90 : -260);
+    fg.d3Force('link')?.distance(compact ? 48 : 96);
     fg.d3Force('center')?.strength(0.01);
     /* eslint-disable @typescript-eslint/no-explicit-any */
     fg.d3Force(
@@ -311,190 +383,304 @@ export default function KnowledgeGraphExplorer({
       forceRadial((node: any) => {
         const n = node as GraphNode;
         return n.type === 'tag' ? 0 : outerRadius;
-      }).strength(0.3) as any,
+      }).strength(0.28) as any,
     );
     fg.d3Force(
       'collision',
       forceCollide((node: any) => {
         const n = node as GraphNode;
         const r = getNodeRadius(n);
-        const labelW = n.label.length * 5;
-        return Math.max(r + 6, labelW) + 2;
+        const labelW = clampLabel(n.label, compact).length * 5.6;
+        return Math.max(r + 10, labelW) + 2;
       })
-        .strength(0.8)
+        .strength(0.86)
         .iterations(2) as any,
     );
     /* eslint-enable @typescript-eslint/no-explicit-any */
     fg.d3ReheatSimulation();
-  }, [displayGraphData, compact, getNodeRadius]);
+  }, [compact, displayGraphData, getNodeRadius, graphSize.width]);
 
-  /* Auto-center on engine stop */
-  const handleEngineStop = () => {
-    const fg = graphRef.current;
-    if (!fg) return;
-    hasFitted.current = true;
-    if (focusedPost) {
-      const focusNode = displayGraphData.nodes.find(
-        (n) => n.id === `post:${focusedPost}`,
-      ) as GraphNode | undefined;
-      if (focusNode?.x !== undefined && focusNode?.y !== undefined) {
-        fg.centerAt(focusNode.x, focusNode.y, 700);
-        fg.zoom(compact ? 4 : 2.4, 700);
-      }
-    } else {
-      fg.zoomToFit(600, compact ? 10 : 20);
-    }
-  };
-
-  /* Fallback: ensure graph is visible after mount */
-  const hasFitted = useRef(false);
-  useEffect(() => {
-    if (hasFitted.current) return;
-    const timer = setTimeout(() => {
+  const fitGraph = useCallback(
+    (duration = 700) => {
       const fg = graphRef.current;
-      if (!fg || hasFitted.current) return;
+      if (!fg) return;
       hasFitted.current = true;
       if (focusedPost) {
         const focusNode = displayGraphData.nodes.find(
           (n) => n.id === `post:${focusedPost}`,
         ) as GraphNode | undefined;
         if (focusNode?.x !== undefined && focusNode?.y !== undefined) {
-          fg.centerAt(focusNode.x, focusNode.y, 700);
-          fg.zoom(compact ? 4 : 2.4, 700);
+          fg.centerAt(focusNode.x, focusNode.y, duration);
+          fg.zoom(compact ? 4 : 2.35, duration);
+          return;
         }
-      } else {
-        fg.zoomToFit(600, compact ? 10 : 20);
       }
+      fg.zoomToFit(duration, compact ? 16 : 42);
+    },
+    [compact, displayGraphData.nodes, focusedPost],
+  );
+
+  const handleEngineStop = useCallback(() => {
+    fitGraph();
+  }, [fitGraph]);
+
+  useEffect(() => {
+    if (hasFitted.current) return;
+    const timer = setTimeout(() => {
+      if (!hasFitted.current) fitGraph();
     }, 1200);
     return () => clearTimeout(timer);
-  }, [displayGraphData, focusedPost, compact]);
+  }, [displayGraphData, fitGraph, focusedPost, compact]);
 
   return (
     <div
       className={
         compact
-          ? 'overflow-hidden rounded-lg border border-gray-200/70 bg-[#f8fafc] dark:border-gray-800/50 dark:bg-[#0f0f1a]'
-          : 'overflow-hidden rounded-lg border border-gray-200/70 bg-[#f8fafc] shadow-sm dark:border-gray-800/50 dark:bg-[#0f0f1a]'
+          ? 'border-primary-900/10 overflow-hidden rounded-xl border bg-[#f6f8f2] dark:border-white/10 dark:bg-[#111915]'
+          : 'border-primary-900/10 overflow-hidden rounded-xl border bg-[#f6f8f2] shadow-[0_22px_80px_rgba(34,58,44,0.12)] dark:border-white/10 dark:bg-[#111915] dark:shadow-[0_22px_80px_rgba(0,0,0,0.28)]'
       }
     >
-      <div className="flex flex-col gap-3 border-b border-gray-200/70 bg-white/70 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800/50 dark:bg-[#0f0f1a]/80">
-        <div>
-          <p className="text-xs font-medium tracking-wide text-violet-600 uppercase dark:text-violet-400">
-            {t('graphLabel')}
-          </p>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {t('stats', { posts: stats.posts, tags: stats.tags })}
-          </p>
+      <div className="border-primary-900/10 flex flex-col gap-4 border-b bg-white/62 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between dark:border-white/10 dark:bg-white/[0.04]">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              {t('graphLabel')}
+            </p>
+            <p className="border-primary-700/15 bg-primary-50 text-primary-800 dark:border-primary-200/15 dark:bg-primary-300/10 dark:text-primary-100 rounded-full border px-3 py-1 text-xs font-medium">
+              {t('stats', { posts: stats.posts, tags: stats.tags })}
+            </p>
+          </div>
+          {!compact && (
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500 dark:text-gray-400">
+              {t('mapHint')}
+            </p>
+          )}
         </div>
         {!compact && (
-          <label className="w-full max-w-sm">
+          <label className="w-full max-w-md">
             <span className="sr-only">{t('searchGraph')}</span>
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={t('searchPlaceholder')}
-              className="block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-gray-700 ring-1 ring-gray-200/80 transition focus:ring-2 focus:ring-violet-500/50 dark:bg-gray-950 dark:text-gray-200 dark:ring-gray-800 dark:focus:ring-violet-400/50"
+              className="ring-primary-900/10 focus:ring-primary-600/35 dark:focus:ring-primary-300/35 block w-full rounded-full border-0 bg-white px-4 py-2.5 text-sm text-gray-800 ring-1 transition placeholder:text-gray-400 focus:ring-2 dark:bg-[#17221c] dark:text-gray-100 dark:ring-white/10 dark:placeholder:text-gray-500"
             />
           </label>
         )}
       </div>
 
-      <div className={compact ? 'h-[240px]' : 'h-[620px]'}>
-        <ForceGraph2D
-          ref={graphRef}
-          graphData={displayGraphData}
-          backgroundColor={palette.bg}
-          nodeRelSize={1}
-          linkCurvature={0.2}
-          linkColor={(link: LinkObject<GraphNode, KnowledgeLink>) => {
-            const s = resolveNodeId(link.source as string | KnowledgeNode);
-            const tgt = resolveNodeId(link.target as string | KnowledgeNode);
-            if (hoverNode && (s === hoverNode.id || tgt === hoverNode.id)) {
-              return palette.linkHover;
-            }
-            return palette.link;
-          }}
-          linkWidth={(link: LinkObject<GraphNode, KnowledgeLink>) => {
-            const s = resolveNodeId(link.source as string | KnowledgeNode);
-            const tgt = resolveNodeId(link.target as string | KnowledgeNode);
-            return hoverNode && (s === hoverNode.id || tgt === hoverNode.id)
-              ? 1.5
-              : 0.5;
-          }}
-          linkDirectionalParticles={0}
-          warmupTicks={compact ? 80 : 150}
-          cooldownTicks={300}
-          minZoom={0.3}
-          maxZoom={8}
-          onEngineStop={handleEngineStop}
-          onNodeHover={handleNodeHover}
-          onNodeClick={(node: KnowledgeNode) => router.push(node.href)}
-          nodeCanvasObject={(
-            node: NodeObject<GraphNode>,
-            ctx: CanvasRenderingContext2D,
-            globalScale: number,
-          ) => {
-            const isTag = node.type === 'tag';
-            const isFocused = !!(
-              focusedPost && node.id === `post:${focusedPost}`
-            );
-            const isHighlighted =
-              highlightedNodeIds.size === 0 || highlightedNodeIds.has(node.id);
-            const radius = getNodeRadius(node as GraphNode);
-            const x = node.x || 0;
-            const y = node.y || 0;
-
-            const nodeColor = isFocused
-              ? palette.focused
-              : isTag
-                ? palette.tag
-                : palette.post;
-            const glowColor = isFocused
-              ? palette.focusedGlow
-              : isTag
-                ? palette.tagGlow
-                : palette.postGlow;
-
-            ctx.globalAlpha = isHighlighted ? 1 : DIMMED_ALPHA;
-
-            const sprite = getNodeSprite(radius, nodeColor, glowColor);
-            const spriteSize = sprite.width / NODE_SPRITE_SCALE;
-            ctx.drawImage(
-              sprite,
-              x - spriteSize / 2,
-              y - spriteSize / 2,
-              spriteSize,
-              spriteSize,
-            );
-
-            ctx.globalAlpha = isHighlighted ? 0.85 : DIMMED_ALPHA;
-            const showLabel =
-              globalScale > LABEL_ZOOM_THRESHOLD ||
-              isTag ||
-              (hoverNode && hoverNode.id === node.id);
-            if (showLabel && !(compact && !isTag)) {
-              const fontSize = Math.min(12, Math.max(9, 11 / globalScale));
-              ctx.font = `${fontSize}px Inter, -apple-system, sans-serif`;
-              ctx.textAlign = 'center';
-              ctx.textBaseline = 'top';
-              ctx.fillStyle = palette.label;
-              ctx.fillText(node.label, x, y + radius + 3);
-            }
-
-            ctx.globalAlpha = 1;
-          }}
-          nodePointerAreaPaint={(
-            node: NodeObject<GraphNode>,
-            color: string,
-            ctx: CanvasRenderingContext2D,
-          ) => {
-            const radius = getNodeRadius(node as GraphNode);
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(node.x || 0, node.y || 0, radius + 6, 0, 2 * Math.PI);
-            ctx.fill();
+      <div
+        ref={graphShellRef}
+        className={
+          compact
+            ? 'relative h-[250px]'
+            : 'relative h-[560px] sm:h-[620px] lg:h-[700px]'
+        }
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage: `linear-gradient(${palette.grid} 1px, transparent 1px), linear-gradient(90deg, ${palette.grid} 1px, transparent 1px)`,
+            backgroundSize: compact ? '42px 42px' : '56px 56px',
           }}
         />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_52%_44%,rgba(119,198,157,0.2),transparent_32%),radial-gradient(circle_at_78%_72%,rgba(106,183,200,0.16),transparent_28%)] dark:bg-[radial-gradient(circle_at_52%_44%,rgba(139,215,178,0.12),transparent_32%),radial-gradient(circle_at_78%_72%,rgba(106,183,200,0.1),transparent_28%)]" />
+
+        {displayGraphData.nodes.length ? (
+          <ForceGraph2D
+            ref={graphRef}
+            graphData={displayGraphData}
+            width={graphSize.width}
+            height={graphSize.height}
+            backgroundColor="rgba(0,0,0,0)"
+            nodeRelSize={1}
+            linkCurvature={0.14}
+            linkColor={(link: LinkObject<GraphNode, KnowledgeLink>) => {
+              const s = resolveNodeId(link.source as string | KnowledgeNode);
+              const tgt = resolveNodeId(link.target as string | KnowledgeNode);
+              if (hoverNode && (s === hoverNode.id || tgt === hoverNode.id)) {
+                return palette.linkHover;
+              }
+              return palette.link;
+            }}
+            linkWidth={(link: LinkObject<GraphNode, KnowledgeLink>) => {
+              const s = resolveNodeId(link.source as string | KnowledgeNode);
+              const tgt = resolveNodeId(link.target as string | KnowledgeNode);
+              return hoverNode && (s === hoverNode.id || tgt === hoverNode.id)
+                ? 1.6
+                : 0.55;
+            }}
+            linkDirectionalParticles={0}
+            warmupTicks={compact ? 80 : 150}
+            cooldownTicks={320}
+            minZoom={0.35}
+            maxZoom={8}
+            onEngineStop={handleEngineStop}
+            onNodeHover={handleNodeHover}
+            onNodeClick={(node: KnowledgeNode) => router.push(node.href)}
+            nodeCanvasObject={(
+              node: NodeObject<GraphNode>,
+              ctx: CanvasRenderingContext2D,
+              globalScale: number,
+            ) => {
+              const isTag = node.type === 'tag';
+              const isFocused = !!(
+                focusedPost && node.id === `post:${focusedPost}`
+              );
+              const isHighlighted =
+                highlightedNodeIds.size === 0 ||
+                highlightedNodeIds.has(node.id);
+              const radius = getNodeRadius(node as GraphNode);
+              const x = node.x || 0;
+              const y = node.y || 0;
+
+              const nodeColor = isFocused
+                ? palette.focused
+                : isTag
+                  ? palette.tag
+                  : palette.post;
+              const glowColor = isFocused
+                ? palette.focusedGlow
+                : isTag
+                  ? palette.tagGlow
+                  : palette.postGlow;
+
+              ctx.globalAlpha = isHighlighted ? 1 : DIMMED_ALPHA;
+
+              const sprite = getNodeSprite(radius, nodeColor, glowColor);
+              const spriteSize = sprite.width / NODE_SPRITE_SCALE;
+              ctx.drawImage(
+                sprite,
+                x - spriteSize / 2,
+                y - spriteSize / 2,
+                spriteSize,
+                spriteSize,
+              );
+
+              if (isTag || isFocused) {
+                ctx.beginPath();
+                ctx.arc(x, y, radius + 3, 0, 2 * Math.PI);
+                ctx.strokeStyle = glowColor;
+                ctx.lineWidth = Math.max(1, 1.4 / globalScale);
+                ctx.stroke();
+              }
+
+              const showLabel =
+                globalScale > LABEL_ZOOM_THRESHOLD ||
+                (isTag && (graphTopology.degreeMap.get(node.id) || 0) > 2) ||
+                (hoverNode && hoverNode.id === node.id);
+              if (showLabel && !(compact && !isTag)) {
+                const fontSize = Math.min(
+                  12.5,
+                  Math.max(9.5, 11 / globalScale),
+                );
+                const label = clampLabel(node.label, compact);
+                ctx.font = `600 ${fontSize}px Space Grotesk, Inter, -apple-system, sans-serif`;
+                const labelWidth = ctx.measureText(label).width;
+                const labelHeight = fontSize + 7;
+                const labelX = x - labelWidth / 2 - 7;
+                const labelY = y + radius + 5;
+
+                ctx.globalAlpha = isHighlighted ? 0.92 : DIMMED_ALPHA;
+                ctx.fillStyle = palette.labelBg;
+                drawRoundedRect(
+                  ctx,
+                  labelX,
+                  labelY,
+                  labelWidth + 14,
+                  labelHeight,
+                  7,
+                );
+                ctx.fill();
+
+                ctx.globalAlpha = isHighlighted ? 0.96 : DIMMED_ALPHA;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = palette.label;
+                ctx.fillText(label, x, labelY + labelHeight / 2 + 0.5);
+              }
+
+              ctx.globalAlpha = 1;
+            }}
+            nodePointerAreaPaint={(
+              node: NodeObject<GraphNode>,
+              color: string,
+              ctx: CanvasRenderingContext2D,
+            ) => {
+              const radius = getNodeRadius(node as GraphNode);
+              ctx.fillStyle = color;
+              ctx.beginPath();
+              ctx.arc(node.x || 0, node.y || 0, radius + 9, 0, 2 * Math.PI);
+              ctx.fill();
+            }}
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center px-6 text-center">
+            <div className="border-primary-900/10 max-w-sm rounded-xl border bg-white/75 p-5 shadow-sm dark:border-white/10 dark:bg-[#17221c]/85">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {t('noMatches')}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                {t('searchHint')}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {!compact && activeNode && (
+          <aside className="pointer-events-none absolute right-4 bottom-4 left-4 hidden sm:right-auto sm:block sm:w-80">
+            <div className="border-primary-900/10 pointer-events-auto rounded-xl border bg-white/86 p-4 shadow-[0_18px_54px_rgba(34,58,44,0.16)] backdrop-blur-md dark:border-white/10 dark:bg-[#17221c]/88 dark:shadow-[0_18px_54px_rgba(0,0,0,0.28)]">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-primary-700 dark:text-primary-200 text-xs font-medium">
+                  {activeNode.type === 'post' ? t('postNode') : t('tagNode')}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {t('connections', { count: activeConnectionCount })}
+                </p>
+              </div>
+              <h2 className="mt-2 line-clamp-2 text-base leading-6 font-semibold text-gray-900 dark:text-gray-100">
+                {activeNode.label}
+              </h2>
+              {activeNode.summary && (
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                  {activeNode.summary}
+                </p>
+              )}
+              {!!activeNode.tags?.length && (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {activeNode.tags.slice(0, 4).map((tag) => (
+                    <span
+                      key={tag}
+                      className="bg-primary-50 text-primary-800 dark:bg-primary-300/10 dark:text-primary-100 rounded-full px-2 py-1 text-xs"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => router.push(activeNode.href)}
+                className="bg-primary-800 hover:bg-primary-900 dark:bg-primary-300 dark:text-primary-950 dark:hover:bg-primary-200 mt-4 inline-flex w-full items-center justify-center rounded-full px-4 py-2 text-sm font-semibold text-white transition active:translate-y-px"
+              >
+                {t('openNode')}
+              </button>
+            </div>
+          </aside>
+        )}
+
+        {!compact && (
+          <div className="border-primary-900/10 pointer-events-none absolute right-4 bottom-4 hidden rounded-full border bg-white/78 px-3 py-2 text-xs font-medium text-gray-600 shadow-sm backdrop-blur-md sm:flex sm:items-center sm:gap-3 dark:border-white/10 dark:bg-[#17221c]/78 dark:text-gray-300">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#2a7f95]" />
+              {t('legendPosts')}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full border border-[#2f7d5f] bg-[#8bd7b2]" />
+              {t('legendTags')}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
