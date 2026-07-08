@@ -4,9 +4,9 @@ export interface Project {
   imgSrc?: string;
   problem: string;
   solution: string;
-  href: string;
-  sourceHref: string;
-  category: 'featured' | 'ecosystem' | 'open-source';
+  href?: string;
+  sourceHref?: string;
+  category: 'app' | 'featured' | 'ecosystem' | 'open-source';
   status: string;
   techStack: string[];
   relatedPosts?: Array<{
@@ -16,6 +16,25 @@ export interface Project {
 }
 
 const projectsData: Project[] = [
+  {
+    title: 'Litho',
+    description:
+      'A native iOS client for linux.do — a SwiftUI app that renders the Discourse community natively while punching through Cloudflare and keeping you logged in. 原生 iOS 的 linux.do 第三方客户端。',
+    problem:
+      'linux.do runs on Discourse behind Cloudflare, so third-party tools and even simple scripts constantly hit challenge pages and lose their session. There is no smooth, native way to browse and interact from an iPhone.',
+    solution:
+      'Litho routes every request through an off-screen WKWebView gateway that borrows the browser UA / Cookie / TLS fingerprint, so it sails past Cloudflare and holds the login state. On that foundation it delivers a full SwiftUI experience: topic feeds, single-document post rendering, reactions, chat, private messages and real-time notifications via MessageBus.',
+    category: 'app',
+    status: 'Daily driver · Private',
+    techStack: [
+      'Swift',
+      'SwiftUI',
+      'iOS 17+',
+      'WKWebView',
+      'Discourse API',
+      'GRDB',
+    ],
+  },
   {
     title: 'skill-hub',
     description:

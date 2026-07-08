@@ -382,9 +382,11 @@ function ProjectContent({
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
-          <Link href={project.href} className={linkClass}>
-            {t('home.viewProject')}
-          </Link>
+          {project.href && (
+            <Link href={project.href} className={linkClass}>
+              {t('home.viewProject')}
+            </Link>
+          )}
           {project.relatedPosts?.map((post) => (
             <Link key={post.href} href={post.href} className={linkClass}>
               {t('home.relatedArticle')}

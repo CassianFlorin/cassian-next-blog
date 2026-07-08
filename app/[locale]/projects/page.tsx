@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { useAnime } from '@/lib/hooks/useAnime';
 import { fadeInUp } from '@/lib/animations/fadeIn';
 
+const appProjects = projectsData.filter((p) => p.category === 'app');
 const featuredProjects = projectsData.filter((p) => p.category === 'featured');
 const ecosystemProjects = projectsData.filter(
   (p) => p.category === 'ecosystem',
@@ -130,20 +131,26 @@ function ProjectCard({
         )}
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-4 border-t border-gray-200/70 pt-4 text-sm font-medium dark:border-gray-800/70">
-        <Link
-          href={project.sourceHref}
-          className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
-        >
-          {labels.github}
-        </Link>
-        <Link
-          href={project.href}
-          className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-        >
-          {labels.projectType}
-        </Link>
-      </div>
+      {(project.sourceHref || project.href) && (
+        <div className="mt-6 flex flex-wrap gap-4 border-t border-gray-200/70 pt-4 text-sm font-medium dark:border-gray-800/70">
+          {project.sourceHref && (
+            <Link
+              href={project.sourceHref}
+              className="text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
+            >
+              {labels.github}
+            </Link>
+          )}
+          {project.href && (
+            <Link
+              href={project.href}
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              {labels.projectType}
+            </Link>
+          )}
+        </div>
+      )}
     </article>
   );
 }
@@ -181,6 +188,11 @@ export default function Projects() {
           </p>
         </div>
         <div className="space-y-12 py-12">
+          <ProjectSection
+            title={t('applications')}
+            projects={appProjects}
+            labels={projectLabels}
+          />
           <ProjectSection
             title={t('featuredProjects')}
             projects={featuredProjects}
