@@ -24,8 +24,9 @@ const projectsData: Project[] = [
       'linux.do runs on Discourse behind Cloudflare, so third-party tools and even simple scripts constantly hit challenge pages and lose their session. There is no smooth, native way to browse and interact from an iPhone.',
     solution:
       'Litho routes every request through an off-screen WKWebView gateway that borrows the browser UA / Cookie / TLS fingerprint, so it sails past Cloudflare and holds the login state. On that foundation it delivers a full SwiftUI experience: topic feeds, single-document post rendering, reactions, chat, private messages and real-time notifications via MessageBus.',
+    href: '/litho',
     category: 'app',
-    status: 'Daily driver · Private',
+    status: 'Daily driver · iOS 即将上架',
     techStack: [
       'Swift',
       'SwiftUI',

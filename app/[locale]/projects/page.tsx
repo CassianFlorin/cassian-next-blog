@@ -19,6 +19,7 @@ const openSourceProjects = projectsData.filter(
 
 type ProjectLabels = {
   projectType: string;
+  productPage: string;
   problem: string;
   solution: string;
   techStack: string;
@@ -146,7 +147,9 @@ function ProjectCard({
               href={project.href}
               className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              {labels.projectType}
+              {project.href.startsWith('/')
+                ? labels.productPage
+                : labels.projectType}
             </Link>
           )}
         </div>
@@ -160,6 +163,7 @@ export default function Projects() {
   const headerRef = useRef<HTMLDivElement>(null);
   const projectLabels: ProjectLabels = {
     projectType: t('projectType'),
+    productPage: t('productPage'),
     problem: t('problem'),
     solution: t('solution'),
     techStack: t('techStack'),
