@@ -61,6 +61,8 @@ function ProjectCard({
   project: Project;
   labels: ProjectLabels;
 }) {
+  const t = useTranslations('projects');
+
   return (
     <article className="flex h-full flex-col rounded-lg border border-gray-200/70 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-gray-800/70 dark:bg-gray-950">
       <div className="space-y-3">
@@ -69,11 +71,11 @@ function ProjectCard({
             {project.title}
           </h3>
           <span className="w-fit rounded-full border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 dark:border-gray-700 dark:text-gray-300">
-            {project.status}
+            {t(`items.${project.id}.status`)}
           </span>
         </div>
         <p className="text-sm leading-6 text-gray-500 dark:text-gray-400">
-          {project.description}
+          {t(`items.${project.id}.description`)}
         </p>
       </div>
 
@@ -83,7 +85,7 @@ function ProjectCard({
             {labels.problem}
           </h4>
           <p className="mt-1 text-gray-500 dark:text-gray-400">
-            {project.problem}
+            {t(`items.${project.id}.problem`)}
           </p>
         </div>
         <div>
@@ -91,7 +93,7 @@ function ProjectCard({
             {labels.solution}
           </h4>
           <p className="mt-1 text-gray-500 dark:text-gray-400">
-            {project.solution}
+            {t(`items.${project.id}.solution`)}
           </p>
         </div>
 

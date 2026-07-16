@@ -11,69 +11,57 @@ import SearchButton from './SearchButton';
 import LanguageSwitch from './LanguageSwitch';
 import { useTranslations } from 'next-intl';
 import { useAnime } from '@/lib/hooks/useAnime';
-import { fadeIn, fadeInUp } from '@/lib/animations/fadeIn';
+import { fadeIn } from '@/lib/animations/fadeIn';
 
 const Header = () => {
   const t = useTranslations();
-  const logoRef = useRef<HTMLDivElement>(null);
-  const navRef = useRef<HTMLDivElement>(null);
-
-  let headerClass =
-    'flex items-center w-full bg-[#F5F7F0] dark:bg-[#121916] justify-between gap-6 py-3.5';
-  if (siteMetadata.stickyNav) {
-    headerClass +=
-      ' sticky top-0 z-50 backdrop-blur-sm bg-[#F5F7F0]/90 dark:bg-[#121916]/90';
-  }
+  const shellRef = useRef<HTMLDivElement>(null);
 
   useAnime({
-    targets: logoRef,
+    targets: shellRef,
     ...fadeIn(0),
-    translateY: [-12, 0],
-  });
-
-  useAnime({
-    targets: navRef,
-    ...fadeInUp(80, 'light'),
-    translateY: [-12, 0],
+    translateY: [-16, 0],
   });
 
   return (
-    <header className={headerClass}>
-      <Link href="/" aria-label={siteMetadata.headerTitle}>
-        <div ref={logoRef} className="flex items-center justify-between">
-          <div className="ring-primary-900/10 mr-3 overflow-hidden rounded-2xl ring-1 dark:ring-white/10">
+    <header className="pt-3 pb-4">
+      <div
+        ref={shellRef}
+        className="flex items-center justify-between gap-3 rounded-full border border-gray-900/10 bg-white/70 py-2 pr-2.5 pl-3 shadow-[0_12px_40px_rgba(10,18,15,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-gray-950/55 dark:shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
+      >
+        <Link
+          href="/"
+          aria-label={siteMetadata.headerTitle}
+          className="flex shrink-0 items-center gap-2.5"
+        >
+          <div className="ring-primary-900/10 overflow-hidden rounded-full ring-1 dark:ring-white/15">
             <Logo />
           </div>
-          {typeof siteMetadata.headerTitle === 'string' ? (
-            <div className="hidden h-6 text-xl font-semibold tracking-tight text-gray-800 sm:block dark:text-gray-100">
-              {siteMetadata.headerTitle}
-            </div>
-          ) : (
-            siteMetadata.headerTitle
-          )}
-        </div>
-      </Link>
-      <div
-        ref={navRef}
-        className="flex items-center space-x-4 leading-5 sm:-mr-6 sm:space-x-6"
-      >
-        <div className="no-scrollbar hidden max-w-40 items-center gap-x-5 overflow-x-auto sm:flex md:max-w-72 lg:max-w-96">
+          <span className="hidden text-base font-semibold tracking-tight text-gray-900 sm:block dark:text-gray-50">
+            {siteMetadata.headerTitle}
+          </span>
+        </Link>
+
+        <nav className="hidden items-center gap-1 md:flex">
           {headerNavLinks
             .filter((link) => link.href !== '/')
             .map((link) => (
               <Link
                 key={link.title}
                 href={link.href}
-                className="hover:text-primary-700 dark:hover:text-primary-300 text-sm font-medium text-gray-600 transition-colors duration-200 dark:text-gray-300"
+                className="hover:text-primary-800 dark:hover:text-primary-300 rounded-full px-3.5 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-900/[0.04] dark:text-gray-300 dark:hover:bg-white/[0.06]"
               >
                 {t(link.title)}
               </Link>
             ))}
+        </nav>
+
+        <div className="flex items-center gap-1.5 sm:gap-2.5">
+          <SearchButton />
+          <LanguageSwitch />
+          <ThemeSwitch />
+          <MobileNav />
         </div>
-        <SearchButton />
-        <LanguageSwitch />
-        <ThemeSwitch />
-        <MobileNav />
       </div>
     </header>
   );

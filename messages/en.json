@@ -91,7 +91,39 @@
     "solution": "Solution",
     "techStack": "Tech Stack",
     "relatedPosts": "Related Posts",
-    "github": "GitHub"
+    "github": "GitHub",
+    "items": {
+      "litho": {
+        "status": "Daily driver · Coming to the App Store",
+        "description": "A native iOS client for linux.do: a SwiftUI app that renders the Discourse community natively while punching through Cloudflare and keeping you logged in.",
+        "problem": "linux.do runs on Discourse behind Cloudflare, so third-party tools and even simple scripts constantly hit challenge pages and lose their session. There is no smooth, native way to browse and interact from an iPhone.",
+        "solution": "Litho routes every request through an off-screen WKWebView gateway that borrows the browser UA / Cookie / TLS fingerprint, so it sails past Cloudflare and holds the login state. On that foundation it delivers a full SwiftUI experience: topic feeds, single-document post rendering, reactions, chat, private messages and real-time notifications via MessageBus."
+      },
+      "skillHub": {
+        "status": "Active",
+        "description": "The package manager for AI agent skills. Install, update, sync, and govern skills across coding agents.",
+        "problem": "AI coding agents are becoming part of daily development, but their reusable skills are still scattered across repos, local folders, and different agent ecosystems.",
+        "solution": "skill-hub turns skills into manageable packages so they can be installed, updated, synchronized, and governed across Codex, Claude, Gemini, and similar workflows."
+      },
+      "databaseCli": {
+        "status": "Active",
+        "description": "Read-only database CLI skill for Codex.",
+        "problem": "Real production debugging often needs schema lookup, safe read-only SQL, and cross-environment comparison without turning an AI session into an unsafe database client.",
+        "solution": "database-cli gives Codex a controlled database investigation workflow: inspect schema, search metadata, run read-only queries, and compare records with guardrails."
+      },
+      "skillHubRegistry": {
+        "status": "Active",
+        "description": "Official catalog registry for skill-hub.",
+        "problem": "A package manager needs a trusted source of skill metadata so users can discover installable skills without copying raw repository paths by hand.",
+        "solution": "skill-hub-registry provides the catalog layer for skill-hub, separating registry metadata from the CLI runtime."
+      },
+      "mooTool": {
+        "status": "Open-source participation",
+        "description": "Handy tool set for developers.",
+        "problem": "Developers repeatedly need small local utilities for text, encoding, diffing, and daily engineering tasks.",
+        "solution": "MooTool collects practical developer utilities in a Java desktop tool. This site presents it as open-source participation in developer tooling."
+      }
+    }
   },
   "knowledge": {
     "title": "Knowledge Map",

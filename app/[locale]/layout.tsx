@@ -62,10 +62,14 @@ export default async function LocaleLayout({
         <Analytics
           analyticsConfig={siteMetadata.analytics as AnalyticsConfig}
         />
+        <div className="site-backdrop" aria-hidden="true">
+          <div className="site-backdrop-aurora" />
+          <div className="site-backdrop-grid" />
+        </div>
         <SectionContainer>
           <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
             <RouteTransitionOrchestrator>
-              <div data-route-section="header">
+              <div data-route-section="header" className="sticky top-0 z-50">
                 <Header />
               </div>
               <main className="mb-auto" data-route-section="main">

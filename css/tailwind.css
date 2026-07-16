@@ -4,37 +4,42 @@
 @source '../node_modules/pliny';
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Core theme configuration - Cassian botanical identity */
+/* Core theme configuration - Cassian dark-tech identity */
 @theme {
   /* Font families */
   --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif,
     'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo,
+    monospace;
 
-  /* Primary: deep green sampled from the logo and avatar */
-  --color-primary-50: oklch(0.97 0.018 158);
-  --color-primary-100: oklch(0.93 0.035 158);
-  --color-primary-200: oklch(0.86 0.06 158);
-  --color-primary-300: oklch(0.76 0.085 158);
-  --color-primary-400: oklch(0.65 0.1 158);
-  --color-primary-500: oklch(0.54 0.095 158);
-  --color-primary-600: oklch(0.44 0.08 158);
-  --color-primary-700: oklch(0.36 0.065 158);
-  --color-primary-800: oklch(0.3 0.052 158);
-  --color-primary-900: oklch(0.24 0.04 158);
-  --color-primary-950: oklch(0.17 0.03 158);
+  /* Primary: electric emerald, evolved from the original botanical green */
+  --color-primary-50: oklch(0.98 0.02 162);
+  --color-primary-100: oklch(0.95 0.05 162);
+  --color-primary-200: oklch(0.9 0.09 162);
+  --color-primary-300: oklch(0.85 0.13 162);
+  --color-primary-400: oklch(0.79 0.16 162);
+  --color-primary-500: oklch(0.7 0.15 162);
+  --color-primary-600: oklch(0.58 0.13 162);
+  --color-primary-700: oklch(0.47 0.11 162);
+  --color-primary-800: oklch(0.38 0.085 162);
+  --color-primary-900: oklch(0.3 0.062 162);
+  --color-primary-950: oklch(0.21 0.042 162);
 
-  /* Gray: misted green neutrals for the mountain identity */
-  --color-gray-50: oklch(0.98 0.006 140);
-  --color-gray-100: oklch(0.95 0.01 140);
-  --color-gray-200: oklch(0.9 0.014 140);
-  --color-gray-300: oklch(0.83 0.018 140);
-  --color-gray-400: oklch(0.68 0.02 140);
-  --color-gray-500: oklch(0.54 0.02 140);
-  --color-gray-600: oklch(0.44 0.022 140);
-  --color-gray-700: oklch(0.35 0.02 140);
-  --color-gray-800: oklch(0.26 0.018 140);
-  --color-gray-900: oklch(0.19 0.016 140);
-  --color-gray-950: oklch(0.13 0.014 140);
+  /* Gray: cold graphite neutrals with a faint green cast */
+  --color-gray-50: oklch(0.982 0.004 170);
+  --color-gray-100: oklch(0.955 0.006 170);
+  --color-gray-200: oklch(0.91 0.008 170);
+  --color-gray-300: oklch(0.84 0.01 170);
+  --color-gray-400: oklch(0.68 0.012 170);
+  --color-gray-500: oklch(0.55 0.014 170);
+  --color-gray-600: oklch(0.45 0.014 170);
+  --color-gray-700: oklch(0.36 0.014 170);
+  --color-gray-800: oklch(0.27 0.014 170);
+  --color-gray-900: oklch(0.2 0.014 170);
+  --color-gray-950: oklch(0.15 0.014 170);
+
+  /* Page surfaces */
+  --color-night: oklch(0.135 0.012 170);
 
   /* Line heights */
   --line-height-11: 2.75rem;
@@ -46,6 +51,18 @@
   --z-60: 60;
   --z-70: 70;
   --z-80: 80;
+
+  /* Motion */
+  --animate-marquee: marquee 42s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
 }
 
 /*
@@ -65,6 +82,14 @@
     border-color: var(--color-gray-200, currentColor);
   }
 
+  .dark *,
+  .dark ::after,
+  .dark ::before,
+  .dark ::backdrop,
+  .dark ::file-selector-button {
+    border-color: color-mix(in oklab, white 12%, transparent);
+  }
+
   a,
   button {
     outline-color: var(--color-primary-500);
@@ -76,17 +101,322 @@
     border-radius: var(--radius-sm);
     outline-color: var(--color-primary-500);
   }
+
+  ::selection {
+    background-color: color-mix(
+      in oklab,
+      var(--color-primary-400) 35%,
+      transparent
+    );
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Site backdrop: dot grid + aurora glow (React Bits / Aceternity inspired)
+--------------------------------------------------------------------------- */
+.site-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.site-backdrop-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-gray-500) 26%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 26px 26px;
+  mask-image: radial-gradient(
+    ellipse 90% 70% at 50% 0%,
+    black 30%,
+    transparent 100%
+  );
+}
+
+.dark .site-backdrop-grid {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-gray-400) 17%, transparent) 1px,
+    transparent 1px
+  );
+}
+
+.site-backdrop-aurora {
+  position: absolute;
+  top: -22rem;
+  left: 50%;
+  height: 44rem;
+  width: min(72rem, 120vw);
+  transform: translateX(-50%);
+  border-radius: 100%;
+  will-change: transform;
+  background: radial-gradient(
+      42% 55% at 32% 55%,
+      color-mix(in oklab, var(--color-primary-400) 26%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40% 50% at 68% 45%,
+      color-mix(in oklab, oklch(0.75 0.12 200) 22%, transparent),
+      transparent 70%
+    );
+}
+
+.dark .site-backdrop-aurora {
+  background: radial-gradient(
+      42% 55% at 32% 55%,
+      color-mix(in oklab, var(--color-primary-400) 20%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      40% 50% at 68% 45%,
+      color-mix(in oklab, oklch(0.7 0.11 210) 16%, transparent),
+      transparent 70%
+    );
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-backdrop-aurora {
+    animation: aurora-drift 24s ease-in-out infinite alternate;
+  }
+
+  @keyframes aurora-drift {
+    from {
+      transform: translateX(-56%) rotate(-3deg) scale(1);
+    }
+    to {
+      transform: translateX(-44%) rotate(3deg) scale(1.08);
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Buttons (Uiverse-inspired micro-interactions)
+--------------------------------------------------------------------------- */
+@layer components {
+  .btn {
+    position: relative;
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    overflow: hidden;
+    border-radius: calc(infinity * 1px);
+    padding-inline: 1.375rem;
+    padding-block: 0.625rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition:
+      transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.2s,
+      background-color 0.2s,
+      border-color 0.2s,
+      color 0.2s;
+  }
+
+  .btn:active {
+    transform: translateY(1px) scale(0.98);
+  }
+
+  .btn-primary {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary-600),
+      var(--color-primary-700)
+    );
+    color: white;
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 25%, transparent),
+      0 8px 30px color-mix(in oklab, var(--color-primary-600) 35%, transparent);
+  }
+
+  .btn-primary:hover {
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 25%, transparent),
+      0 10px 40px color-mix(in oklab, var(--color-primary-500) 45%, transparent);
+  }
+
+  .dark .btn-primary {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary-300),
+      var(--color-primary-400)
+    );
+    color: var(--color-primary-950);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, white 45%, transparent),
+      0 8px 30px color-mix(in oklab, var(--color-primary-400) 28%, transparent);
+  }
+
+  /* shine sweep */
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 25%,
+      color-mix(in oklab, white 45%, transparent) 50%,
+      transparent 75%
+    );
+    transform: translateX(-120%);
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .btn-primary:hover::after {
+    transform: translateX(120%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn-primary::after {
+      display: none;
+    }
+  }
+
+  .btn-ghost {
+    border: 1px solid
+      color-mix(in oklab, var(--color-gray-900) 14%, transparent);
+    background: color-mix(in oklab, white 55%, transparent);
+    color: var(--color-gray-700);
+    backdrop-filter: blur(8px);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--color-primary-500);
+    background: white;
+    color: var(--color-primary-800);
+  }
+
+  .dark .btn-ghost {
+    border-color: color-mix(in oklab, white 14%, transparent);
+    background: color-mix(in oklab, white 5%, transparent);
+    color: var(--color-gray-200);
+  }
+
+  .dark .btn-ghost:hover {
+    border-color: color-mix(
+      in oklab,
+      var(--color-primary-400) 60%,
+      transparent
+    );
+    background: color-mix(in oklab, white 9%, transparent);
+    color: var(--color-primary-200);
+  }
+
+  /* -------------------------------------------------------------------------
+     Spotlight card: pointer-tracked glow (Aceternity-inspired)
+  ------------------------------------------------------------------------- */
+  .spotlight-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.25rem;
+    border: 1px solid
+      color-mix(in oklab, var(--color-gray-900) 10%, transparent);
+    background: color-mix(in oklab, white 62%, transparent);
+    transition:
+      border-color 0.3s,
+      background-color 0.3s,
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .dark .spotlight-card {
+    border-color: color-mix(in oklab, white 10%, transparent);
+    background: color-mix(in oklab, white 4.5%, transparent);
+  }
+
+  .spotlight-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(
+      340px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      color-mix(in oklab, var(--color-primary-500) 13%, transparent),
+      transparent 65%
+    );
+    transition: opacity 0.35s;
+  }
+
+  .dark .spotlight-card::before {
+    background: radial-gradient(
+      340px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      color-mix(in oklab, var(--color-primary-400) 14%, transparent),
+      transparent 65%
+    );
+  }
+
+  .spotlight-card:hover::before {
+    opacity: 1;
+  }
+
+  .spotlight-card:hover {
+    border-color: color-mix(
+      in oklab,
+      var(--color-primary-500) 45%,
+      transparent
+    );
+  }
+
+  .spotlight-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* -------------------------------------------------------------------------
+     Marquee
+  ------------------------------------------------------------------------- */
+  .marquee {
+    overflow: hidden;
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 12%,
+      black 88%,
+      transparent
+    );
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: var(--animate-marquee);
+  }
+
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track {
+      animation: none;
+    }
+  }
+
+  /* SplitText helper */
+  .split-char {
+    display: inline-block;
+    will-change: transform, opacity;
+  }
 }
 
 @layer utilities {
   .prose {
     & a {
-      color: var(--color-primary-500);
+      color: var(--color-primary-600);
       &:hover {
-        color: var(--color-primary-600);
+        color: var(--color-primary-700);
       }
       & code {
-        color: var(--color-primary-400);
+        color: var(--color-primary-500);
       }
     }
     & :where(h1, h2) {
@@ -97,15 +427,15 @@
       font-weight: 600;
     }
     & :where(code):not(pre code) {
-      color: var(--color-indigo-500);
+      color: var(--color-primary-700);
     }
   }
 
   .prose-invert {
     & a {
-      color: var(--color-primary-500);
+      color: var(--color-primary-400);
       &:hover {
-        color: var(--color-primary-400);
+        color: var(--color-primary-300);
       }
       & code {
         color: var(--color-primary-400);
@@ -113,6 +443,9 @@
     }
     & :where(h1, h2, h3, h4, h5, h6) {
       color: var(--color-gray-100);
+    }
+    & :where(code):not(pre code) {
+      color: var(--color-primary-300);
     }
   }
 }

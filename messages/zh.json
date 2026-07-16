@@ -91,7 +91,39 @@
     "solution": "解决方案",
     "techStack": "技术栈",
     "relatedPosts": "相关文章",
-    "github": "GitHub"
+    "github": "GitHub",
+    "items": {
+      "litho": {
+        "status": "日常主力 · iOS 即将上架",
+        "description": "原生 iOS 的 linux.do 第三方客户端。用 SwiftUI 原生渲染 Discourse 社区，同时穿透 Cloudflare 并保持登录状态。",
+        "problem": "linux.do 基于 Discourse 且部署在 Cloudflare 之后，第三方工具甚至简单脚本都会频繁撞上人机验证页并丢失会话，iPhone 上一直没有流畅的原生浏览和互动方式。",
+        "solution": "Litho 把所有请求路由到一个离屏 WKWebView 网关，借用浏览器的 UA / Cookie / TLS 指纹，因此能顺利通过 Cloudflare 并保持登录状态。在此基础上提供完整的 SwiftUI 体验：话题流、单文档帖子渲染、表情回应、聊天、私信，以及基于 MessageBus 的实时通知。"
+      },
+      "skillHub": {
+        "status": "活跃开发中",
+        "description": "AI Agent 技能的包管理器。跨编码 Agent 安装、更新、同步和治理技能。",
+        "problem": "AI 编码 Agent 正在成为日常开发的一部分，但可复用的技能仍散落在各个仓库、本地目录和不同的 Agent 生态里。",
+        "solution": "skill-hub 把技能变成可管理的包，让它们可以在 Codex、Claude、Gemini 等工作流之间安装、更新、同步和治理。"
+      },
+      "databaseCli": {
+        "status": "活跃开发中",
+        "description": "面向 Codex 的只读数据库 CLI 技能。",
+        "problem": "真实的生产排查经常需要查看 schema、执行安全的只读 SQL、做跨环境对比，同时不能把 AI 会话变成一个不受控的数据库客户端。",
+        "solution": "database-cli 给 Codex 一套受控的数据库排查工作流：查看 schema、检索元数据、执行只读查询，并在护栏内对比记录。"
+      },
+      "skillHubRegistry": {
+        "status": "活跃开发中",
+        "description": "skill-hub 的官方目录注册中心。",
+        "problem": "包管理器需要一个可信的技能元数据源，让用户不必手抄仓库路径就能发现可安装的技能。",
+        "solution": "skill-hub-registry 为 skill-hub 提供目录层，把注册中心元数据与 CLI 运行时分离。"
+      },
+      "mooTool": {
+        "status": "开源参与",
+        "description": "开发者常备小工具集。",
+        "problem": "开发者在文本处理、编码转换、内容比对和日常工程任务中，反复需要各种小型本地工具。",
+        "solution": "MooTool 把实用的开发者工具收进一个 Java 桌面应用。本站以此展示我在开发者工具领域的开源参与。"
+      }
+    }
   },
   "knowledge": {
     "title": "知识地图",

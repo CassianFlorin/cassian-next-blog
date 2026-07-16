@@ -2,7 +2,7 @@ import 'css/tailwind.css';
 import 'pliny/search/algolia.css';
 import 'remark-github-blockquote-alert/alert.css';
 
-import { Space_Grotesk, Inter } from 'next/font/google';
+import { Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import { ThemeProviders } from './theme-providers';
 import { Metadata } from 'next';
 import { locales } from '../i18n';
@@ -14,7 +14,11 @@ const space_grotesk = Space_Grotesk({
   variable: '--font-space-grotesk',
 });
 
-const inter = Inter({ subsets: ['latin'] });
+const jetbrains_mono = JetBrains_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-jetbrains-mono',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteMetadata.siteUrl),
@@ -84,7 +88,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${space_grotesk.variable} ${inter.className} scroll-smooth`}
+      className={`${space_grotesk.variable} ${jetbrains_mono.variable} scroll-smooth`}
       suppressHydrationWarning
     >
       <link
@@ -117,12 +121,12 @@ export default async function RootLayout({
       <meta
         name="theme-color"
         media="(prefers-color-scheme: light)"
-        content="#F5F7F0"
+        content="#f6f9f8"
       />
       <meta
         name="theme-color"
         media="(prefers-color-scheme: dark)"
-        content="#121916"
+        content="#0d1211"
       />
       <link
         rel="alternate"
@@ -134,7 +138,7 @@ export default async function RootLayout({
         src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5441938758887409"
         crossOrigin="anonymous"
       />
-      <body className="bg-[#F5F7F0] pl-[calc(100vw-100%)] text-gray-800 antialiased dark:bg-[#121916] dark:text-gray-200">
+      <body className="dark:bg-night bg-gray-50 pl-[calc(100vw-100%)] font-sans text-gray-800 antialiased dark:text-gray-200">
         <ThemeProviders>{children}</ThemeProviders>
       </body>
     </html>
