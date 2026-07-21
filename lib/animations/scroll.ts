@@ -47,6 +47,6 @@ export function smoothScrollTo(
   animate(document.documentElement, {
     scrollTop: targetPosition,
     duration,
-    easing: ANIMATION_EASING.gentle,
+    ease: ANIMATION_EASING.gentle,
   } as AnimationParams);
 }

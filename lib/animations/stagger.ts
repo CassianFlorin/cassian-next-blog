@@ -53,7 +53,7 @@ export const staggerFadeInUp = (
   return animate(targets, {
     opacity: [0, 1],
     translateY: [translate, 0],
-    easing: ANIMATION_EASING.expressive,
+    ease: ANIMATION_EASING.expressive,
     duration,
     delay: stagger(staggerDelay, { start: startDelay }),
     ...animationOptions,
@@ -69,7 +69,7 @@ export const staggerFadeIn = (
 
   return animate(targets, {
     opacity: [0, 1],
-    easing: ANIMATION_EASING.gentle,
+    ease: ANIMATION_EASING.gentle,
     duration: Math.max(300, duration - 120),
     delay: stagger(Math.max(24, staggerDelay - 10), { start: startDelay }),
     ...animationOptions,

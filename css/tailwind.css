@@ -506,3 +506,100 @@ input:-webkit-autofill:focus {
   display: inline-block;
   vertical-align: middle;
 }
+
+/* ---------------------------------------------------------------------------
+   Entry curtain: first-visit brand reveal (see components/EntryCurtain.tsx)
+--------------------------------------------------------------------------- */
+.entry-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  will-change: transform;
+  background: radial-gradient(
+      120% 90% at 50% 0%,
+      color-mix(in oklab, var(--color-primary-500) 22%, transparent),
+      transparent 60%
+    ),
+    var(--color-gray-50);
+}
+
+.dark .entry-curtain {
+  background: radial-gradient(
+      120% 90% at 50% 0%,
+      color-mix(in oklab, var(--color-primary-400) 20%, transparent),
+      transparent 62%
+    ),
+    var(--color-night);
+}
+
+/* Blocking inline script sets this on <html> when the session flag exists,
+   so returning-in-session reloads never paint the curtain. */
+.entry-curtain-done .entry-curtain {
+  display: none;
+}
+
+.entry-curtain-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  padding-inline: 1.5rem;
+  text-align: center;
+}
+
+.entry-curtain-brand {
+  margin: 0;
+  font-family: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(2.25rem, 8vw, 5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  /* Solid color so the per-character child spans inherit it and stay visible;
+     a background-clip:text gradient on the parent would not reach the chars. */
+  color: var(--color-primary-700);
+}
+
+.dark .entry-curtain-brand {
+  color: var(--color-primary-300);
+}
+
+.entry-curtain-char {
+  display: inline-block;
+  white-space: pre;
+  opacity: 0;
+  color: inherit;
+  will-change: transform, opacity;
+}
+
+.entry-curtain-rule {
+  display: block;
+  height: 2px;
+  width: min(14rem, 60vw);
+  transform: scaleX(0);
+  opacity: 0;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-primary-500),
+    transparent
+  );
+}
+
+.entry-curtain-tagline {
+  margin: 0;
+  opacity: 0;
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: clamp(0.7rem, 2.4vw, 0.9rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--color-gray-600) 90%, transparent);
+}
+
+.dark .entry-curtain-tagline {
+  color: color-mix(in oklab, var(--color-gray-300) 85%, transparent);
+}

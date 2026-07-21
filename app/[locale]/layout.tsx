@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import SectionContainer from '@/components/SectionContainer';
 import Footer from '@/components/Footer';
 import RouteTransitionOrchestrator from '@/components/RouteTransitionOrchestrator';
+import EntryCurtain from '@/components/EntryCurtain';
 import siteMetadata from '@/data/siteMetadata';
 import { ThemeProviders } from '../theme-providers';
 import { Metadata } from 'next';
@@ -59,6 +60,12 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
       <ThemeProviders>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(sessionStorage.getItem('entry-curtain-played')==='1'){document.documentElement.classList.add('entry-curtain-done')}}catch(e){}`,
+          }}
+        />
+        <EntryCurtain />
         <Analytics
           analyticsConfig={siteMetadata.analytics as AnalyticsConfig}
         />

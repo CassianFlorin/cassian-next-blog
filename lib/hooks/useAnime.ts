@@ -72,7 +72,7 @@ export function useAnime(params: AnimateParams) {
     const { targets: _, ...animParams } = params;
     const mergedParams: Partial<AnimationParams> = {
       duration: ANIMATION_DURATION.normal,
-      easing: ANIMATION_EASING.expressive,
+      ease: ANIMATION_EASING.expressive,
       ...animParams,
     };
 
@@ -114,7 +114,7 @@ export function useScrollAnimation(
 
     const mergedParams: Partial<AnimationParams> = {
       duration: ANIMATION_DURATION.normal,
-      easing: ANIMATION_EASING.expressive,
+      ease: ANIMATION_EASING.expressive,
       ...params,
     };
 

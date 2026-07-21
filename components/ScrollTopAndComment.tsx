@@ -30,7 +30,7 @@ const ScrollTopAndComment = () => {
       animate(buttonsRef.current, {
         opacity: [0, 1],
         scale: [0.8, 1],
-        easing: 'outElastic(1, 0.6)',
+        ease: 'outElastic(1, 0.6)',
         duration: 800,
       });
     }

@@ -60,7 +60,7 @@ const MobileNav = () => {
     animationRef.current = animate(links, {
       opacity: [0, 1],
       translateX: [-34, 0],
-      easing: ANIMATION_EASING.snappy,
+      ease: ANIMATION_EASING.snappy,
       duration: ANIMATION_DURATION.normal,
       delay: stagger(70, { start: 120 }),
     });

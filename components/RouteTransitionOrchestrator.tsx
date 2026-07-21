@@ -68,7 +68,7 @@ export default function RouteTransitionOrchestrator({ children }: Props) {
     animationRef.current = animate(sections, {
       opacity: isInitialRender ? [0, 1] : [0.92, 1],
       translateY: isInitialRender ? [16, 0] : [8, 0],
-      easing: ANIMATION_EASING.snappy,
+      ease: ANIMATION_EASING.snappy,
       duration: isInitialRender
         ? ANIMATION_DURATION.normal
         : ANIMATION_DURATION.fast,

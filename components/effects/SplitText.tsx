@@ -52,7 +52,7 @@ export default function SplitText({
       opacity: [0, 1],
       translateY: ['0.6em', 0],
       rotate: [4, 0],
-      easing: ANIMATION_EASING.expressive,
+      ease: ANIMATION_EASING.expressive,
       duration: 700,
       delay: stagger(26, { start: delay }),
     });

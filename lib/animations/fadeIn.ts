@@ -30,14 +30,14 @@ export const fadeInUp = (
 ): Partial<AnimationParams> => ({
   opacity: [0, 1],
   translateY: [byIntensity(intensity, [14, 24, 36]), 0],
-  easing: ANIMATION_EASING.expressive,
+  ease: ANIMATION_EASING.expressive,
   duration: ANIMATION_DURATION.normal,
   delay,
 });
 
 export const fadeIn = (delay: number = 0): Partial<AnimationParams> => ({
   opacity: [0, 1],
-  easing: ANIMATION_EASING.gentle,
+  ease: ANIMATION_EASING.gentle,
   duration: ANIMATION_DURATION.fast,
   delay,
 });
@@ -48,7 +48,7 @@ export const fadeInScale = (
 ): Partial<AnimationParams> => ({
   opacity: [0, 1],
   scale: [byIntensity(intensity, [0.98, 0.94, 0.9]), 1],
-  easing: ANIMATION_EASING.expressive,
+  ease: ANIMATION_EASING.expressive,
   duration: ANIMATION_DURATION.normal,
   delay,
 });
@@ -59,7 +59,7 @@ export const fadeInLeft = (
 ): Partial<AnimationParams> => ({
   opacity: [0, 1],
   translateX: [byIntensity(intensity, [-14, -22, -30]), 0],
-  easing: ANIMATION_EASING.expressive,
+  ease: ANIMATION_EASING.expressive,
   duration: ANIMATION_DURATION.normal,
   delay,
 });
@@ -67,7 +67,7 @@ export const fadeInLeft = (
 export const popIn = (delay: number = 0): Partial<AnimationParams> => ({
   opacity: [0, 1],
   scale: [0.82, 1],
-  easing: ANIMATION_EASING.pop,
+  ease: ANIMATION_EASING.pop,
   duration: ANIMATION_DURATION.slow,
   delay,
 });
