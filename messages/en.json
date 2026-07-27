@@ -233,6 +233,10 @@
     "CodeGraph": "CodeGraph",
     "codegraph": "CodeGraph",
     "个人知识管理": "Personal Knowledge Management",
-    "工作流": "Workflow"
+    "工作流": "Workflow",
+    "Codex": "Codex",
+    "CLI": "CLI",
+    "中转站": "Relay Station",
+    "排错": "Troubleshooting"
   }
 }

@@ -1,0 +1,173 @@
+---
+title: Codex CLI 接中转站配置排错：一次 401 引发的完整踩坑记录
+date: '2026-07-27 21:30:00'
+tags:
+  - Codex
+  - CLI
+  - 中转站
+  - 排错
+  - AI
+  - Tools
+draft: false
+summary: 新版 Codex CLI（含 ChatGPT 桌面版内置的 Codex，实测 v0.145.0）接第三方中转站时，最常见的报错就是一路 401。本文把正确的 config.toml 写法、三个必踩的坑和验证方法整理成一份可直接照抄的排错清单。
+---
+
+# Codex CLI 接中转站配置排错
+
+新版 Codex CLI 想接第三方中转站，最容易卡在一个地方：明明填了中转站的地址和 key，请求却还是打到了 `api.openai.com`，然后一路 `401 Unauthorized`。
+
+这篇文章记录我把 Codex CLI（含 ChatGPT 桌面版内置的 Codex，实测 **v0.145.0**）接上中转站的完整过程：正确的配置写法、三个必踩的坑，以及怎么验证真的走通了。可以直接当排错清单照抄。
+
+<Callout emoji="🧭">
+  一句话结论：
+  <strong>
+    <code>base_url</code> 必须写进 <code>[model_providers.xxx]</code>{' '}
+    块里，再用顶层
+    <code>model_provider</code> 指过去
+  </strong>
+  。裸写在顶层的 <code>base_url</code> 会被新版 Codex 完全忽略。
+</Callout>
+
+## 结论先行：正确的 config.toml
+
+配置文件在 `~/.codex/config.toml`（Windows 在 `C:\Users\你\.codex\config.toml`）。下面这份是能跑通的最小配置：
+
+```toml
+model = "gpt-5.6-sol"          # 换成中转站支持的模型名
+model_reasoning_effort = "high"
+model_provider = "qnvip"       # 指向下面的 provider 块
+experimental_bearer_token = 'sk-xxxxxxxx'   # 中转站的 key，鉴权用
+
+[model_providers.qnvip]
+name = "qnvip"
+base_url = "http://中转站域名/v1"
+wire_api = "responses"         # 中转站不支持 responses 就改成 "chat"
+```
+
+结构上只有三件事必须对上：
+
+1. 顶层 `model_provider` 的值，等于 `[model_providers.xxx]` 里的那个 `xxx`。
+2. `base_url` 写在 provider 块内部，而不是顶层。
+3. 鉴权用顶层的 `experimental_bearer_token`，不依赖环境变量。
+
+## 报错长什么样
+
+接不通时，最典型的报错是这样的：
+
+<ErrorDisplay
+  title="请求根本没走中转站"
+  error="401 Unauthorized: Incorrect API key provided: sk-xxxx..."
+  code="invalid_api_key"
+  path="https://api.openai.com/v1/responses"
+  details={[
+    '报错里的 url 是 api.openai.com，而不是你的中转站域名',
+    '说明 Codex 用的是内置 openai provider，没读到你的配置',
+    '中转站的 key 拿到官方接口当然无效 → 401',
+  ]}
+/>
+
+<Callout emoji="🔍">
+  排错第一步永远是<strong>看报错里的 url</strong>：如果是{' '}
+  <code>api.openai.com</code>，问题出在 provider 没生效；如果 url
+  已经是你的中转站域名，那才是 key 或 <code>wire_api</code>{' '}
+  的问题。这一个信号能帮你少走一半弯路。
+</Callout>
+
+## 三个常见坑
+
+### 坑 1：`base_url` 裸写在顶层 → 被完全忽略（主因）
+
+这是绝大多数人卡住的原因。新版 Codex **不认顶层的 `base_url`**。如果没有 `[model_providers.xxx]` 块加上 `model_provider` 指过去，它就退回到内置的 openai provider，硬编码打到 `api.openai.com`。
+
+| 写法                                          | 结果                                                          |
+| --------------------------------------------- | ------------------------------------------------------------- |
+| ❌ `base_url` 裸写在顶层                      | 被静默忽略，没有任何报错，请求打到 `api.openai.com`，最终 401 |
+| ✅ `base_url` 写进 `[model_providers.xxx]` 块 | 配合顶层 `model_provider` 生效，请求正确打到中转站            |
+
+错误写法（顶层裸写，无效）：
+
+```toml
+base_url = "http://中转站域名/v1"   # ❌ 被忽略
+wire_api = "responses"
+```
+
+### 坑 2：key 末尾多敲了一个引号
+
+复制粘贴 key 时非常容易手滑，比如 `'sk-...4eb5"'` —— 结尾多出来的那个 `"` 会被当成 key 的一部分，污染整个 key，于是即便 provider 配对了，也会在中转站侧报 `invalid_api_key`。
+
+<Callout emoji="✂️">
+  检查引号是否<strong>成对且干净</strong>
+  ：单引号配单引号，双引号配双引号，中间不要混。粘贴完 key
+  后，把光标移到行尾确认没有多余字符。
+</Callout>
+
+### 坑 3：自定义 provider 不读 `auth.json`
+
+ChatGPT 桌面版内置的 Codex 里有个 `auth.json`，里面的 `OPENAI_API_KEY` **只给内置 openai provider 用**。自定义 provider 如果写 `env_key = "OPENAI_API_KEY"`，它读的是真·系统环境变量，而不是 `auth.json`，于是报：
+
+```text
+Missing environment variable: OPENAI_API_KEY
+```
+
+两个解法，推荐第一个：
+
+- ✅ **用顶层 `experimental_bearer_token`**：不依赖环境变量，命令行启动和桌面 App 启动都稳。
+- ⚠️ 或者真的 `export OPENAI_API_KEY=sk-xxx`，再在 provider 里写 `env_key = "OPENAI_API_KEY"`。注意桌面版 App 启动时**不一定继承** `~/.zshrc` 里的 export，容易时灵时不灵。
+
+## 配置流程速览
+
+把上面三个坑翻译成操作步骤，就是这样一条路径：
+
+<StepProgress
+  steps={[
+    {
+      title: '写 provider 块',
+      status: 'completed',
+      description: '在 [model_providers.xxx] 里填 name、base_url、wire_api',
+    },
+    {
+      title: '顶层指向 provider',
+      status: 'completed',
+      description: '设置 model_provider = "xxx"，与块名一致',
+    },
+    {
+      title: '配置鉴权',
+      status: 'completed',
+      description: '用 experimental_bearer_token 填中转站 key，检查引号成对',
+    },
+    {
+      title: '在受信任目录验证',
+      status: 'current',
+      description: '用 codex exec 跑一条测试请求，确认 provider 生效',
+    },
+  ]}
+/>
+
+## 验证方法
+
+必须在**受信任目录**里跑，否则会报 `Not inside a trusted directory`：
+
+```bash
+cd /受信任的项目目录
+echo "只回复两个字:成功" | codex exec --skip-git-repo-check
+```
+
+看启动信息里的 `provider:` 是不是你的中转站名，以及能不能正常返回内容即可。能收到「成功」两个字，就说明整条链路打通了。
+
+## 报错速查表
+
+把常见报错和对应原因整理成一张表，遇到问题直接对号入座：
+
+| 报错                                           | 原因                                            | 处理                                                      |
+| ---------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------- |
+| 401 且 url 是 `api.openai.com`                 | `base_url` 没进 provider 块 / provider 没生效   | 检查 `model_provider` 与 `[model_providers.xxx]` 是否对上 |
+| 401 `invalid_api_key`（url 是中转站）          | key 错 / key 带多余字符                         | 重新复制 key，检查引号成对干净                            |
+| `Missing environment variable: OPENAI_API_KEY` | 用了 `env_key` 但环境变量没设                   | 改用 `experimental_bearer_token`                          |
+| 404 / 路径错误                                 | `wire_api` 设成 `responses` 但中转站只支持 chat | 改成 `"chat"`；或检查 `base_url` 的 `/v1` 多了或少了      |
+| `Not inside a trusted directory`               | 不在受信任目录                                  | 加 `--skip-git-repo-check` 或在已信任目录里跑             |
+
+<Callout emoji="📌">
+  三条口诀收尾：
+  <strong>base_url 进块、key 别带引号、鉴权用 bearer_token</strong>。
+  绝大多数中转站接不通的问题，都逃不出这三条。
+</Callout>

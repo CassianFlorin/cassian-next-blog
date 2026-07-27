@@ -233,6 +233,10 @@
     "CodeGraph": "CodeGraph",
     "codegraph": "CodeGraph",
     "个人知识管理": "个人知识管理",
-    "工作流": "工作流"
+    "工作流": "工作流",
+    "Codex": "Codex",
+    "CLI": "CLI",
+    "中转站": "中转站",
+    "排错": "排错"
   }
 }
