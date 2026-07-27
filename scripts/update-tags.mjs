@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import matter from 'gray-matter';
+import { slug } from 'github-slugger';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -167,17 +168,22 @@ function updateTranslationFile(filePath, translations, newTags) {
   let addedCount = 0;
 
   for (const tag of newTags) {
-    if (!data.tags[tag]) {
-      const translation = translations[tag];
-      if (translation) {
-        data.tags[tag] = translation;
+    // 计算翻译值：优先用原始标签，其次用 slug，都没有则回退到标签本身
+    const tagSlug = slug(tag);
+    const translation = translations[tag] || translations[tagSlug] || tag;
+
+    // 页面通过 slug 查 tags.<slug>，所以原始标签键与 slug 键都要写入
+    // （中文标签 slug 与自身相同，只会写一个键）
+    const keys = [...new Set([tag, tagSlug])];
+    for (const key of keys) {
+      if (!data.tags[key]) {
+        data.tags[key] = translation;
         addedCount++;
-        console.log(`  + Added: "${tag}" -> "${translation}"`);
-      } else {
-        // 如果没有预设翻译，使用标签本身作为翻译
-        data.tags[tag] = tag;
-        addedCount++;
-        console.log(`  + Added: "${tag}" -> "${tag}" (no translation found)`);
+        const note =
+          translations[tag] || translations[tagSlug]
+            ? ''
+            : ' (no translation found)';
+        console.log(`  + Added: "${key}" -> "${translation}"${note}`);
       }
     }
   }

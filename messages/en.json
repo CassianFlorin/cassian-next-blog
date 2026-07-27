@@ -237,6 +237,8 @@
     "Codex": "Codex",
     "CLI": "CLI",
     "中转站": "Relay Station",
-    "排错": "Troubleshooting"
+    "排错": "Troubleshooting",
+    "codex": "Codex",
+    "cli": "CLI"
   }
 }
