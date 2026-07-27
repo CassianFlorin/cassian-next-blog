@@ -17,12 +17,10 @@ const BLOG_DIR = path.join(ROOT, 'data', 'blog');
 // 关键词 → 标签 映射（大小写不敏感，支持正则）
 // 尽量选择较为明确的特征词，避免误命中
 const KEYWORD_RULES = [
-  // 通用
+  // 通用（去掉 Tools/Tips/Diff 等高频泛词，避免误命中）
   { tag: 'Open Source', tests: [/开源/i, /open\s*source/i, /\boss\b/i] },
   { tag: 'GitHub', tests: [/github/i] },
-  { tag: 'Tools', tests: [/工具/i, /\btools?\b/i] },
   { tag: 'Guide', tests: [/指南/i, /guide/i] },
-  { tag: 'Tips', tests: [/技巧|提示|tip(s)?/i] },
 
   // 语言/技术
   { tag: 'Java', tests: [/\bjava\b(?!\s*script)/i] },
@@ -34,7 +32,6 @@ const KEYWORD_RULES = [
 
   // 主题词
   { tag: 'Contributors', tests: [/贡献者|贡献|contributor/i] },
-  { tag: 'Diff', tests: [/text\s*diff/i, /\bdiff\b/i, /差异|对比/i] },
 ];
 
 function parseArgs() {
