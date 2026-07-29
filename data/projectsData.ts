@@ -23,6 +23,8 @@ const projectsData: Project[] = [
       'Swift',
       'SwiftUI',
       'iOS 17+',
+      'Kotlin',
+      'Compose',
       'WKWebView',
       'Discourse API',
       'GRDB',

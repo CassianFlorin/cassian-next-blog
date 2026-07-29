@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import './litho.css';
 
 const APK_URL = 'https://litho.cassianflorin.com/litho.apk';
+const TESTFLIGHT_URL = 'https://testflight.apple.com/join/PZc9vmmZ';
 
 type IconName =
   | 'arrow-right'
@@ -192,17 +193,22 @@ export default function LithoLanding() {
       <section className="hero">
         <div className="wrap hero-grid">
           <div className="reveal">
-            <span className="eyebrow">原生 iOS · linux.do 第三方客户端</span>
+            <span className="eyebrow">
+              原生 iOS / Android · linux.do 第三方客户端
+            </span>
             <h1>
               把 linux.do
               <br />
-              稳稳<span className="ink">印</span>上 iOS。
+              稳稳<span className="ink">印</span>上 iOS 与 Android。
             </h1>
             <p className="lede">
               以打穿 Cloudflare
               盾、保持登录态、丝滑原生体验为第一目标而生。一整份帖子流，一次成版。
             </p>
             <div className="hero-cta">
+              <a href={TESTFLIGHT_URL} className="btn btn-primary">
+                <Icon name="apple" /> 加入 iOS TestFlight 公测
+              </a>
               <a href={APK_URL} className="btn btn-primary">
                 <Icon name="android" /> 下载 Android 版 (APK)
               </a>
@@ -215,10 +221,10 @@ export default function LithoLanding() {
             </div>
             <div className="hero-meta">
               <span>
-                <Icon name="android" /> Android 抢先体验
+                <Icon name="apple" /> TestFlight 公测中 · 限量 100 席
               </span>
               <span>
-                <Icon name="apple" /> iOS 即将上架
+                <Icon name="android" /> Android APK 同步更新
               </span>
               <span>
                 <Icon name="shield-check" /> 网关过盾 · 免挑战页
@@ -565,6 +571,9 @@ export default function LithoLanding() {
               <b>XcodeGen</b> 工程管理
             </span>
             <span className="chip">
+              <b>Kotlin + Compose</b> Android 端 1:1 移植
+            </span>
+            <span className="chip">
               最低 <b>iOS 17</b>
             </span>
           </div>
@@ -576,13 +585,22 @@ export default function LithoLanding() {
         <div className="wrap">
           <div className="reveal">
             <div className="closing-status">
-              <Icon name="appstore" /> <b>Litho 拓本</b> · 即将上架 App Store
+              <Icon name="appstore" /> <b>Litho 拓本</b> · iOS TestFlight 公测中
             </div>
             <p className="big">
               把社区的文字，<span className="ink">稳稳印</span>到你手上的屏幕。
             </p>
+            <div className="hero-cta">
+              <a href={TESTFLIGHT_URL} className="btn btn-primary">
+                <Icon name="apple" /> 加入 TestFlight 公测
+              </a>
+              <a href={APK_URL} className="btn btn-primary">
+                <Icon name="android" /> 下载 Android 版 (APK)
+              </a>
+            </div>
             <p className="note">
-              iOS 17+ · 手机主屏显示「Litho」，商店名为「Litho 拓本」。
+              iOS 17+ · 公测限量 100 席 · 手机主屏显示「Litho」，商店名为「Litho
+              拓本」。
             </p>
           </div>
         </div>
@@ -603,7 +621,7 @@ export default function LithoLanding() {
           <div className="foot-meta">
             <div>
               <span className="lbl">平台</span>
-              {'　'}iOS 17+ · SwiftUI
+              {'　'}iOS 17+ · SwiftUI ／ Android · Compose
             </div>
             <div>
               <span className="lbl">社区</span>
@@ -615,7 +633,7 @@ export default function LithoLanding() {
             </div>
             <div>
               <span className="lbl">状态</span>
-              {'　'}日常主力使用中
+              {'　'}iOS TestFlight 公测 · Android APK 发布中
             </div>
           </div>
         </div>

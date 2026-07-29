@@ -94,8 +94,8 @@
     "github": "GitHub",
     "items": {
       "litho": {
-        "status": "日常主力 · iOS 即将上架",
-        "description": "原生 iOS 的 linux.do 第三方客户端。用 SwiftUI 原生渲染 Discourse 社区，同时穿透 Cloudflare 并保持登录状态。",
+        "status": "日常主力 · iOS 公测 / Android 已发布",
+        "description": "linux.do 的原生第三方客户端（iOS / Android）。iOS 用 SwiftUI、Android 用 Compose 原生渲染 Discourse 社区，同时穿透 Cloudflare 并保持登录状态。",
         "problem": "linux.do 基于 Discourse 且部署在 Cloudflare 之后，第三方工具甚至简单脚本都会频繁撞上人机验证页并丢失会话，iPhone 上一直没有流畅的原生浏览和互动方式。",
         "solution": "Litho 把所有请求路由到一个离屏 WKWebView 网关，借用浏览器的 UA / Cookie / TLS 指纹，因此能顺利通过 Cloudflare 并保持登录状态。在此基础上提供完整的 SwiftUI 体验：话题流、单文档帖子渲染、表情回应、聊天、私信，以及基于 MessageBus 的实时通知。"
       },
