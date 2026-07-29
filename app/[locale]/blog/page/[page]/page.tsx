@@ -3,8 +3,23 @@ import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer';
 import { allBlogs } from 'contentlayer/generated';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
+import { genPageMetadata } from 'app/seo';
 
 const POSTS_PER_PAGE = 5;
+
+export async function generateMetadata(props: {
+  params: Promise<{ locale: string; page: string }>;
+}): Promise<Metadata> {
+  const { locale, page } = await props.params;
+  const t = await getTranslations({ locale, namespace: 'seo' });
+  return genPageMetadata({
+    title: t('blogPageTitle', { page }),
+    description: t('blogDescription'),
+    locale,
+    path: `/blog/page/${page}`,
+  });
+}
 
 export const generateStaticParams = async () => {
   const totalPages = Math.ceil(allBlogs.length / POSTS_PER_PAGE);

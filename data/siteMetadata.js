@@ -7,7 +7,10 @@ const siteMetadata = {
     'Cassian Florin builds AI engineering tools, developer workflows, and personal knowledge systems.',
   language: 'zh-cn',
   theme: 'system', // system, dark or light
-  siteUrl: 'https://cassianflorin.com',
+  // Must match the primary domain configured in Vercel — every canonical,
+  // hreflang, sitemap URL and JSON-LD @id is derived from it, so a mismatch
+  // makes all of them point at a redirect.
+  siteUrl: 'https://www.cassianflorin.com',
   siteRepo: 'https://github.com/CassianFlorin/cassian-next-blog',
   siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
   socialBanner: `${process.env.BASE_PATH || ''}/static/images/social-card.png`,

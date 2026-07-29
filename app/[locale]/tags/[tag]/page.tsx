@@ -6,21 +6,32 @@ import { allBlogs } from 'contentlayer/generated';
 import tagData from 'app/tag-data.json';
 import { genPageMetadata } from 'app/seo';
 import { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import JsonLd from '@/components/JsonLd';
+import { buildCollectionPageJsonLd } from '@/lib/structuredData';
+import { buildAlternates, resolveLocale } from '@/lib/seo';
 
 const POSTS_PER_PAGE = 5;
 
 export async function generateMetadata(props: {
-  params: Promise<{ tag: string }>;
+  params: Promise<{ tag: string; locale: string }>;
 }): Promise<Metadata> {
   const params = await props.params;
   const tag = decodeURI(params.tag);
+  const locale = resolveLocale(params.locale);
+  const t = await getTranslations({ locale, namespace: 'seo' });
+  const count = (tagData as Record<string, number>)[slug(tag)] ?? 0;
+  const path = `/tags/${encodeURI(tag)}`;
+
   return genPageMetadata({
-    title: tag,
-    description: `${siteMetadata.title} ${tag} tagged content`,
+    title: t('tagTitle', { tag }),
+    description: t('tagDescription', { tag, count }),
+    locale,
+    path,
     alternates: {
-      canonical: './',
+      ...buildAlternates(locale, path),
       types: {
-        'application/rss+xml': `${siteMetadata.siteUrl}/tags/${tag}/feed.xml`,
+        'application/rss+xml': `${siteMetadata.siteUrl}/tags/${slug(tag)}/feed.xml`,
       },
     },
   });
@@ -35,10 +46,12 @@ export const generateStaticParams = async () => {
 };
 
 export default async function TagPage(props: {
-  params: Promise<{ tag: string }>;
+  params: Promise<{ tag: string; locale: string }>;
 }) {
   const params = await props.params;
   const tag = decodeURI(params.tag);
+  const locale = resolveLocale(params.locale);
+  const t = await getTranslations({ locale, namespace: 'seo' });
   const title = tag[0].toUpperCase() + tag.split(' ').join('-').slice(1);
   const filteredPosts = allCoreContent(
     sortPosts(
@@ -56,11 +69,27 @@ export default async function TagPage(props: {
   };
 
   return (
-    <ListLayout
-      posts={filteredPosts}
-      initialDisplayPosts={initialDisplayPosts}
-      pagination={pagination}
-      title={title}
-    />
+    <>
+      <JsonLd
+        data={buildCollectionPageJsonLd(locale, {
+          name: t('tagTitle', { tag }),
+          description: t('tagDescription', {
+            tag,
+            count: filteredPosts.length,
+          }),
+          path: `/tags/${encodeURI(tag)}`,
+          items: initialDisplayPosts.map((post) => ({
+            title: post.title,
+            path: `/${post.path}`,
+          })),
+        })}
+      />
+      <ListLayout
+        posts={filteredPosts}
+        initialDisplayPosts={initialDisplayPosts}
+        pagination={pagination}
+        title={title}
+      />
+    </>
   );
 }

@@ -4,8 +4,27 @@ import ListLayout from '@/layouts/ListLayoutWithTags';
 import { allBlogs } from 'contentlayer/generated';
 import tagData from 'app/tag-data.json';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
+import { genPageMetadata } from 'app/seo';
 
 const POSTS_PER_PAGE = 5;
+
+export async function generateMetadata(props: {
+  params: Promise<{ tag: string; page: string; locale: string }>;
+}): Promise<Metadata> {
+  const params = await props.params;
+  const tag = decodeURI(params.tag);
+  const t = await getTranslations({ locale: params.locale, namespace: 'seo' });
+  const count = (tagData as Record<string, number>)[slug(tag)] ?? 0;
+
+  return genPageMetadata({
+    title: t('tagPageTitle', { tag, page: params.page }),
+    description: t('tagDescription', { tag, count }),
+    locale: params.locale,
+    path: `/tags/${encodeURI(tag)}/page/${params.page}`,
+  });
+}
 
 export const generateStaticParams = async () => {
   const tagCounts = tagData as Record<string, number>;

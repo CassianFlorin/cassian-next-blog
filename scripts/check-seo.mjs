@@ -1,0 +1,195 @@
+/**
+ * Content SEO linter for data/blog/*.mdx.
+ *
+ * Runs on every build (as part of `prebuild`) and can be run on demand with
+ * `yarn check-seo`. Errors fail the build; warnings only report.
+ *
+ * Pass `--strict` to also fail on warnings.
+ */
+import { readFileSync, readdirSync, existsSync } from 'fs';
+import path from 'path';
+import matter from 'gray-matter';
+
+const ROOT = process.cwd();
+const BLOG_DIR = path.join(ROOT, 'data', 'blog');
+const PUBLIC_DIR = path.join(ROOT, 'public');
+const STRICT = process.argv.includes('--strict');
+
+/** Search snippets get truncated past roughly this width. */
+const SUMMARY_MIN = 40;
+const SUMMARY_MAX = 160;
+const TITLE_MAX = 60;
+const TAGS_MIN = 2;
+const TAGS_MAX = 8;
+
+const errors = [];
+const warnings = [];
+const postsWithoutCover = [];
+
+const addError = (file, message) => errors.push({ file, message });
+const addWarning = (file, message) => warnings.push({ file, message });
+
+/**
+ * CJK characters render about twice as wide as Latin ones, so a Chinese title
+ * hits the SERP pixel limit at roughly half the character count.
+ */
+function displayWidth(text) {
+  let width = 0;
+  for (const char of text) {
+    width += /[⺀-￿]/.test(char) ? 2 : 1;
+  }
+  return width;
+}
+
+/** Strip fenced code blocks so their `#` comments are not read as headings. */
+function stripCodeFences(body) {
+  return body.replace(/^```[\s\S]*?^```/gm, '');
+}
+
+function checkPost(file, raw) {
+  const { data: fm, content } = matter(raw);
+  const body = stripCodeFences(content);
+
+  if (fm.draft === true) return;
+
+  // --- title ---------------------------------------------------------------
+  if (!fm.title || !String(fm.title).trim()) {
+    addError(file, 'frontmatter 缺少 title');
+  } else if (displayWidth(String(fm.title)) > TITLE_MAX) {
+    addWarning(
+      file,
+      `title 显示宽度 ${displayWidth(String(fm.title))} 超过 ${TITLE_MAX}，搜索结果可能被截断`,
+    );
+  }
+
+  // --- summary (becomes <meta name="description">) -------------------------
+  const summary = fm.summary
+    ? String(fm.summary).replace(/\s+/g, ' ').trim()
+    : '';
+  if (!summary) {
+    addError(file, 'frontmatter 缺少 summary（用作 meta description）');
+  } else {
+    const width = displayWidth(summary);
+    if (width < SUMMARY_MIN) {
+      addWarning(
+        file,
+        `summary 显示宽度 ${width} 偏短（建议 ≥ ${SUMMARY_MIN}）`,
+      );
+    } else if (width > SUMMARY_MAX) {
+      addWarning(
+        file,
+        `summary 显示宽度 ${width} 超过 ${SUMMARY_MAX}，摘要会被截断`,
+      );
+    }
+  }
+
+  // --- date ----------------------------------------------------------------
+  if (!fm.date) {
+    addError(file, 'frontmatter 缺少 date');
+  } else if (Number.isNaN(new Date(fm.date).getTime())) {
+    addError(file, `date 无法解析：${fm.date}`);
+  }
+
+  // --- tags ----------------------------------------------------------------
+  const tags = Array.isArray(fm.tags) ? fm.tags : [];
+  if (tags.length < TAGS_MIN) {
+    addWarning(
+      file,
+      `tags 只有 ${tags.length} 个（建议 ${TAGS_MIN}-${TAGS_MAX} 个）`,
+    );
+  } else if (tags.length > TAGS_MAX) {
+    addWarning(
+      file,
+      `tags 有 ${tags.length} 个（建议 ≤ ${TAGS_MAX}，过多标签会稀释主题相关性）`,
+    );
+  }
+
+  // --- images --------------------------------------------------------------
+  const images = typeof fm.images === 'string' ? [fm.images] : fm.images || [];
+  for (const image of images) {
+    if (typeof image !== 'string' || /^https?:\/\//.test(image)) continue;
+    if (!existsSync(path.join(PUBLIC_DIR, image.replace(/^\//, '')))) {
+      addError(file, `images 指向的文件不存在：${image}`);
+    }
+  }
+  if (images.length === 0) {
+    // Aggregated at the end — per-post lines would drown out real findings.
+    postsWithoutCover.push(file);
+  }
+
+  // --- headings ------------------------------------------------------------
+  if (!/^##\s+/m.test(body) && !/^#\s+/m.test(body)) {
+    addWarning(file, '正文没有任何小标题，长文建议用 ## 分节');
+  }
+
+  // --- images in body need alt text ----------------------------------------
+  const markdownImages = [...body.matchAll(/!\[(.*?)\]\((.*?)\)/g)];
+  for (const [, alt, src] of markdownImages) {
+    if (!alt.trim()) {
+      addError(file, `图片缺少 alt 文本：${src}`);
+    }
+  }
+
+  // --- internal links should not be locale-hardcoded -----------------------
+  const internalLinks = [...body.matchAll(/\]\((\/[^)\s]*)\)/g)];
+  for (const [, href] of internalLinks) {
+    if (/^\/(zh|en)\//.test(href)) {
+      addWarning(
+        file,
+        `内链写死了语言前缀：${href}（写成 /blog/... 即可，组件会自动补当前语言）`,
+      );
+    }
+  }
+
+  // --- canonicalUrl sanity -------------------------------------------------
+  if (fm.canonicalUrl && !/^https?:\/\//.test(String(fm.canonicalUrl))) {
+    addError(file, `canonicalUrl 必须是绝对 URL：${fm.canonicalUrl}`);
+  }
+}
+
+function main() {
+  if (!existsSync(BLOG_DIR)) {
+    console.log('check-seo: 没有找到 data/blog，跳过');
+    return;
+  }
+
+  const files = readdirSync(BLOG_DIR).filter((f) => f.endsWith('.mdx'));
+  const slugs = new Map();
+
+  for (const file of files) {
+    const raw = readFileSync(path.join(BLOG_DIR, file), 'utf-8');
+    checkPost(file, raw);
+
+    // Slug collisions would make two posts fight over one URL.
+    const slug = file.replace(/\.mdx$/, '');
+    if (slugs.has(slug.toLowerCase())) {
+      addError(
+        file,
+        `slug 与 ${slugs.get(slug.toLowerCase())} 冲突（忽略大小写）`,
+      );
+    }
+    slugs.set(slug.toLowerCase(), file);
+  }
+
+  for (const { file, message } of warnings) {
+    console.log(`  ⚠  ${file}: ${message}`);
+  }
+  if (postsWithoutCover.length > 0) {
+    console.log(
+      `  ⚠  ${postsWithoutCover.length}/${files.length} 篇文章没有 images 封面，分享时回退到站点默认卡片（建议 1200x630）`,
+    );
+  }
+  for (const { file, message } of errors) {
+    console.log(`  ✖  ${file}: ${message}`);
+  }
+
+  const summary = `check-seo: 检查 ${files.length} 篇文章，${errors.length} 个错误，${warnings.length} 个警告`;
+
+  if (errors.length > 0 || (STRICT && warnings.length > 0)) {
+    console.error(`\n${summary}`);
+    process.exit(1);
+  }
+  console.log(summary);
+}
+
+main();

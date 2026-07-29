@@ -17,7 +17,20 @@ import PostBanner from '@/layouts/PostBanner';
 import { Metadata } from 'next';
 import siteMetadata from '@/data/siteMetadata';
 import { notFound } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { buildLocalKnowledgeGraph } from '@/lib/knowledgeGraph';
+import JsonLd from '@/components/JsonLd';
+import {
+  buildBlogPostingJsonLd,
+  buildBreadcrumbJsonLd,
+} from '@/lib/structuredData';
+import {
+  absoluteImageList,
+  buildAlternates,
+  localeUrl,
+  ogLocaleByLocale,
+  resolveLocale,
+} from '@/lib/seo';
 
 const defaultLayout = 'PostLayout';
 const layouts = {
@@ -27,7 +40,7 @@ const layouts = {
 };
 
 export async function generateMetadata(props: {
-  params: Promise<{ slug: string[] }>;
+  params: Promise<{ slug: string[]; locale: string }>;
 }): Promise<Metadata | undefined> {
   const params = await props.params;
   const slug = decodeURI(params.slug.join('/'));
@@ -41,39 +54,39 @@ export async function generateMetadata(props: {
     return;
   }
 
+  const locale = resolveLocale(params.locale);
   const publishedAt = new Date(post.date).toISOString();
   const modifiedAt = new Date(post.lastmod || post.date).toISOString();
   const authors = authorDetails.map((author) => author.name);
-  let imageList = [siteMetadata.socialBanner];
-  if (post.images) {
-    imageList = typeof post.images === 'string' ? [post.images] : post.images;
-  }
-  const ogImages = imageList.map((img) => {
-    return {
-      url: img && img.includes('http') ? img : siteMetadata.siteUrl + img,
-    };
-  });
+  const images = absoluteImageList(post.images);
 
   return {
     title: post.title,
     description: post.summary,
+    // Override the sitewide keyword list with this post's own tags.
+    keywords: post.tags?.length ? post.tags : undefined,
+    authors: authors.map((name) => ({ name })),
+    // `canonicalUrl` frontmatter wins when the post was first published
+    // elsewhere; otherwise the locale-prefixed URL is canonical.
+    alternates: buildAlternates(locale, `/${post.path}`, post.canonicalUrl),
     openGraph: {
       title: post.title,
       description: post.summary,
       siteName: siteMetadata.title,
-      locale: 'en_US',
+      locale: ogLocaleByLocale[locale],
       type: 'article',
       publishedTime: publishedAt,
       modifiedTime: modifiedAt,
-      url: './',
-      images: ogImages,
+      url: localeUrl(locale, `/${post.path}`),
+      images,
       authors: authors.length > 0 ? authors : [siteMetadata.author],
+      tags: post.tags,
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.summary,
-      images: imageList,
+      images,
     },
   };
 }
@@ -85,10 +98,12 @@ export const generateStaticParams = async () => {
 };
 
 export default async function Page(props: {
-  params: Promise<{ slug: string[] }>;
+  params: Promise<{ slug: string[]; locale: string }>;
 }) {
   const params = await props.params;
   const slug = decodeURI(params.slug.join('/'));
+  const locale = resolveLocale(params.locale);
+  const t = await getTranslations({ locale, namespace: 'seo' });
   // Filter out drafts in production
   const sortedCoreContents = allCoreContent(sortPosts(allBlogs));
   const postIndex = sortedCoreContents.findIndex((p) => p.slug === slug);
@@ -106,22 +121,32 @@ export default async function Page(props: {
   });
   const mainContent = coreContent(post);
   const localKnowledgeGraph = buildLocalKnowledgeGraph(allBlogs, slug);
-  const jsonLd = post.structuredData;
-  jsonLd['author'] = authorDetails.map((author) => {
-    return {
-      '@type': 'Person',
-      name: author.name,
-    };
+
+  const articleJsonLd = buildBlogPostingJsonLd(locale, {
+    title: post.title,
+    summary: post.summary,
+    date: post.date,
+    lastmod: post.lastmod,
+    tags: post.tags,
+    images: post.images,
+    path: `/${post.path}`,
+    canonicalUrl: post.canonicalUrl,
+    authors: authorDetails.map((author) => ({ name: author.name })),
+    readingTimeWords: post.readingTime?.words,
   });
+
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd(locale, [
+    { name: t('breadcrumbHome'), path: '/' },
+    { name: t('breadcrumbBlog'), path: '/blog' },
+    { name: post.title },
+  ]);
 
   const Layout = layouts[post.layout || defaultLayout];
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={articleJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       <Layout
         content={mainContent}
         authorDetails={authorDetails}

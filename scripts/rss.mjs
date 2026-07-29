@@ -6,14 +6,20 @@ import siteMetadata from '../data/siteMetadata.js';
 import tagData from '../app/tag-data.json' with { type: 'json' };
 import { allBlogs } from '../.contentlayer/generated/index.mjs';
 import { sortPosts } from 'pliny/utils/contentlayer.js';
+import { defaultLocale } from '../lib/locales.mjs';
 
 const outputFolder = process.env.EXPORT ? 'out' : 'public';
 
+// Routes are locale-prefixed; unprefixed URLs only redirect, so feed links and
+// GUIDs point straight at the canonical locale.
+const postUrl = (config, post) =>
+  `${config.siteUrl}/${defaultLocale}/blog/${post.slug}`;
+
 const generateRssItem = (config, post) => `
   <item>
-    <guid>${config.siteUrl}/blog/${post.slug}</guid>
+    <guid>${postUrl(config, post)}</guid>
     <title>${escape(post.title)}</title>
-    <link>${config.siteUrl}/blog/${post.slug}</link>
+    <link>${postUrl(config, post)}</link>
     ${post.summary && `<description>${escape(post.summary)}</description>`}
     <pubDate>${new Date(post.date).toUTCString()}</pubDate>
     <author>${config.email} (${config.author})</author>
@@ -25,7 +31,7 @@ const generateRss = (config, posts, page = 'feed.xml') => `
   <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
       <title>${escape(config.title)}</title>
-      <link>${config.siteUrl}/blog</link>
+      <link>${config.siteUrl}/${defaultLocale}/blog</link>
       <description>${escape(config.description)}</description>
       <language>${config.language}</language>
       <managingEditor>${config.email} (${config.author})</managingEditor>

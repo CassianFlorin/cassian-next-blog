@@ -240,5 +240,26 @@
     "排错": "Troubleshooting",
     "codex": "Codex",
     "cli": "CLI"
+  },
+  "seo": {
+    "siteTitle": "Cassian Florin | AI Engineering Tool Builder",
+    "siteDescription": "Cassian Florin's technical blog on AI agent engineering, developer workflows, personal knowledge systems, and backend development.",
+    "blogTitle": "All Posts",
+    "blogDescription": "Every post and field note on AI agents, developer tooling, workflow automation, and backend engineering.",
+    "blogPageTitle": "All Posts · Page {page}",
+    "tagsTitle": "Tags",
+    "tagsDescription": "Browse every topic on the site and jump straight to AI agents, developer tools, or Java backend content.",
+    "tagTitle": "Tag: {tag}",
+    "tagDescription": "All {count} posts and notes tagged “{tag}”.",
+    "tagPageTitle": "Tag: {tag} · Page {page}",
+    "aboutTitle": "About",
+    "aboutDescription": "About Cassian Florin: the AI engineering tools I build, what I focus on, and how to get in touch.",
+    "projectsTitle": "Projects",
+    "projectsDescription": "Projects I build and contribute to: AI agent tooling, developer productivity tools, and open source work.",
+    "knowledgeTitle": "Knowledge Map",
+    "knowledgeDescription": "Explore how posts, tags, and knowledge notes connect across the site as a graph.",
+    "breadcrumbHome": "Home",
+    "breadcrumbBlog": "Blog",
+    "breadcrumbTags": "Tags"
   }
 }

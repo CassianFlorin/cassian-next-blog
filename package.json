@@ -6,7 +6,7 @@
     "start": "node scripts/patch-contentlayer-opentelemetry.mjs && next dev",
     "dev": "node scripts/patch-contentlayer-opentelemetry.mjs && cross-env INIT_CWD=$PWD next dev",
     "prebuild": "node scripts/patch-contentlayer-opentelemetry.mjs && node scripts/update-tags.mjs && node scripts/generate-obsidian-graph.mjs",
-    "build": "cross-env INIT_CWD=$PWD next build && cross-env NODE_OPTIONS='--experimental-json-modules' node ./scripts/postbuild.mjs",
+    "build": "node scripts/check-seo.mjs && cross-env INIT_CWD=$PWD next build && cross-env NODE_OPTIONS='--experimental-json-modules' node ./scripts/postbuild.mjs",
     "serve": "next start",
     "analyze": "cross-env ANALYZE=true next build",
     "lint": "next lint --fix --dir pages --dir app --dir components --dir lib --dir layouts --dir scripts",
@@ -14,7 +14,8 @@
     "generate-tags": "node scripts/generate-post-tags.mjs",
     "update-tags": "node scripts/update-tags.mjs",
     "init-translations": "node scripts/init-translations.mjs",
-    "generate-obsidian-graph": "node scripts/generate-obsidian-graph.mjs"
+    "generate-obsidian-graph": "node scripts/generate-obsidian-graph.mjs",
+    "check-seo": "node scripts/check-seo.mjs"
   },
   "dependencies": {
     "@headlessui/react": "2.2.0",

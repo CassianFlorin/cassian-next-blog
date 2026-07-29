@@ -12,6 +12,7 @@ import { fromHtmlIsomorphic } from 'hast-util-from-html-isomorphic';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import { remarkAlert } from 'remark-github-blockquote-alert';
+import remarkDemoteHeadings from './lib/remarkDemoteHeadings.mjs';
 import {
   remarkExtractFrontmatter,
   remarkCodeTitles,
@@ -116,22 +117,7 @@ export const Blog = defineDocumentType(() => ({
     bibliography: { type: 'string' },
     canonicalUrl: { type: 'string' },
   },
-  computedFields: {
-    ...computedFields,
-    structuredData: {
-      type: 'json',
-      resolve: (doc) => ({
-        '@context': 'https://schema.org',
-        '@type': 'BlogPosting',
-        headline: doc.title,
-        datePublished: doc.date,
-        dateModified: doc.lastmod || doc.date,
-        description: doc.summary,
-        image: doc.images ? doc.images[0] : siteMetadata.socialBanner,
-        url: `${siteMetadata.siteUrl}/${doc._raw.flattenedPath}`,
-      }),
-    },
-  },
+  computedFields,
 }));
 
 export const Authors = defineDocumentType(() => ({
@@ -171,22 +157,7 @@ export const Secret = defineDocumentType(() => ({
     bibliography: { type: 'string' },
     canonicalUrl: { type: 'string' },
   },
-  computedFields: {
-    ...computedFields,
-    structuredData: {
-      type: 'json',
-      resolve: (doc) => ({
-        '@context': 'https://schema.org',
-        '@type': 'BlogPosting',
-        headline: doc.title,
-        datePublished: doc.date,
-        dateModified: doc.lastmod || doc.date,
-        description: doc.summary,
-        image: doc.images ? doc.images[0] : siteMetadata.socialBanner,
-        url: `${siteMetadata.siteUrl}/${doc._raw.flattenedPath}`,
-      }),
-    },
-  },
+  computedFields,
 }));
 
 export default makeSource({
@@ -201,6 +172,8 @@ export default makeSource({
       remarkMath,
       remarkImgToJsx,
       remarkAlert,
+      // Keeps exactly one <h1> per page (the layout renders the title).
+      remarkDemoteHeadings,
     ],
     rehypePlugins: [
       rehypeSlug,

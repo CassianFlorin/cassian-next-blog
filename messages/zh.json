@@ -240,5 +240,26 @@
     "排错": "排错",
     "codex": "Codex",
     "cli": "CLI"
+  },
+  "seo": {
+    "siteTitle": "Cassian Florin｜AI 工程工具构建者",
+    "siteDescription": "Cassian Florin 的个人技术博客：AI Agent 工程、开发者工作流、个人知识管理系统，以及后端开发实践笔记。",
+    "blogTitle": "全部文章",
+    "blogDescription": "关于 AI Agent、开发者工具、工作流自动化与后端工程的全部文章与实践笔记。",
+    "blogPageTitle": "全部文章 · 第 {page} 页",
+    "tagsTitle": "标签",
+    "tagsDescription": "按主题浏览全部文章标签，快速找到 AI Agent、开发工具、Java 后端等方向的内容。",
+    "tagTitle": "标签：{tag}",
+    "tagDescription": "「{tag}」相关的全部文章与笔记，共 {count} 篇。",
+    "tagPageTitle": "标签：{tag} · 第 {page} 页",
+    "aboutTitle": "关于我",
+    "aboutDescription": "关于 Cassian Florin：我在做的 AI 工程工具、技术方向，以及可以怎样联系我。",
+    "projectsTitle": "项目",
+    "projectsDescription": "我构建和参与的项目：AI Agent 工具、开发者效率工具与开源贡献。",
+    "knowledgeTitle": "知识地图",
+    "knowledgeDescription": "以图谱方式浏览站内文章、标签与知识笔记之间的关联关系。",
+    "breadcrumbHome": "首页",
+    "breadcrumbBlog": "博客",
+    "breadcrumbTags": "标签"
   }
 }

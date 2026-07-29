@@ -127,7 +127,9 @@ export default function EntryCurtain() {
   return (
     <div ref={rootRef} className="entry-curtain" role="presentation">
       <div className="entry-curtain-inner">
-        <h1 className="entry-curtain-brand" aria-label={BRAND}>
+        {/* Decorative brand wordmark: intentionally not a heading so each
+            page keeps a single, content-specific <h1>. */}
+        <div className="entry-curtain-brand" aria-label={BRAND}>
           {chars.map((item, index) =>
             item.isSpace ? (
               <span key={index}> </span>
@@ -141,7 +143,7 @@ export default function EntryCurtain() {
               </span>
             ),
           )}
-        </h1>
+        </div>
         <span className="entry-curtain-rule" aria-hidden="true" />
         <p className="entry-curtain-tagline" aria-hidden="true">
           {TAGLINE}

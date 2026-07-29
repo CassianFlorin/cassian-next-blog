@@ -5,8 +5,9 @@ import 'remark-github-blockquote-alert/alert.css';
 import { Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import { ThemeProviders } from './theme-providers';
 import { Metadata } from 'next';
-import { locales } from '../i18n';
+import { defaultLocale, locales } from '../i18n';
 import siteMetadata from '@/data/siteMetadata';
+import { htmlLangByLocale, ogLocaleByLocale, resolveLocale } from '@/lib/seo';
 
 const space_grotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -28,14 +29,16 @@ export const metadata: Metadata = {
   },
   description: siteMetadata.description,
   authors: [{ name: siteMetadata.author }],
+  // Sitewide fallback only — blog posts override this with their own tags.
   keywords: [
+    'AI Agent',
+    'AI 编程工具',
+    'Claude Code',
+    'Obsidian',
+    '个人知识管理',
+    'Developer Tools',
     'Java',
     'Backend Development',
-    'Java Development',
-    'System Design',
-    'Developer Productivity',
-    'AI Tools',
-    'Tech Blog',
     'Cassian Florin',
   ],
   openGraph: {
@@ -44,7 +47,8 @@ export const metadata: Metadata = {
     url: './',
     siteName: siteMetadata.title,
     images: [siteMetadata.socialBanner],
-    locale: 'en_US',
+    // Overridden per locale in app/[locale]/layout.tsx.
+    locale: ogLocaleByLocale[defaultLocale],
     type: 'website',
   },
   alternates: {
@@ -87,7 +91,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang={locale}
+      lang={htmlLangByLocale[resolveLocale(locale)]}
       className={`${space_grotesk.variable} ${jetbrains_mono.variable} scroll-smooth`}
       suppressHydrationWarning
     >

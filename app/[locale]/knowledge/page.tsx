@@ -6,17 +6,26 @@ import {
 import { allBlogs } from 'contentlayer/generated';
 import { genPageMetadata } from 'app/seo';
 import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
 import obsidianGraph from '@/generated/obsidian-graph.json';
 
-export const metadata = genPageMetadata({
-  title: 'Knowledge Map',
-  description:
-    'Explore how posts, tags, and knowledge notes connect across the site.',
-});
+export async function generateMetadata(props: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await props.params;
+  const t = await getTranslations({ locale, namespace: 'seo' });
+  return genPageMetadata({
+    title: t('knowledgeTitle'),
+    description: t('knowledgeDescription'),
+    locale,
+    path: '/knowledge',
+  });
+}
 
 export default async function KnowledgePage({
   searchParams,
 }: {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ post?: string }>;
 }) {
   const [{ post }, t] = await Promise.all([
