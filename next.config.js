@@ -8,10 +8,13 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
 
-// You might need to insert additional domains in script-src if you are using external services
+// You might need to insert additional domains in script-src if you are using external services.
+// Vercel Web Analytics serves its production script from the same origin
+// (/_vercel/insights/script.js); va.vercel-scripts.com is only the local dev
+// debug build, listed so it does not trip CSP while developing.
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' giscus.app analytics.umami.is pagead2.googlesyndication.com;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' giscus.app pagead2.googlesyndication.com va.vercel-scripts.com;
   style-src 'self' 'unsafe-inline';
   img-src * blob: data:;
   media-src *.s3.amazonaws.com;

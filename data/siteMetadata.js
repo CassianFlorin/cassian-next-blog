@@ -29,25 +29,20 @@ const siteMetadata = {
   locale: 'zh-cn',
   // set to true if you want a navbar fixed to the top
   stickyNav: false,
+  // Page views are handled by Vercel Web Analytics, wired up directly in
+  // app/[locale]/layout.tsx rather than through pliny.
+  //
+  // This block stays as the switch point for the pliny-supported providers
+  // below. Note that pliny injects a provider's script as soon as its key
+  // exists, even with an empty id — so only add a key once you have the id,
+  // otherwise every page load fires a request that records nothing.
   analytics: {
     // If you want to use an analytics provider you have to add it to the
     // content security policy in the `next.config.js` file.
     // supports Plausible, Simple Analytics, Umami, Posthog or Google Analytics.
-    //
-    // Only declared when the id is actually set: pliny renders the umami script
-    // regardless of whether `umamiWebsiteId` is defined, so leaving the key in
-    // place without an id loads the script on every page and records nothing.
-    ...(process.env.NEXT_UMAMI_ID
-      ? {
-          umamiAnalytics: {
-            // Env var so forks of this repo don't report into our analytics.
-            umamiWebsiteId: process.env.NEXT_UMAMI_ID, // e.g. 123e4567-e89b-12d3-a456-426614174000
-            // You may also need to overwrite the script if you're storing data in the US - ex:
-            // src: 'https://us.umami.is/script.js'
-            // Remember to add 'us.umami.is' in `next.config.js` as a permitted domain for the CSP
-          },
-        }
-      : {}),
+    // umamiAnalytics: {
+    //   umamiWebsiteId: process.env.NEXT_UMAMI_ID, // e.g. 123e4567-e89b-12d3-a456-426614174000
+    // },
     // plausibleAnalytics: {
     //   plausibleDataDomain: '', // e.g. tailwind-nextjs-starter-blog.vercel.app
     // If you are hosting your own Plausible.

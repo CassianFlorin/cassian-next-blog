@@ -1,5 +1,6 @@
 import { Space_Grotesk } from 'next/font/google';
 import { Analytics, AnalyticsConfig } from 'pliny/analytics';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import { SearchProvider, SearchConfig } from 'pliny/search';
 import Header from '@/components/Header';
 import SectionContainer from '@/components/SectionContainer';
@@ -109,6 +110,11 @@ export default async function LocaleLayout({
           }}
         />
         <EntryCurtain />
+        {/* Vercel Web Analytics: same-origin script, so the strict CSP in
+            next.config.js covers it without an allowlist entry. */}
+        <VercelAnalytics />
+        {/* Kept as the switch point for the providers still listed in
+            siteMetadata.analytics; renders nothing while none is configured. */}
         <Analytics
           analyticsConfig={siteMetadata.analytics as AnalyticsConfig}
         />
