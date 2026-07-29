@@ -1,0 +1,238 @@
+---
+title: 多语言博客 SEO 改造：sitemap 里每个 URL 都在重定向
+date: '2026-07-29 18:00:00'
+tags:
+  - SEO
+  - Next.js
+  - i18n
+  - Vercel
+  - 排错
+draft: false
+summary: Next.js 多语言博客的 sitemap 里，每条 URL 都要两跳重定向才能到真实页面。本文记录怎么定位、怎么修，以及怎么让以后的文章自动保持合规。
+---
+
+# 多语言博客 SEO 改造
+
+这个博客是 Next.js App Router + next-intl 的多语言站点，路由形如 `/zh/blog/xxx`。SEO 相关的东西看起来该有的都有：`sitemap.ts`、`robots.ts`、每篇文章的 `BlogPosting` 结构化数据。
+
+直到我把 sitemap 拉下来对着真实路由看了一眼。
+
+<Callout emoji="🧭">
+  一句话结论：
+  <strong>
+    有 middleware 做语言前缀重定向的站点，sitemap 必须输出带前缀的 URL
+  </strong>
+  。否则每条 URL 都是一跳重定向，而这件事从代码里完全看不出来。
+</Callout>
+
+## 起因：sitemap 里的 URL 一个都进不去
+
+原来的 `app/sitemap.ts` 大致是这样：
+
+```ts
+const routes = ['', 'blog', 'projects', 'knowledge', 'about'].map((route) => ({
+  url: `${siteUrl}/${route}`,
+  lastModified: new Date().toISOString().split('T')[0],
+}));
+```
+
+输出是 `https://cassianflorin.com/blog`。看着没问题。
+
+但真实路由是 `/zh/blog` 和 `/en/blog`——`middleware.ts` 会把不带语言前缀的路径重定向过去。也就是说 sitemap 里**每一条 URL 都是一次 307**。
+
+用 curl 一测，发现还不止一跳：
+
+```bash
+curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" https://cassianflorin.com/blog
+```
+
+```text
+307 -> https://www.cassianflorin.com/blog
+```
+
+`data/siteMetadata.js` 里写的 `siteUrl` 是 `https://cassianflorin.com`，而 Vercel 上配的主域名是 **www**。两个问题叠在一起，完整链路是：
+
+```text
+https://cassianflorin.com/blog          （sitemap 里写的）
+  ↓ 307  非 www → www
+https://www.cassianflorin.com/blog
+  ↓ 307  middleware 补语言前缀
+https://www.cassianflorin.com/zh/blog   （真实页面）
+```
+
+爬虫会跟随重定向，所以页面最终能被收录，不至于完全瞎掉。但每抓一个页面白跑两跳，canonical 也指向一个不存在实体内容的地址。
+
+这两件事的共同点：**光看代码看不出来**。`siteUrl` 那行字符串本身没有任何问题，是它和线上部署不匹配。后来我养成了习惯——凡是涉及部署的判断，先 curl 一遍线上再说。
+
+## 修复一：sitemap 输出带语言前缀的 URL
+
+改成按 locale 展开，每条再带上 hreflang 注解：
+
+```ts
+function localizedEntries(path: string, options: { ... }) {
+  const languages = languageAlternates(path);
+  return locales.map((locale) => ({
+    url: localeUrl(locale, path),
+    lastModified: options.lastModified,
+    changeFrequency: options.changeFrequency,
+    priority: locale === defaultLocale ? options.priority : ...,
+    alternates: { languages },
+  }));
+}
+```
+
+Next.js 的 `MetadataRoute.Sitemap` 支持 `alternates.languages`，会渲染成标准的 `xhtml:link`：
+
+```xml
+<url>
+<loc>https://www.cassianflorin.com/zh/blog</loc>
+<xhtml:link rel="alternate" hreflang="zh-CN" href="https://www.cassianflorin.com/zh/blog" />
+<xhtml:link rel="alternate" hreflang="en" href="https://www.cassianflorin.com/en/blog" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cassianflorin.com/zh/blog" />
+</url>
+```
+
+顺手把原来漏掉的标签页、博客分页也纳进来。结果是 **22 条 → 146 条**，且全部直接返回 200。
+
+分页有个细节：第 1 页和 `/blog` 内容完全一样，所以分页条目从第 2 页开始，避免自己和自己重复。
+
+## 修复二：hreflang——内容没翻译该怎么办
+
+这个站的界面是双语的，但**文章正文只有中文**。`/en/blog/xxx` 和 `/zh/blog/xxx` 渲染的是同一篇中文文章，只有导航、页脚这些外壳是英文。
+
+一开始我以为该给 `/en` 版本加 canonical 指回 `/zh`。但那样是错的：hreflang 要求**每个语言版本都 self-canonical**，指回去等于告诉搜索引擎「英文版不算数」，hreflang 直接失效。
+
+正确做法是两个版本各自 self-canonical，再用 hreflang 互相声明：
+
+```text
+/zh/blog/xxx  canonical → 自己    hreflang: zh-CN, en, x-default
+/en/blog/xxx  canonical → 自己    hreflang: zh-CN, en, x-default
+```
+
+`x-default` 指向默认语言（中文）。搜索引擎会自己判断给哪个用户展示哪个版本，也不会当成重复内容惩罚。
+
+## 修复三：每个页面有三个 h1
+
+用脚本数了一下渲染后的 HTML，每篇文章页有 3 个 `<h1>`：
+
+| 来源                    | 内容                                 |
+| ----------------------- | ------------------------------------ |
+| `EntryCurtain` 开场动画 | `Cassian Florin`（**每个页面都有**） |
+| `PageTitle`             | 文章标题（正确的那个）               |
+| MDX 正文                | 作者写的 `# 一级标题`                |
+
+第一个最离谱——一个装饰性的品牌动画占掉了全站每个页面的 h1。改成 `div` 就行，`aria-label` 保留，视觉和动画完全不变。
+
+第三个麻烦一些。17 篇文章里有 15 篇正文都以 `# 标题` 开头（和 frontmatter 的 title 重复）。手动改内容既繁琐又会打断以后的写作习惯，所以写了个 remark 插件在构建时处理：
+
+```js
+export default function remarkDemoteHeadings() {
+  return (tree) => {
+    let hasTopLevelHeading = false;
+    visit(tree, 'heading', (node) => {
+      if (node.depth === 1) hasTopLevelHeading = true;
+    });
+
+    if (!hasTopLevelHeading) return;
+
+    visit(tree, 'heading', (node) => {
+      node.depth = Math.min(node.depth + 1, 6);
+    });
+  };
+}
+```
+
+整体降一级而不是只把 h1 改成 h2——这样作者写的相对层级关系（`#` → `##` → `###`）完整保留，只是整体下移一层，嵌到布局渲染的那个 h1 底下。已经从 `##` 开头的文章则完全不受影响。
+
+现在正文照常写 `# 标题`，构建时自动变成合法的单 h1 文档。
+
+## 让它对以后的文章也生效
+
+改完现存问题只是一半。更重要的是新文章不用再操心这些。
+
+**能自动的全部自动**：canonical、hreflang、`og:locale`、结构化数据、sitemap 条目、RSS，全部从 frontmatter 推导。发文章只需要写 frontmatter，其余不用管。
+
+**不能自动的，构建时拦下来**。写了个 `scripts/check-seo.mjs`，串在 `build` 的第一步：
+
+```text
+✖ 错误（中断构建）  缺 title/summary/date、图片缺 alt、封面文件不存在、slug 冲突
+⚠ 警告（仅提示）    标题过长、摘要过短或超长、标签数量异常、内链写死语言前缀
+```
+
+有个中文特有的细节：SERP 的截断是按像素宽度算的，中文字符大约是拉丁字符的两倍宽。所以不能直接数字符数：
+
+```js
+function displayWidth(text) {
+  let width = 0;
+  for (const char of text) {
+    width += /[⺀-￿]/.test(char) ? 2 : 1;
+  }
+  return width;
+}
+```
+
+按这个口径，一条中文摘要超过 80 字左右就会在搜索结果里被截断。跑下来发现有篇文章的摘要显示宽度 191，确实太长了。
+
+## 意外收获：Yarn 3 从来没执行过 prebuild
+
+把 `check-seo` 挂进 `prebuild` 之后，跑 `yarn build`，没有任何输出。
+
+原因是 **Yarn 2+ 不再自动执行 `pre` / `post` 生命周期脚本**。而这个仓库的 `prebuild` 里还挂着 `update-tags`（补标签翻译）和 `generate-obsidian-graph`：
+
+```json
+"prebuild": "node scripts/patch-contentlayer-opentelemetry.mjs && node scripts/update-tags.mjs && node scripts/generate-obsidian-graph.mjs"
+```
+
+也就是说这两个脚本在本地和 Vercel 上**从来没在构建时跑过**。之所以一直没出问题，是因为它们的产物都提交进了仓库。
+
+解决办法是显式串进 `build`。但直接串会踩另一个雷：`generate-obsidian-graph` 依赖 `OBSIDIAN_VAULT_ROOT`，这个环境变量只存在于我本机。在 Vercel 上它会拿空数据**覆盖掉已提交的图谱**。
+
+所以先改脚本，无 vault 时保留已有文件：
+
+```js
+if (!vaultRoot) {
+  if (existsSync(outputPath)) {
+    console.log('Obsidian graph skipped: keeping existing file.');
+    return;
+  }
+  // 只在文件缺失时才写空图谱
+}
+```
+
+改完才敢串进去。
+
+## 两个顺带发现的问题
+
+**GitHub Pages 工作流每次推送都在失败**。仓库里留着一个 `pages.yml`，从 6 月起每次 push 都失败发邮件——仓库根本没开 Pages。而且它用的是 `EXPORT=1` 静态导出，真启用了反而会彻底破坏 middleware 的语言路由。删掉。
+
+**统计脚本在空跑**。线上一直加载着 umami 的脚本，但 `NEXT_UMAMI_ID` 从来没配过。翻了 pliny 的源码才发现问题所在：
+
+```js
+var Umami = (_a) => {
+  var _b = _a, { src = "https://analytics.umami.is/script.js" } = _b, ...
+```
+
+只要 `umamiAnalytics` 这个 key 存在，脚本就会注入，**不管有没有 ID**。所以每次访问都白请求一次 CDN，一条数据都没记。SEO 优化做完却没有工具能衡量效果，这个比较讽刺。
+
+## 结果
+
+| 指标                       | 改造前           | 改造后                                                       |
+| -------------------------- | ---------------- | ------------------------------------------------------------ |
+| sitemap 条目               | 22               | 146                                                          |
+| sitemap URL 是否需要重定向 | 全部需要（两跳） | 全部直达 200                                                 |
+| hreflang                   | 无               | 438 条注解                                                   |
+| `og:locale`                | 固定 `en_US`     | 按语言输出                                                   |
+| 每页 `<h1>` 数量           | 3                | 1                                                            |
+| 结构化数据                 | 仅 `BlogPosting` | 增加 `Person`、`WebSite`、`BreadcrumbList`、`CollectionPage` |
+
+## 如果你也在做多语言站点的 SEO
+
+按我踩坑的顺序，值得先查这几件事：
+
+1. **把 sitemap 里的 URL 逐个 curl 一遍**，看返回的是 200 还是 3xx。这是最容易被忽略、影响又最大的一条。
+2. **确认 `siteUrl` 和线上主域名一致**（www / 非 www）。代码里看不出来，只能探线上。
+3. **确认 hreflang 和 canonical 不打架**：每个语言版本必须 self-canonical，否则 hreflang 无效。
+4. **数一下渲染后 HTML 里的 h1 数量**，注意全局组件（导航、动画、Logo）里藏的那些。
+5. **如果用 Yarn 2+，检查 `pre`/`post` 脚本是不是根本没在跑。**
+
+写检查脚本这件事，回头看是性价比最高的。它把「我知道该注意什么」变成了「构建会告诉我哪里不对」——半年后我肯定不记得摘要该控制在多少字，但构建记得。

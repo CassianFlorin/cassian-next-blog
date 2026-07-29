@@ -174,7 +174,13 @@ function updateTranslationFile(filePath, translations, newTags) {
 
     // 页面通过 slug 查 tags.<slug>，所以原始标签键与 slug 键都要写入
     // （中文标签 slug 与自身相同，只会写一个键）
-    const keys = [...new Set([tag, tagSlug])];
+    //
+    // 含 "." 的键要排除：next-intl 用 "." 表达嵌套，会在初始化时校验整个
+    // messages 对象并直接抛 INVALID_KEY。像 "Next.js" 这种标签只能存 slug 键
+    // （nextjs），组件侧统一按 slug 查，所以不影响显示。
+    const keys = [...new Set([tag, tagSlug])].filter(
+      (key) => !key.includes('.'),
+    );
     for (const key of keys) {
       if (!data.tags[key]) {
         data.tags[key] = translation;

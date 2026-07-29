@@ -239,7 +239,13 @@
     "中转站": "中转站",
     "排错": "排错",
     "codex": "Codex",
-    "cli": "CLI"
+    "cli": "CLI",
+    "SEO": "SEO",
+    "seo": "SEO",
+    "nextjs": "Next.js",
+    "i18n": "i18n",
+    "Vercel": "Vercel",
+    "vercel": "Vercel"
   },
   "seo": {
     "siteTitle": "Cassian Florin｜AI 工程工具构建者",

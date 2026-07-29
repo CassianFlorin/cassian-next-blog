@@ -239,7 +239,13 @@
     "中转站": "Relay Station",
     "排错": "Troubleshooting",
     "codex": "Codex",
-    "cli": "CLI"
+    "cli": "CLI",
+    "SEO": "SEO",
+    "seo": "SEO",
+    "nextjs": "Next.js",
+    "i18n": "i18n",
+    "Vercel": "Vercel",
+    "vercel": "Vercel"
   },
   "seo": {
     "siteTitle": "Cassian Florin | AI Engineering Tool Builder",
