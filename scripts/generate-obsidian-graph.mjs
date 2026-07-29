@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import path from 'node:path';
+import { existsSync } from 'node:fs';
 import { writeObsidianGraph } from '../lib/obsidianGraph.mjs';
 
 const ROOT = process.cwd();
@@ -34,6 +35,16 @@ function main() {
   const { outputPath, vaultRoot } = parseArgs();
 
   if (!vaultRoot) {
+    // The vault only exists on the author's machine, so any other environment
+    // (CI, Vercel) would otherwise overwrite a real committed graph with an
+    // empty one. Seed the file if it is missing, but never clobber it.
+    if (existsSync(outputPath)) {
+      console.log(
+        `Obsidian graph skipped: OBSIDIAN_VAULT_ROOT is not set, keeping existing ${path.relative(ROOT, outputPath)}.`,
+      );
+      return;
+    }
+
     const graph = writeObsidianGraph({ outputPath, vaultRoot: '' });
     console.log(
       `Obsidian graph skipped: OBSIDIAN_VAULT_ROOT is not set. Wrote empty graph to ${path.relative(ROOT, outputPath)}.`,
