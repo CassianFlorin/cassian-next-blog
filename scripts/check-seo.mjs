@@ -13,7 +13,17 @@ import matter from 'gray-matter';
 const ROOT = process.cwd();
 const BLOG_DIR = path.join(ROOT, 'data', 'blog');
 const PUBLIC_DIR = path.join(ROOT, 'public');
+const CHARSET_FILE = path.join(ROOT, 'assets', 'fonts', 'charset.txt');
 const STRICT = process.argv.includes('--strict');
+
+/**
+ * Glyphs covered by the subsetted OG-card fonts. Anything outside this set
+ * renders as a blank box on the card, which is invisible until someone shares
+ * the link — so it is worth catching at build time.
+ */
+const ogCharset = existsSync(CHARSET_FILE)
+  ? new Set(readFileSync(CHARSET_FILE, 'utf-8'))
+  : null;
 
 /** Search snippets get truncated past roughly this width. */
 const SUMMARY_MIN = 40;
@@ -30,7 +40,6 @@ const TLDR_MAX = 200;
 
 const errors = [];
 const warnings = [];
-const postsWithoutCover = [];
 
 const addError = (file, message) => errors.push({ file, message });
 const addWarning = (file, message) => warnings.push({ file, message });
@@ -150,6 +159,20 @@ function checkPost(file, raw) {
     }
   }
 
+  // --- OG card glyph coverage ----------------------------------------------
+  if (ogCharset) {
+    const onCard = [String(fm.title || ''), ...(fm.tags || []).slice(0, 3)]
+      .join('')
+      .replace(/\s/g, '');
+    const missing = [...new Set(onCard)].filter((ch) => !ogCharset.has(ch));
+    if (missing.length > 0) {
+      addWarning(
+        file,
+        `OG 卡片字体缺字：${missing.join('')}（把这些字加进 assets/fonts/charset.txt 后重跑 scripts/build-og-font.py）`,
+      );
+    }
+  }
+
   // --- date ----------------------------------------------------------------
   if (!fm.date) {
     addError(file, 'frontmatter 缺少 date');
@@ -178,10 +201,6 @@ function checkPost(file, raw) {
     if (!existsSync(path.join(PUBLIC_DIR, image.replace(/^\//, '')))) {
       addError(file, `images 指向的文件不存在：${image}`);
     }
-  }
-  if (images.length === 0) {
-    // Aggregated at the end — per-post lines would drown out real findings.
-    postsWithoutCover.push(file);
   }
 
   // --- headings ------------------------------------------------------------
@@ -240,11 +259,6 @@ function main() {
 
   for (const { file, message } of warnings) {
     console.log(`  ⚠  ${file}: ${message}`);
-  }
-  if (postsWithoutCover.length > 0) {
-    console.log(
-      `  ⚠  ${postsWithoutCover.length}/${files.length} 篇文章没有 images 封面，分享时回退到站点默认卡片（建议 1200x630）`,
-    );
   }
   for (const { file, message } of errors) {
     console.log(`  ✖  ${file}: ${message}`);
