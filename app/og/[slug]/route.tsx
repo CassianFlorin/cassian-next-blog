@@ -12,8 +12,15 @@ import { renderOgCard } from '@/lib/ogCard';
  *
  * `force-static` plus `generateStaticParams` prerenders every card at build
  * time, so the subsetted fonts are never needed at runtime.
+ *
+ * `dynamicParams = false` keeps it that way: the font path is built from
+ * `process.cwd()` at runtime, so Next's file tracing cannot see it and would
+ * not bundle the .ttf files into the serverless function. Any slug outside the
+ * prerendered set — a draft, say — must 404 at the routing layer rather than
+ * reach the handler and fail on a missing font.
  */
 export const dynamic = 'force-static';
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   return allBlogs
