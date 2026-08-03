@@ -33,6 +33,7 @@ import {
   localeUrl,
   ogLocaleByLocale,
   resolveLocale,
+  SITE_URL,
 } from '@/lib/seo';
 
 const defaultLayout = 'PostLayout';
@@ -61,7 +62,21 @@ export async function generateMetadata(props: {
   const publishedAt = new Date(post.date).toISOString();
   const modifiedAt = new Date(post.lastmod || post.date).toISOString();
   const authors = authorDetails.map((author) => author.name);
-  const images = absoluteImageList(post.images);
+  // A post that declares its own `images` wins; everything else falls back to
+  // the card generated at /og/<slug>.png.
+  const hasOwnImages =
+    typeof post.images === 'string' ||
+    (Array.isArray(post.images) && post.images.length > 0);
+  const images = hasOwnImages
+    ? absoluteImageList(post.images)
+    : [
+        {
+          url: `${SITE_URL}/og/${encodeURI(post.slug)}.png`,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ];
 
   return {
     title: post.title,
