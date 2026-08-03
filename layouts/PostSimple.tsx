@@ -10,6 +10,7 @@ import PageTitle from '@/components/PageTitle';
 import SectionContainer from '@/components/SectionContainer';
 import siteMetadata from '@/data/siteMetadata';
 import ScrollTopAndComment from '@/components/ScrollTopAndComment';
+import Tldr from '@/components/Tldr';
 import { useAnime } from '@/lib/hooks/useAnime';
 import { fadeInUp } from '@/lib/animations/fadeIn';
 
@@ -26,7 +27,7 @@ export default function PostLayout({
   prev,
   children,
 }: LayoutProps) {
-  const { path, slug, date, title } = content;
+  const { path, slug, date, title, tldr } = content;
   const contentRef = useRef<HTMLDivElement>(null);
 
   useAnime({
@@ -63,6 +64,7 @@ export default function PostLayout({
                 className="prose dark:prose-invert max-w-none pt-10 pb-8"
                 style={{ opacity: 0 }}
               >
+                <Tldr>{tldr}</Tldr>
                 {children}
               </div>
             </div>

@@ -11,6 +11,7 @@ import PageTitle from '@/components/PageTitle';
 import SectionContainer from '@/components/SectionContainer';
 import siteMetadata from '@/data/siteMetadata';
 import ScrollTopAndComment from '@/components/ScrollTopAndComment';
+import Tldr from '@/components/Tldr';
 import { useAnime } from '@/lib/hooks/useAnime';
 import { fadeInScale, fadeInUp } from '@/lib/animations/fadeIn';
 
@@ -27,7 +28,7 @@ export default function PostMinimal({
   prev,
   children,
 }: LayoutProps) {
-  const { slug, title, images } = content;
+  const { slug, title, images, tldr } = content;
   const displayImage =
     images && images.length > 0
       ? images[0]
@@ -73,6 +74,7 @@ export default function PostMinimal({
             className="prose dark:prose-invert max-w-none py-4"
             style={{ opacity: 0 }}
           >
+            <Tldr>{tldr}</Tldr>
             {children}
           </div>
           {siteMetadata.comments && (

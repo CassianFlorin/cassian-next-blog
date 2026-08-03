@@ -10,6 +10,8 @@ tags:
   - Guide
 draft: false
 summary: 深入对比 OpenClaw 和 Hermes Agent 两个开源 AI Agent 框架，探讨它们在渠道覆盖、记忆系统、插件生态等方面的设计差异与适用场景。
+tldr: >-
+  两者都是 Harness Engineering 的实践，方向却相反：OpenClaw 广度优先，强在多平台渠道覆盖；Hermes Agent 深度优先，强在记忆系统和命令行交互。要多平台统一响应选前者，要强命令行助手选后者。
 ---
 
 <div className="not-prose">
@@ -87,15 +89,16 @@ OpenClaw 支持 **20+ 通讯渠道**，这是它最显著的特点。
     </ul>
   </div>
 
-  <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20">
-    <div className="mb-2 font-semibold text-purple-900 dark:text-purple-300">
-      🟣 Hermes Agent 独有
-    </div>
-    <ul className="space-y-1 text-sm text-purple-700 dark:text-purple-400">
-      <li>• Home Assistant</li>
-      <li>• Yuanbao 元宝</li>
-    </ul>
+{' '}
+<div className="rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/20">
+  <div className="mb-2 font-semibold text-purple-900 dark:text-purple-300">
+    🟣 Hermes Agent 独有
   </div>
+  <ul className="space-y-1 text-sm text-purple-700 dark:text-purple-400">
+    <li>• Home Assistant</li>
+    <li>• Yuanbao 元宝</li>
+  </ul>
+</div>
 
   <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
     <div className="mb-2 font-semibold text-green-900 dark:text-green-300">
@@ -377,6 +380,7 @@ Hermes Agent 在记忆系统上投入了更多精力，提供更精细的记忆�
         重在"深度交互"，为专业用户打造
       </p>
     </div>
+
   </div>
 
   <div className="rounded-lg border-l-4 border-indigo-500 bg-indigo-50 p-4 dark:bg-indigo-900/20">

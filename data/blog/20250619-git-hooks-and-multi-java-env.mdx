@@ -11,6 +11,8 @@ tags:
   - Java
   - JavaScript
 summary: 公司通过 git commit hook 实现代码提交前校验，但本地多JDK环境（最高JDK22）导致 Maven spotless 插件无法正常执行。
+tldr: >-
+  多 JDK 共存时，Maven Spotless 会因为高版本 JDK 报 InvocationTargetException。解法是用 SDKMAN 装所需版本，项目根目录放 .sdkmanrc，并在 pre-commit hook 开头加载 SDKMAN，锁死构建用的 Java 版本。
 draft: false
 ---
 

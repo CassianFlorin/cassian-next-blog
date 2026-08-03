@@ -17,6 +17,7 @@ import adsenseConfig from '@/data/adsenseConfig';
 import { useAnime } from '@/lib/hooks/useAnime';
 import { fadeInLeft, fadeInUp } from '@/lib/animations/fadeIn';
 import ArticleKnowledgeGraph from '@/components/ArticleKnowledgeGraph';
+import Tldr from '@/components/Tldr';
 import type { KnowledgeGraphData } from '@/lib/knowledgeGraph';
 
 const editUrl = (path) => `${siteMetadata.siteRepo}/blob/main/data/${path}`;
@@ -47,7 +48,7 @@ export default function PostLayout({
   knowledgeGraph,
   children,
 }: LayoutProps) {
-  const { filePath, path, slug, date, title, tags } = content;
+  const { filePath, path, slug, date, title, tags, tldr } = content;
   const basePath = path.split('/')[0];
   const t = useTranslations('blog');
 
@@ -147,6 +148,7 @@ export default function PostLayout({
                 className="prose prose-gray dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-p:leading-relaxed max-w-none pt-8 pb-6"
                 style={{ opacity: 0 }}
               >
+                <Tldr>{tldr}</Tldr>
                 {children}
               </div>
               {knowledgeGraph && (

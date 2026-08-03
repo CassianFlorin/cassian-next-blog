@@ -9,7 +9,34 @@ tags:
 summary: >-
   Obsidian 是一个基于本地 Markdown 文件的知识管理工具。这篇文章介绍它的核心概念、安装方式、Vault 的创建方法，以及如何通过
   Obsidian CLI 从命令行读取和写入笔记。
+tldr: >-
+  Obsidian 是管理本地 Markdown 文件的知识库工具，一个 Vault 就是一个普通文件夹，一篇笔记就是一个 .md 文件。正因为知识以文件和双链的形式存在，脚本、命令行和 Agent 都能直接读写它。
 draft: false
+definedTerm:
+  name: Obsidian
+  description: >-
+    一个基于本地 Markdown 文件的知识管理工具。每篇笔记通常就是电脑里的一个 .md
+    文件，这些文件所在的文件夹被称为 Vault，笔记之间可以用双链互相连接。
+  sameAs:
+    - https://obsidian.md
+faq:
+  - q: Obsidian 的 Vault 是什么
+    a: >-
+      Vault 是 Obsidian 管理的一整个知识库，本质上就是电脑里的一个普通文件夹。
+      Obsidian 打开的不是某一篇笔记，而是整个 Vault。
+  - q: Obsidian 和普通云笔记有什么区别
+    a: >-
+      最大的区别是笔记以本地 Markdown 文件的形式存在，而不是只存在某个在线产品的
+      数据库里。你可以自己备份、同步、迁移，也可以用其他编辑器或脚本打开它们。
+  - q: Obsidian 的双链怎么用
+    a: >-
+      在笔记里写 [[另一篇笔记名]] 就能链接过去。时间久了你得到的不是一堆孤立文档，
+      而是一个互相连接的知识网络，图谱视图只是把这些连接画出来而已。
+  - q: 可以用命令行操作 Obsidian 吗
+    a: >-
+      可以。Obsidian CLI 支持从命令行查看 Vault、创建笔记、向已有笔记追加内容和
+      搜索。先确认本机能运行 obsidian help，创建、追加、读取三个命令连起来就是最小
+      的命令行闭环。
 ---
 
 # 什么是 Obsidian：从安装到命令行打开知识库

@@ -11,6 +11,25 @@ tags:
   - 排错
 draft: false
 summary: 和 AI agent 一起给这个 Next.js 多语言博客做了 SEO 改造。最关键的发现都不在代码里——sitemap 每条 URL 都要两跳重定向，只有探线上才看得出来。
+tldr: >-
+  有 middleware 做语言前缀重定向的站点，sitemap 必须输出带语言前缀的 URL，否则每条 URL 都是一跳重定向。这个问题在代码里完全看不出来，只有把 sitemap 里的 URL 逐条 curl 过去才会暴露。
+faq:
+  - q: 多语言站点的 sitemap 应该输出带语言前缀的 URL 吗
+    a: >-
+      应该。只要 middleware 会把不带前缀的路径重定向到 /zh 或 /en，sitemap 里不带
+      前缀的 URL 每一条都是一次 307，爬虫每次抓取都要多跳一次。
+  - q: 文章还没有翻译时 hreflang 该怎么写
+    a: >-
+      仍然为每个语言版本输出完整的 hreflang 集合，并让每个语言版本 self-canonical。
+      canonical 指向别的语言版本会让 hreflang 直接失效。
+  - q: 为什么 Yarn 3 不执行 prebuild 脚本
+    a: >-
+      Yarn 2 以上默认不再自动运行 pre/post 生命周期脚本。要么显式调用，要么把命令
+      合并进 build 脚本本身。
+  - q: 一个页面有多个 h1 会有什么影响
+    a: >-
+      会稀释页面主题。全局组件（导航、Logo、入场动画）里藏的 h1 最容易被忽略，
+      需要数一下渲染后 HTML 里的实际数量。
 ---
 
 # 多语言博客 SEO 改造

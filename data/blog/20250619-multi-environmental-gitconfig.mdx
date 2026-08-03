@@ -9,7 +9,27 @@ tags:
 summary: >-
   我在新单位需要使用自己的真实姓名提交，而我的开源项目则使用第二身份。本文记录了如何通过 Git 的 includeIf
   配置机制，在不影响常用配置的前提下实现多环境身份兼容。
+tldr: >-
+  Git 的 includeIf 能按仓库路径自动切换提交身份：把公司和开源的 user.name / user.email 拆进不同配置文件，再在 ~/.gitconfig 里用 includeIf "gitdir:路径/" 引入，进到对应目录就自动生效，不用每次手动改。
 draft: false
+howto:
+  name: 用 includeIf 按目录自动切换 Git 身份
+  description: >-
+    把公司和开源的提交身份拆到不同的 Git 配置文件，再按仓库路径条件加载，进到对应
+    目录就自动生效。
+  steps:
+    - name: 创建额外的 Git 配置文件
+      text: >-
+        在用户主目录下新建一份配置文件，例如 ~/.gitconfig_work，里面只写这个身份的
+        user.name 和 user.email。
+    - name: 在主配置里条件引入
+      text: >-
+        编辑 ~/.gitconfig，加上 includeIf "gitdir:/path/to/dir/" 段落，指向刚创建的
+        那份配置文件。includeIf 会检测路径前缀是否匹配。
+    - name: 验证是否生效
+      text: >-
+        在对应目录下初始化一个仓库，运行 git config user.name，确认显示的是该目录
+        对应的身份。
 ---
 
 # 多环境 Git Config 配置

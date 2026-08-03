@@ -10,6 +10,8 @@ tags:
   - Tips
 draft: false
 summary: 基于 SensorsConfig.java 配置类，详细说明如何在项目中集成神策数据分析功能，包括配置说明、代码集成和使用示例。
+tldr: >-
+  神策数据分析的 Java 接入由 SensorsConfig 配置类统一管理：开发环境用 DEBUG 模式实时校验埋点，生产环境用 BATCH 模式批量上报，各环境配置通过 Nacos 下发，避免测试数据污染正式项目。
 ---
 
 <div className="not-prose">

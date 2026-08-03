@@ -8,7 +8,25 @@ tags:
   - 开发工具
   - 工程效率
 summary: CodeGraph 的价值不是替代 grep，而是让 Agent 在真实代码库里先看定义、调用方、被调用方和影响面，减少盲搜、误判入口和漏改调用链的问题。
+tldr: >-
+  grep 只能回答「哪里出现了这个字符串」，回答不了「谁调用了它、改它会影响什么」。CodeGraph 通过 MCP 给 Agent 提供代码结构索引，让它动手前先看清定义、调用方和下游依赖，从而把改动范围判断对。
 draft: false
+faq:
+  - q: CodeGraph 和 grep 有什么区别
+    a: >-
+      grep 回答的是「哪里出现了这个字符串」，CodeGraph 回答的是「这个符号定义在哪、
+      谁调用了它、改它会影响什么」。前者是文本问题，后者是结构问题。
+  - q: 有了 CodeGraph 还需要 grep 吗
+    a: >-
+      需要。查日志、文案、配置项、环境变量、Markdown 内容这类纯文本问题仍然应该优先
+      用 rg，CodeGraph 不是它的替代品。
+  - q: 怎么安装 CodeGraph
+    a: >-
+      用官方安装器，它会引导你选择要配置的 Agent（Claude Code、Cursor、Codex CLI、
+      opencode 或 Hermes Agent）。配置完重启对应 Agent 让 MCP server 重新加载，再在
+      项目里初始化索引。
+  - q: .codegraph 目录需要提交到 Git 吗
+    a: 不需要。它是本地生成的索引目录，应该加进 .gitignore。
 ---
 
 # Agent 光会 grep 还不够：CodeGraph 让它先看懂代码结构

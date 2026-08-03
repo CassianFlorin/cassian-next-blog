@@ -23,6 +23,9 @@ import JsonLd from '@/components/JsonLd';
 import {
   buildBlogPostingJsonLd,
   buildBreadcrumbJsonLd,
+  buildDefinedTermJsonLd,
+  buildFaqPageJsonLd,
+  buildHowToJsonLd,
 } from '@/lib/structuredData';
 import {
   absoluteImageList,
@@ -125,6 +128,7 @@ export default async function Page(props: {
   const articleJsonLd = buildBlogPostingJsonLd(locale, {
     title: post.title,
     summary: post.summary,
+    tldr: post.tldr,
     date: post.date,
     lastmod: post.lastmod,
     tags: post.tags,
@@ -141,12 +145,34 @@ export default async function Page(props: {
     { name: post.title },
   ]);
 
+  // Opt-in per post via frontmatter; each builder returns null when absent.
+  const faqJsonLd = buildFaqPageJsonLd(locale, {
+    path: `/${post.path}`,
+    canonicalUrl: post.canonicalUrl,
+    faq: post.faq,
+  });
+  const howToJsonLd = buildHowToJsonLd(locale, {
+    path: `/${post.path}`,
+    canonicalUrl: post.canonicalUrl,
+    title: post.title,
+    summary: post.summary,
+    howto: post.howto,
+  });
+  const definedTermJsonLd = buildDefinedTermJsonLd(locale, {
+    path: `/${post.path}`,
+    canonicalUrl: post.canonicalUrl,
+    definedTerm: post.definedTerm,
+  });
+
   const Layout = layouts[post.layout || defaultLayout];
 
   return (
     <>
       <JsonLd data={articleJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
+      {faqJsonLd && <JsonLd data={faqJsonLd} />}
+      {howToJsonLd && <JsonLd data={howToJsonLd} />}
+      {definedTermJsonLd && <JsonLd data={definedTermJsonLd} />}
       <Layout
         content={mainContent}
         authorDetails={authorDetails}

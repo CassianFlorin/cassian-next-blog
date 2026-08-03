@@ -13,7 +13,22 @@ tags:
 summary: >-
   在企业开发中可能会遇到项目中使用了 Git Hooks，其中有一个 git pre-commit 的 hook。本文就来说在要是用 git hooks
   时我遇到的问题
+tldr: >-
+  Git hook 报 npx: command not found，根因通常是 Homebrew 装的 Node 与 hook 拿到的 PATH 不一致。卸掉 brew 版 Node 改用 nvm 管理即可；Java 用 SDKMAN、Python 用 pyenv 是同一个道理。
 draft: false
+faq:
+  - q: Git hook 报 npx command not found 怎么解决
+    a: >-
+      根因通常是用 Homebrew 安装的 Node 与 git hook 拿到的 PATH 不一致。卸掉 brew 版
+      Node，改用 nvm 安装和管理版本。
+  - q: 为什么不推荐用 Homebrew 安装开发语言环境
+    a: >-
+      Homebrew 安装方便，但会导致路径不一致，git hook 这类非交互式 shell 读不到，
+      从而执行失败。
+  - q: 各语言应该用什么版本管理工具
+    a: >-
+      Java 用 SDKMAN，Node.js 用 nvm，Python 用 pyenv，并在项目里放 .sdkmanrc、
+      .nvmrc 这类配置文件让团队保持一致。
 ---
 
 # Git Hooks 与 Node 环境问题
