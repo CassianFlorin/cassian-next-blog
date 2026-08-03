@@ -69,7 +69,8 @@
     "searchPlaceholder": "搜索文章...",
     "discussOnTwitter": "在 Twitter 上讨论",
     "viewOnGitHub": "在 GitHub 上查看",
-    "backToBlog": "返回博客"
+    "backToBlog": "返回博客",
+    "tldrLabel": "一句话结论"
   },
   "about": {
     "title": "关于我",

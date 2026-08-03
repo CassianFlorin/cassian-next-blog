@@ -86,6 +86,8 @@ export function buildBreadcrumbJsonLd(
 export interface BlogPostingInput {
   title: string;
   summary?: string;
+  /** One-sentence conclusion; becomes schema.org `abstract`. */
+  tldr?: string;
   date: string;
   lastmod?: string;
   tags?: string[];
@@ -113,6 +115,7 @@ export function buildBlogPostingJsonLd(
     headline: post.title,
     name: post.title,
     description: post.summary,
+    abstract: post.tldr,
     inLanguage: hreflangByLocale[locale],
     datePublished: new Date(post.date).toISOString(),
     dateModified: new Date(post.lastmod || post.date).toISOString(),
@@ -161,6 +164,155 @@ export function buildCollectionPageJsonLd(
         url: localeUrl(locale, item.path),
       })),
     },
+  };
+}
+
+/** Coerce a frontmatter value to a trimmed string, or undefined if unusable. */
+function text(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
+/**
+ * Q&A pairs from the post's `faq` frontmatter.
+ *
+ * Google stopped showing FAQ rich results for most sites in 2023, so this is
+ * not about SERP decoration — it hands generative engines pre-paired questions
+ * and self-contained answers instead of making them infer both from prose.
+ * Returns null when the post has no usable entries.
+ */
+export function buildFaqPageJsonLd(
+  locale: Locale,
+  options: { path: string; canonicalUrl?: string; faq: unknown },
+): JsonLd | null {
+  if (!Array.isArray(options.faq)) return null;
+
+  const entries = options.faq
+    .map((entry) => ({
+      question: text((entry as Record<string, unknown>)?.q),
+      answer: text((entry as Record<string, unknown>)?.a),
+    }))
+    .filter(
+      (entry): entry is { question: string; answer: string } =>
+        Boolean(entry.question) && Boolean(entry.answer),
+    );
+
+  if (entries.length === 0) return null;
+
+  const url = options.canonicalUrl || localeUrl(locale, options.path);
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${url}#faq`,
+    inLanguage: hreflangByLocale[locale],
+    isPartOf: { '@id': WEBSITE_ID },
+    about: { '@id': `${url}#article` },
+    mainEntity: entries.map((entry) => ({
+      '@type': 'Question',
+      name: entry.question,
+      acceptedAnswer: { '@type': 'Answer', text: entry.answer },
+    })),
+  };
+}
+
+interface HowToStepJsonLd {
+  '@type': 'HowToStep';
+  name: string;
+  text: string;
+  url?: string;
+}
+
+/**
+ * Step-by-step guides from the post's `howto` frontmatter.
+ *
+ * Step `url` may be a bare `#anchor`, which is resolved against the post URL so
+ * an engine can cite the exact section.
+ */
+export function buildHowToJsonLd(
+  locale: Locale,
+  options: {
+    path: string;
+    canonicalUrl?: string;
+    title: string;
+    summary?: string;
+    howto: unknown;
+  },
+): JsonLd | null {
+  const howto = options.howto as Record<string, unknown> | undefined;
+  if (!howto || typeof howto !== 'object' || !Array.isArray(howto.steps)) {
+    return null;
+  }
+
+  const url = options.canonicalUrl || localeUrl(locale, options.path);
+
+  const steps = howto.steps
+    .map((step): HowToStepJsonLd | null => {
+      const raw = step as Record<string, unknown>;
+      const name = text(raw?.name);
+      const stepText = text(raw?.text);
+      if (!name || !stepText) return null;
+      const anchor = text(raw?.url);
+      return {
+        '@type': 'HowToStep',
+        name,
+        text: stepText,
+        ...(anchor
+          ? { url: anchor.startsWith('#') ? `${url}${anchor}` : anchor }
+          : {}),
+      };
+    })
+    .filter((step): step is HowToStepJsonLd => step !== null);
+
+  if (steps.length === 0) return null;
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    '@id': `${url}#howto`,
+    name: text(howto.name) || options.title,
+    description: text(howto.description) || options.summary,
+    // ISO 8601 duration, e.g. `PT30M`.
+    totalTime: text(howto.totalTime),
+    inLanguage: hreflangByLocale[locale],
+    isPartOf: { '@id': WEBSITE_ID },
+    step: steps,
+  };
+}
+
+/**
+ * The concept a "what is X" post defines, from the `definedTerm` frontmatter.
+ * Gives engines an explicit term→definition edge rather than one buried in the
+ * opening paragraphs.
+ */
+export function buildDefinedTermJsonLd(
+  locale: Locale,
+  options: { path: string; canonicalUrl?: string; definedTerm: unknown },
+): JsonLd | null {
+  const term = options.definedTerm as Record<string, unknown> | undefined;
+  if (!term || typeof term !== 'object') return null;
+
+  const name = text(term.name);
+  const description = text(term.description);
+  if (!name || !description) return null;
+
+  const url = options.canonicalUrl || localeUrl(locale, options.path);
+  const sameAsList = Array.isArray(term.sameAs)
+    ? term.sameAs.map(text).filter((item): item is string => Boolean(item))
+    : [];
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTerm',
+    '@id': `${url}#term`,
+    name,
+    description,
+    alternateName: text(term.alternateName),
+    inLanguage: hreflangByLocale[locale],
+    url,
+    sameAs: sameAsList.length > 0 ? sameAsList : undefined,
+    subjectOf: { '@id': `${url}#article` },
   };
 }
 

@@ -69,7 +69,8 @@
     "searchPlaceholder": "Search articles...",
     "discussOnTwitter": "Discuss on Twitter",
     "viewOnGitHub": "View on GitHub",
-    "backToBlog": "Back to blog"
+    "backToBlog": "Back to blog",
+    "tldrLabel": "In short"
   },
   "about": {
     "title": "About Me",

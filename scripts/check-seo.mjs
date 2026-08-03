@@ -21,6 +21,12 @@ const SUMMARY_MAX = 160;
 const TITLE_MAX = 60;
 const TAGS_MIN = 2;
 const TAGS_MAX = 8;
+/**
+ * `tldr` has to stand on its own when a generative engine lifts it out of the
+ * page, so it needs more substance than a headline but must stay quotable.
+ */
+const TLDR_MIN = 30;
+const TLDR_MAX = 200;
 
 const errors = [];
 const warnings = [];
@@ -80,6 +86,67 @@ function checkPost(file, raw) {
         file,
         `summary 显示宽度 ${width} 超过 ${SUMMARY_MAX}，摘要会被截断`,
       );
+    }
+  }
+
+  // --- tldr (rendered above the body, emitted as schema.org `abstract`) -----
+  const tldr = fm.tldr ? String(fm.tldr).replace(/\s+/g, ' ').trim() : '';
+  if (!tldr) {
+    addWarning(
+      file,
+      'frontmatter 缺少 tldr（一句话结论，生成式引擎最常摘录的就是这一段）',
+    );
+  } else {
+    const width = displayWidth(tldr);
+    if (width < TLDR_MIN) {
+      addWarning(file, `tldr 显示宽度 ${width} 偏短（建议 ≥ ${TLDR_MIN}）`);
+    } else if (width > TLDR_MAX) {
+      addWarning(
+        file,
+        `tldr 显示宽度 ${width} 超过 ${TLDR_MAX}，摘录时会被截断（建议压成一句话）`,
+      );
+    }
+    if (tldr === summary) {
+      addWarning(file, 'tldr 与 summary 完全相同，两者应各自承担不同信息');
+    }
+  }
+
+  // --- structured-data frontmatter shape -----------------------------------
+  if (fm.faq !== undefined) {
+    if (!Array.isArray(fm.faq) || fm.faq.length === 0) {
+      addError(file, 'faq 必须是非空数组');
+    } else {
+      fm.faq.forEach((entry, i) => {
+        if (!entry?.q || !entry?.a) {
+          addError(file, `faq[${i}] 缺少 q 或 a`);
+        }
+      });
+    }
+  }
+
+  if (fm.howto !== undefined) {
+    const steps = fm.howto?.steps;
+    if (!Array.isArray(steps) || steps.length === 0) {
+      addError(file, 'howto.steps 必须是非空数组');
+    } else {
+      steps.forEach((step, i) => {
+        if (!step?.name || !step?.text) {
+          addError(file, `howto.steps[${i}] 缺少 name 或 text`);
+        }
+      });
+    }
+    // schema.org expects an ISO 8601 duration, e.g. PT30M.
+    if (fm.howto?.totalTime && !/^P(T.*)?[\dA-Z]/.test(fm.howto.totalTime)) {
+      addError(
+        file,
+        `howto.totalTime 必须是 ISO 8601 时长（如 PT30M）：${fm.howto.totalTime}`,
+      );
+    }
+  }
+
+  if (fm.definedTerm !== undefined) {
+    if (!fm.definedTerm?.name || !fm.definedTerm?.description) {
+      addError(file, 'definedTerm 需要同时有 name 和 description');
     }
   }
 

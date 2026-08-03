@@ -111,6 +111,18 @@ export const Blog = defineDocumentType(() => ({
     lastmod: { type: 'date' },
     draft: { type: 'boolean' },
     summary: { type: 'string' },
+    // One self-contained sentence answering the post. Rendered above the body
+    // and emitted as schema.org `abstract` — generative engines quote passages
+    // that stand on their own, which a mid-article paragraph rarely does.
+    tldr: { type: 'string' },
+    // `[{ q, a }]` — emitted as a schema.org FAQPage alongside the article.
+    faq: { type: 'json' },
+    // `{ name?, description?, totalTime?, steps: [{ name, text, url? }] }`
+    // — emitted as schema.org HowTo for step-by-step guides.
+    howto: { type: 'json' },
+    // `{ name, description, alternateName?, sameAs? }` — emitted as a
+    // schema.org DefinedTerm for posts that define a concept.
+    definedTerm: { type: 'json' },
     images: { type: 'json' },
     authors: { type: 'list', of: { type: 'string' } },
     layout: { type: 'string' },

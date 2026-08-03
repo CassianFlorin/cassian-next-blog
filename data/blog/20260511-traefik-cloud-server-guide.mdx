@@ -7,7 +7,66 @@ tags:
   - reverse-proxy
   - devops
 summary: 用 Traefik、Docker Compose 和 Let's Encrypt 在云服务器上搭建统一入口，让多个 Web 服务通过域名、HTTPS 和容器 label 快速接入。
+tldr: >-
+  把 Traefik 放在云服务器入口层统一处理反向代理、Let's Encrypt 证书和路由，业务容器只要加入同一个 Docker 网络、用 labels 声明域名和端口就能接入。服务器只开放 22、80、443，新增服务不必再改 Nginx 配置。
 draft: false
+howto:
+  name: 在云服务器上用 Docker Compose 部署 Traefik
+  description: >-
+    把 Traefik 作为云服务器的统一 HTTPS 入口，负责反向代理、Let's Encrypt 证书签发
+    和路由分发，业务容器通过 Docker labels 接入。
+  steps:
+    - name: 准备服务器环境
+      text: >-
+        更新系统、安装 Docker 与 Docker Compose，并配置防火墙只开放 22、80、443。
+        不要把 Dashboard 的 8080 端口开放到公网。
+      url: '#准备服务器环境'
+    - name: 配置域名解析
+      text: >-
+        在 DNS 服务商添加 A 记录把域名指向服务器公网 IP，用 dig 域名 +short 确认解析
+        已生效再继续。
+      url: '#配置域名解析'
+    - name: 创建 Traefik 工作目录
+      text: 建立存放 compose 文件、静态配置和 acme.json 证书文件的目录结构。
+      url: '#创建-traefik-工作目录'
+    - name: 生成 Dashboard 登录密码
+      text: 用 htpasswd 生成 Basic Auth 凭据，供 Dashboard 路由的中间件使用。
+      url: '#生成-dashboard-登录密码'
+    - name: 编写 Traefik 配置
+      text: >-
+        选择 HTTP-01（适合大多数入门场景）或 DNS-01（适合 Cloudflare 和泛域名证书）
+        证书挑战方式，配置 entrypoints、certificate resolver 和 Docker provider。
+      url: '#编写-traefik-配置'
+    - name: 启动 Traefik
+      text: 用 docker compose up -d 启动，并通过 docker logs -f traefik 确认没有报错。
+      url: '#启动-traefik'
+    - name: 用 whoami 验证代理链路
+      text: >-
+        先接入官方 whoami 测试容器，确认域名解析、证书签发和路由转发整条链路都通了，
+        再接自己的服务。
+      url: '#用-whoami-验证代理链路'
+    - name: 接入自己的业务服务
+      text: >-
+        让业务容器加入同一个 traefik 网络，用 labels 声明 Host 规则、entrypoint、
+        证书解析器和容器内部端口即可被统一代理。
+      url: '#接入自己的业务服务'
+faq:
+  - q: Traefik 证书一直签发失败怎么办
+    a: >-
+      通常是域名没有解析到服务器、80 端口未开放，或者 DNS 还没生效。依次检查
+      dig 域名 +short 的返回、云服务商安全组，以及 ufw status。
+  - q: 访问域名返回 502 是什么原因
+    a: >-
+      Traefik 找不到业务容器端口或网络不通。检查 labels 里的
+      loadbalancer.server.port 是否填的是容器内部端口，以及容器有没有加入 traefik 网络。
+  - q: 访问域名返回 404 怎么排查
+    a: >-
+      多半是容器没有设置 traefik.enable=true，或者 Host 规则写错了。对照容器 labels
+      和 Traefik Dashboard 里的 Routers 检查。
+  - q: Traefik Dashboard 可以直接开放到公网吗
+    a: >-
+      不可以。不要开启 --api.insecure=true，也不要把 8080 端口开放到公网。Dashboard
+      应该通过域名、HTTPS 和 Basic Auth 访问。
 ---
 
 # 云服务器配置 Traefik 教程：用 Docker Compose 搭一个可复用的 HTTPS 入口

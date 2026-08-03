@@ -12,6 +12,47 @@ draft: false
 summary: >-
   新版 Codex CLI（实测 v0.145.0）接第三方中转站，最常见的报错是一路 401。本文整理出正确的
   config.toml 写法、三个必踩的坑和验证方法，可以直接当排错清单照抄。
+tldr: >-
+  Codex CLI 接第三方中转站的关键是：base_url 必须写在 [model_providers.xxx] 块内部，再由顶层 model_provider 指过去，裸写在顶层会被新版完全忽略。鉴权用顶层 experimental_bearer_token，不要依赖环境变量。
+howto:
+  name: 给 Codex CLI 配置第三方中转站
+  description: >-
+    在 ~/.codex/config.toml 里正确声明 model provider，让 Codex CLI 的请求打到中转站
+    而不是 api.openai.com。
+  steps:
+    - name: 写 provider 块
+      text: >-
+        在 ~/.codex/config.toml 里新建 [model_providers.xxx] 块，填入 name、base_url
+        和 wire_api。base_url 必须写在块内部。
+    - name: 顶层指向 provider
+      text: 设置顶层 model_provider = "xxx"，值必须与 provider 块名完全一致。
+    - name: 配置鉴权
+      text: >-
+        用顶层 experimental_bearer_token 填中转站的 key，并检查引号成对且干净，
+        不要依赖环境变量。
+    - name: 在受信任目录验证
+      text: >-
+        用 codex exec 跑一条测试请求，看启动信息里的 provider 是不是你的中转站名，
+        能正常返回内容就说明链路打通了。
+faq:
+  - q: Codex CLI 报 401 而且请求 url 是 api.openai.com 怎么办
+    a: >-
+      base_url 没有写进 provider 块，或者 provider 没生效。检查顶层 model_provider
+      的值与 [model_providers.xxx] 的块名是否完全一致。
+  - q: 报 401 invalid_api_key、但 url 已经是中转站地址怎么办
+    a: >-
+      key 本身错了或带了多余字符。最常见的是粘贴时结尾多敲了一个引号，重新复制 key
+      并确认引号成对干净。
+  - q: '报 Missing environment variable: OPENAI_API_KEY 怎么解决'
+    a: >-
+      用了 env_key 但环境变量没设。改用顶层 experimental_bearer_token，命令行启动和
+      桌面 App 启动都稳。
+  - q: 为什么自定义 provider 读不到 auth.json 里的 key
+    a: >-
+      auth.json 里的 OPENAI_API_KEY 只给内置 openai provider 用。自定义 provider 写
+      env_key 读的是真正的系统环境变量，所以要改用 experimental_bearer_token。
+  - q: 报 Not inside a trusted directory 怎么办
+    a: 加 --skip-git-repo-check，或者在已经信任的目录里运行。
 ---
 
 # Codex CLI 接中转站配置排错

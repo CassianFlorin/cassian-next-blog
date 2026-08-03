@@ -11,7 +11,33 @@ tags:
   - Tips
   - Java
 summary: 本文档使用 SDKMAN 来管理 Java 版本，确保所有开发人员使用相同的 Java 环境。以下是在不同操作系统上安装和配置 SDKMAN 的指南。
+tldr: >-
+  SDKMAN 是管理 Java 等 SDK 多版本的命令行工具，macOS 和 Linux 用一行 curl 安装，Windows 需要先有 Git Bash 或 WSL。装好后用 sdk install java 装版本，在项目里放 .sdkmanrc 就能进目录自动切换。
 draft: false
+definedTerm:
+  name: SDKMAN
+  description: >-
+    一个用于管理多个软件开发工具包版本的命令行工具，最常用于在不同项目之间切换 JDK
+    版本，同时也支持 Kotlin、Scala、Gradle、Maven 等。
+  sameAs:
+    - https://sdkman.io
+howto:
+  name: 安装并配置 SDKMAN
+  description: >-
+    在 macOS、Linux 或 Windows 上安装 SDKMAN，并让项目进入目录时自动切换 Java 版本。
+  steps:
+    - name: 安装 SDKMAN
+      text: >-
+        macOS 和 Linux 直接在终端执行官方 curl 安装命令；Windows 需要先有 Git Bash
+        或 WSL 环境。安装完成后重新加载 shell 配置。
+    - name: 安装项目所需的 Java 版本
+      text: >-
+        用 sdk list java 查看可用版本，再用 sdk install java 安装项目需要的那一个，
+        用 sdk current java 验证当前生效的版本。
+    - name: 配置项目自动切换
+      text: >-
+        在项目根目录创建 .sdkmanrc 并写入所需版本，之后进入该目录时 SDKMAN 会自动
+        切换到对应的 Java 版本。
 ---
 
 # SDKMAN 安装与配置指南
