@@ -12,8 +12,9 @@ import { ThemeProviders } from '../theme-providers';
 import { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
+import { notFound } from 'next/navigation';
 import JsonLd from '@/components/JsonLd';
-import { locales } from '@/lib/i18nRouting';
+import { isLocale, locales } from '@/lib/i18nRouting';
 import { buildSiteJsonLd } from '@/lib/structuredData';
 import {
   absoluteImageList,
@@ -98,6 +99,12 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  // `[locale]` matches any single path segment, and middleware skips paths with
+  // a dot in them — so `/favicon.ico` and friends land here with a bogus locale.
+  // Without this guard the message import throws and the request 500s.
+  if (!isLocale(locale)) {
+    notFound();
+  }
   const messages = (await import(`../../messages/${locale}.json`)).default;
 
   return (
