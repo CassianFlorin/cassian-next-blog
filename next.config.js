@@ -12,15 +12,33 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 // Vercel Web Analytics serves its production script from the same origin
 // (/_vercel/insights/script.js); va.vercel-scripts.com is only the local dev
 // debug build, listed so it does not trip CSP while developing.
+
+// Google AdSense (自动广告) 需要的域名。
+// adsbygoogle.js 只是入口，它会继续从 googleadservices / doubleclick /
+// adtrafficquality 拉脚本，广告本身则渲染在 doubleclick 和 googlesyndication
+// 的 iframe 里——所以 script-src 和 frame-src 必须同时放行，只放行
+// pagead2.googlesyndication.com 会导致广告位一直空白。
+// 这里用通配子域，因为 AdSense 的 safeframe 主机名是轮换的
+// (例如 xxxx.safeframe.googlesyndication.com)，无法穷举。
+const googleAdsHosts = [
+  'https://*.googlesyndication.com',
+  'https://*.googleadservices.com',
+  'https://*.doubleclick.net',
+  'https://*.adtrafficquality.google',
+  'https://adservice.google.com',
+  'https://fundingchoicesmessages.google.com',
+  'https://www.google.com',
+].join(' ');
+
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' giscus.app pagead2.googlesyndication.com va.vercel-scripts.com;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' giscus.app va.vercel-scripts.com ${googleAdsHosts};
   style-src 'self' 'unsafe-inline';
   img-src * blob: data:;
   media-src *.s3.amazonaws.com;
   connect-src *;
   font-src 'self';
-  frame-src giscus.app pagead2.googlesyndication.com
+  frame-src giscus.app ${googleAdsHosts}
 `;
 
 const securityHeaders = [

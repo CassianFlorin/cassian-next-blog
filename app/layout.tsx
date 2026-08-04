@@ -7,6 +7,7 @@ import { ThemeProviders } from './theme-providers';
 import { Metadata } from 'next';
 import { defaultLocale, locales } from '../i18n';
 import siteMetadata from '@/data/siteMetadata';
+import adsenseConfig, { shouldLoadAdsenseScript } from '@/data/adsenseConfig';
 import { htmlLangByLocale, ogLocaleByLocale, resolveLocale } from '@/lib/seo';
 
 const space_grotesk = Space_Grotesk({
@@ -88,6 +89,7 @@ export default async function RootLayout({
 }) {
   const { locale } = await params;
   const basePath = process.env.BASE_PATH || '';
+  const loadAdsense = shouldLoadAdsenseScript();
 
   return (
     <html
@@ -137,11 +139,24 @@ export default async function RootLayout({
         type="application/rss+xml"
         href={`${basePath}/feed.xml`}
       />
-      <script
-        async
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5441938758887409"
-        crossOrigin="anonymous"
-      />
+      {/*
+        AdSense 站点验证。审核期间 Google 需要在页面上读到这个 meta，
+        因此不随环境开关一起关闭——它是惰性的，不产生任何请求。
+      */}
+      {adsenseConfig.enabled && (
+        <meta name="google-adsense-account" content={adsenseConfig.clientId} />
+      )}
+      {/*
+        自动广告脚本。位置与数量由 AdSense 后台的「自动广告」开关控制，
+        页面里不需要任何 <ins> 广告位。仅生产部署注入，避免无效流量。
+      */}
+      {loadAdsense && (
+        <script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseConfig.clientId}`}
+          crossOrigin="anonymous"
+        />
+      )}
       <body className="dark:bg-night bg-gray-50 pl-[calc(100vw-100%)] font-sans text-gray-800 antialiased dark:text-gray-200">
         <ThemeProviders>{children}</ThemeProviders>
       </body>

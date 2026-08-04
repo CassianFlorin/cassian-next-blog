@@ -12,8 +12,6 @@ import Image from '@/components/Image';
 import Tag from '@/components/Tag';
 import siteMetadata from '@/data/siteMetadata';
 import ScrollTopAndComment from '@/components/ScrollTopAndComment';
-import AdSense from '@/components/AdSense';
-import adsenseConfig from '@/data/adsenseConfig';
 import { useAnime } from '@/lib/hooks/useAnime';
 import { fadeInLeft, fadeInUp } from '@/lib/animations/fadeIn';
 import ArticleKnowledgeGraph from '@/components/ArticleKnowledgeGraph';
@@ -158,15 +156,6 @@ export default function PostLayout({
                   className="py-6 xl:hidden"
                 />
               )}
-              {/* 文章内容后的广告位 */}
-              <div className="py-6">
-                <AdSense
-                  adSlot={adsenseConfig.adSlots.postContent}
-                  adFormat="auto"
-                  className="text-center"
-                  adStyle={{ minHeight: '250px' }}
-                />
-              </div>
               <div className="pt-6 pb-6 text-sm text-gray-400 dark:text-gray-500">
                 <Link
                   href={discussUrl(path)}
@@ -249,15 +238,6 @@ export default function PostLayout({
                   </svg>
                   {t('backToBlog')}
                 </Link>
-              </div>
-              {/* 侧边栏广告位 */}
-              <div className="pt-6 xl:pt-8">
-                <AdSense
-                  adSlot={adsenseConfig.adSlots.sidebar}
-                  adFormat="vertical"
-                  className="text-center"
-                  adStyle={{ minHeight: '300px', width: '100%' }}
-                />
               </div>
             </footer>
           </div>
