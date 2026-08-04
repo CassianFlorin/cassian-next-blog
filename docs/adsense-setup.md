@@ -84,6 +84,22 @@ Server Component。
 - 自动广告可能造成布局偏移(CLS)。上线后建议用 PageSpeed Insights 复查 Core Web
   Vitals，必要时在后台调低广告密度。
 
+## 域名与 ads.txt
+
+裸域 `cassianflorin.com` 会 307 跳转到 `www.cassianflorin.com`(canonical 也是 www)，
+因此 `ads.txt` 只在 www 上返回 200，裸域上返回的是跳转。
+
+**这是正常的，不需要处理。** IAB 的 ads.txt 规范要求抓取方跟随 HTTP 重定向，而这里
+属于同一根域内的跳转，Google 会正常抓到 www 上的文件。
+
+需要特别注意的是：**这个跳转是 Vercel 平台级的域名重定向**(项目 Settings → Domains)，
+在请求到达应用之前就发生了。仓库里没有 `vercel.json`，`middleware.ts` 的 matcher 也
+排除了带点的路径(`.*\..*`)，所以 `/ads.txt` 压根不经过应用——**改代码无法影响裸域的
+行为**，不要在 `next.config.js` 或 middleware 里找原因。
+
+真要让裸域直接返回 200，只能先在 Vercel 去掉域名级重定向、改成应用层用 `redirects()`
+按 Host 跳转并排除 `/ads.txt`。代价是多一层逻辑，且裸域会短暂提供全站重复内容。
+
 ## 排查
 
 线上检查接入是否正常：
