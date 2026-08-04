@@ -1,0 +1,282 @@
+---
+title: 博客 GEO 改造：让文章能被 AI 引用，顺带挖出线上的 500
+date: '2026-08-04 10:00:00'
+tags:
+  - GEO
+  - SEO
+  - Next.js
+  - AI
+  - Agent
+  - 排错
+summary: >-
+  给博客做了一轮 GEO 改造：一句话结论、结构化数据、RSS 全文、llms.txt 和分享卡片。顺带挖出
+  favicon 长期返回 500，以及 RSS 被自己文章里的代码卡住。
+tldr: >-
+  GEO 的重点不是关键词，而是让内容能被生成式引擎整段摘走：每篇一个自包含结论、把问答和步骤做成结构化数据、RSS
+  输出全文。这轮真正棘手的两个问题都不在代码里，只有探线上才看得见。
+draft: false
+faq:
+  - q: GEO 和 SEO 有什么区别
+    a: >-
+      SEO 竞争的是排名和点击，GEO 竞争的是「被引用」——生成式引擎直接给出答案时，你的站点是否被当作信息源。
+      两者底层重叠很大，GEO 不是替代 SEO 的新赛道，更像零点击时代对同一批工作的重新加权。
+  - q: 做 GEO 最有效的手段是什么
+    a: >-
+      提供具体统计数字、引用权威来源、插入专家原话。2023 年那篇 GEO 论文的实验显示这类改写能把可见性提升三四成，
+      而传统的关键词堆砌在生成式引擎里几乎不起作用。
+  - q: robots.txt 需要为 AI 爬虫做什么
+    a: >-
+      至少要放行 GPTBot、ClaudeBot、PerplexityBot、Google-Extended。很多站点 SEO 做得很好，
+      却顺手把 AI 爬虫全 ban 了，那 GEO 无从谈起。
+  - q: llms.txt 值得做吗
+    a: >-
+      成本很低可以顺手加，但目前主流引擎的实际采用率有限，别指望立竿见影。它的形态是一份站点导览：
+      H1、一句话定位，加上按分节组织的链接列表。
+  - q: 为什么 FAQPage 结构化数据仍然值得做
+    a: >-
+      Google 从 2023 年起对多数站点不再展示 FAQ 和 HowTo 富媒体结果，所以它不会改变搜索结果的外观。
+      它的价值是把问答对直接交给生成式引擎，省掉模型从散文里推断的过程。
+howto:
+  name: 给已有博客做 GEO 改造
+  description: >-
+    按投入产出比排序的改造顺序，适用于已经有基本 SEO 底子的技术博客。
+  steps:
+    - name: 先探线上，而不是读代码
+      text: >-
+        把 sitemap 里的 URL、robots.txt、favicon 这些路径逐个 curl 一遍，看真实返回码。
+        代码里长得正常的东西，线上未必正常。
+    - name: 确认 AI 爬虫没被拦
+      text: >-
+        检查 robots.txt 是否放行 GPTBot、ClaudeBot、PerplexityBot、Google-Extended。
+    - name: 每篇加一段自包含结论
+      text: >-
+        一段能脱离上下文独立成立的话，放在正文顶部，同时输出为 schema.org 的 abstract。
+        这是投入产出比最高的一项。
+    - name: 把问答和步骤做成结构化数据
+      text: >-
+        FAQPage、HowTo、DefinedTerm 各取所需，内容直接从文章已有的排错表和正文里提取。
+    - name: RSS 输出全文
+      text: >-
+        用 content:encoded 承载全文，description 保留摘要，两者各司其职。
+    - name: 把规则写进构建
+      text: >-
+        新增的约定要变成构建期校验，否则半年后自己也记不住。
+---
+
+# 博客 GEO 改造
+
+先说 GEO 是什么：**Generative Engine Optimization，生成式引擎优化**。
+
+SEO 是让内容在搜索结果里排得高，GEO 是让内容**被 AI 的回答引用**——ChatGPT、Claude、Perplexity、Google AI Overviews 这类引擎直接给出答案时，你的站点是否被当作信息源、被点名、被链接。
+
+这个词出自 2023 年的一篇论文（Aggarwal 等，后来发在 KDD）。他们做了实验对比哪些改写手段能提升「被引用率」，结论挺反直觉：**加入具体统计数字、引用权威来源、插入专家原话，可见性能提升三四成；而传统的关键词堆砌几乎不起作用。**
+
+<Callout emoji="🧭">
+  先泼一盆冷水：GEO 跟 SEO 的底层重叠度很大（权威性、原创内容、被别处引用）。
+  它不是替代 SEO 的新赛道，更像是零点击时代对同一批工作的重新加权。
+  市面上不少「GEO 服务」就是把 SEO 换个名字卖。
+</Callout>
+
+这个博客[上一轮做过 SEO 改造](/blog/20260729-nextjs-i18n-seo-overhaul)，底子还行。这次是在那之上做 GEO，顺带挖出两个线上问题——它们的共同点是：**在代码里长得完全正常。**
+
+## 先探线上，再读代码
+
+第一步不是改东西，是摸清家底。把 sitemap、robots.txt、feed、几个特殊路径逐个 curl 一遍。
+
+好消息是底子确实不错：文章页服务端渲染，正文完整在 HTML 里（AI 爬虫基本不跑 JS，很多 SPA 博客在这一步就出局了）；`robots.txt` 是 `User-Agent: *` / `Allow: /`，GPTBot、ClaudeBot、PerplexityBot、Google-Extended 全部通行；单页 4 个 JSON-LD 块，`BlogPosting` + `Person` + `WebSite` + `BreadcrumbList` 还用 `@id` 互相引用成图。
+
+坏消息是这个：
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" https://www.cassianflorin.com/favicon.ico
+```
+
+```text
+500
+```
+
+## favicon 一直在返回 500
+
+不只 favicon。`/apple-touch-icon.png`、`/llms.txt`、任何根路径下带点且不存在的 URL——全是 500。
+
+根因是两个正常设计撞在一起：
+
+```ts title="middleware.ts"
+export const config = {
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+};
+```
+
+middleware 用 `.*\..*` 放行了所有带点的路径（本意是别去拦静态资源）。而 `app/[locale]` 是动态段，**会匹配任意单段路径**。于是 `/favicon.ico` 绕过 middleware，被 App Router 当成 `locale = "favicon.ico"`，一路走进：
+
+```tsx title="app/[locale]/layout.tsx"
+const { locale } = await params;
+const messages = (await import(`../../messages/${locale}.json`)).default;
+```
+
+`messages/favicon.ico.json` 不存在 → `MODULE_NOT_FOUND` → 500。
+
+修复是一行守卫：
+
+```tsx
+if (!isLocale(locale)) {
+  notFound();
+}
+```
+
+<Callout emoji="🔍">
+  这个 bug 我是在 dev server 的日志里看到真实报错才定位的。 光看代码，`[locale]`
+  布局没有任何可疑之处——它只是诚实地相信了路由给它的参数。
+</Callout>
+
+顺手把 `favicon.ico` 复制到 `public/` 根目录，那个路径现在返回 200。
+
+## 改造一：每篇一段能被摘走的结论
+
+这是投入产出比最高的一项。
+
+生成式引擎摘录的是**能脱离上下文独立成立**的段落。而技术文章里这种段落通常不存在——结论散落在五个小节里，模型得自己拼。
+
+所以加了个 `tldr` frontmatter 字段，18 篇全部补齐。它同时出现在三个地方：
+
+- 正文顶部的可见区块
+- `BlogPosting` 的 schema.org `abstract`
+- `check-seo` 的长度校验（30–200 显示宽度）
+
+组件刻意做得很朴素：一个带 `data-tldr` 的 `<section>`，标签和句子之间没有任何嵌套标记，方便整段被摘走。
+
+有意思的是，那条长度规则当场就抓到我自己写超长的 5 条，压完才过。
+
+## 改造二：把问答和步骤直接交给引擎
+
+新增三个 schema.org builder，按 frontmatter opt-in：
+
+| 类型          | 覆盖 | 内容                                                |
+| ------------- | ---- | --------------------------------------------------- |
+| `FAQPage`     | 7 篇 | 27 组问答                                           |
+| `HowTo`       | 4 篇 | 18 个步骤，Traefik 那篇的每一步都带校验过的章节锚点 |
+| `DefinedTerm` | 3 篇 | Obsidian、Harness Engineering、SDKMAN               |
+
+去重后共 9 篇。答案全部从文章已有的排错表和正文里提取，没有新写内容。
+
+<Callout emoji="⚠️">
+  必须说清楚：Google 从 2023 年起对多数站点不再展示 FAQ 和 HowTo
+  富媒体结果，所以**这部分不会给你带来任何搜索结果外观上的变化**。
+  它的价值是把问答对和步骤序列直接喂给生成式引擎，省掉模型从散文里推断的过程。
+</Callout>
+
+三个 builder 都做了防御式解析，frontmatter 写错时返回 `null` 而不是崩构建。
+
+## 改造三：18 张自动生成的分享卡片
+
+之前所有文章都没有封面图，分享出去只有站点默认 banner。
+
+原计划用 Next 的 `opengraph-image` 文件约定，结果构建直接报错：
+
+```text
+Error: Catch-all must be the last part of the URL.
+```
+
+文章路由是 catch-all（`[...slug]`），Next 不允许图片约定段跟在它后面。改成路由处理器 `app/og/[slug]/route.tsx`，URL 是 `/og/<slug>.png`。
+
+顺带避开一个坑：**没放在 `/api/` 下面**，因为 `robots.ts` 里有 `Disallow: /api/`，社交爬虫抓不到那底下的图。
+
+真正麻烦的是字体。`next/og` 底层是 Satori，**它不带任何中文字体**，不显式传字体进去，中文标题会渲染成一片豆腐块。完整的 Noto Sans SC 有 18 MB，塞进每次图片生成里不现实。
+
+解法是子集化：把可变字体固定到 400 / 700 两个字重，再按字符集裁剪。字符集 = 全站语料 + **GB2312 一级字表 3755 字**兜底——只用现有语料的话才 1143 字，新文章很容易写出界。
+
+最终 3988 个字符、两个字重各 1.1 MB。这些字体只在构建时用来画图，不会发给访问者。
+
+还有一处加固：
+
+```ts
+export const dynamic = 'force-static';
+export const dynamicParams = false;
+```
+
+字体路径由 `process.cwd()` 在运行时拼接，Next 的文件追踪静态分析不出来，不会把 ttf 打进 serverless 函数包。所以未预渲染的 slug 必须在路由层 404，而不是进到处理函数后因为找不到字体而失败。
+
+## 改造四：RSS 输出全文，然后被自己的文章卡住
+
+feed 之前只有 `description`（摘要），订阅者必须点回站点才能读正文。
+
+难点是正文是 MDX：18 篇里有 470 处 `<div className>`、22 个 `<Callout>`，还有若干自定义组件。contentlayer 只暴露 `body.raw`（MDX 源码）和 `body.code`（编译后的 bundle），没有现成 HTML。
+
+写了个 remark/rehype 管线：剥掉展示性 JSX（阅读器没样式表也没 React，Tailwind 包装层是纯噪音），把 `Callout` 之类映射成语义化 HTML，再把藏在 props 里的内容抢救出来——`CopyableCodeBlock` 的代码和 `ErrorDisplay` 的报错都在属性里，单纯剥离会静默丢失。
+
+然后 XML 解析报错了：
+
+```text
+xml.etree.ElementTree.ParseError: not well-formed (invalid token)
+```
+
+CDATA 标记数量平衡，结构看着没问题。查了半天，罪魁是这一行：
+
+```js
+width += /[⺀-￿]/.test(char) ? 2 : 1;
+```
+
+这是 `check-seo` 里算中文显示宽度的正则，上界是 **U+FFFF**。而它出现在 feed 里，是因为[上一轮 SEO 改造那篇文章](/blog/20260729-nextjs-i18n-seo-overhaul)引用了这段代码。
+
+U+FFFF 在 XML 1.0 里是非法字符，**CDATA 和数字引用都救不了**——规范里它根本不允许出现。
+
+<Callout emoji="🪤">
+  这个雷是那篇文章给自己埋的：它引用的正是同一轮改造里写出来的代码。
+  半年后如果不是要做全文 RSS，永远不会被发现。
+</Callout>
+
+处理成 `\uXXXX` 转义形式：既是合法 XML，在代码块语境里也仍是等价且可读的 JavaScript，比直接删掉强。顺带覆盖了 C0 控制字符和落单代理项。
+
+feed 从约 14 KB 增至 208 KB。tag feeds 保持摘要版——51 个标签 feed 都是同一批文章的子集，正文重复没有收益。
+
+## 改造五：llms.txt
+
+按 [llmstxt.org](https://llmstxt.org) 规范在根路径输出站点导览，构建时静态生成，内容跟着文章自动更新。
+
+结构是 H1 + 一句话定位 + 一段上下文，然后是按 `## Posts` / `## Pages` / `## Optional` 分节的链接列表。每篇文章**直接拿 `tldr` 当描述**——这正是该字段的用途，一次抓取就能让模型拿到全站结构和每篇的要点。
+
+采用率有限，属于成本低可以顺手加、别指望立竿见影的那类。
+
+## 改造六：自动维护 lastmod
+
+`lastmod` 字段本来就在，`sitemap.ts` 和结构化数据也都在读它。缺的是**值**：18 篇一个都没填，于是 `dateModified` 一直回落到 `datePublished`，等于告诉引擎「这些文章从发布起就没动过」。
+
+手写必然会忘，所以从 git 历史推导。这里有个不那么显然的坑：
+
+朴素做法是取 `git log -1 --format=%cI -- <file>`。但脚本写入 `lastmod` 会产生一次新提交，这次提交成为该文件的最新改动，下次构建读到新日期，于是再写一次——**脚本吃自己的输出，日期无限自增**。
+
+所以要逐个检查提交对该文件的 diff，**跳过那些只改动了 `lastmod:` 行的提交**，一直回溯到真正改了内容的那次。
+
+另一个坑是 Vercel：默认检出是浅克隆，`git log` 答不出老文件的历史。脚本检测到 `--is-shallow-repository` 就跳过，沿用已提交的值——值由本地构建写入并提交，构建机只负责读。
+
+## 把规则固化进构建
+
+新增的约定如果只活在脑子里，半年后自己也记不住。所以全部写进了 `check-seo`：
+
+- `tldr` 缺失警告 + 30–200 显示宽度
+- `faq` / `howto` / `definedTerm` 的字段形状校验
+- OG 卡片字体缺字检测（标题用了子集外的字会提前报出来，而不是等分享时才发现是空白框）
+- `lastmod` 早于 `date` 报错
+
+这套东西的价值在于：**它把「文章要有一句话结论」从一条建议变成了会让构建失败的规则。**
+
+## 如果你也要做 GEO
+
+按我这轮的顺序，值得先做这几件事：
+
+1. **先探线上，而不是读代码。** 把 sitemap 里的 URL、robots.txt、favicon 逐个 curl 一遍看真实返回码。这轮最有价值的两个发现都是这么冒出来的。
+2. **确认 AI 爬虫没被拦。** 很多站点 SEO 做得很好，却顺手把 GPTBot 全 ban 了。
+3. **每篇加一段自包含结论。** 投入产出比最高，成本几乎为零。
+4. **把问答和步骤做成结构化数据。** 别指望富媒体结果，指望的是省掉模型的推断。
+5. **RSS 输出全文。**
+6. **把新约定写进构建校验。**
+
+至于内容本身——论文的结论仍然成立：具体数字、权威引用、原话，比任何关键词技巧都管用。这一点上 GEO 和好文章的标准是重合的。
+
+## 一个没变的结论
+
+上一轮 SEO 改造那篇文章的结尾，我写的是「把 sitemap 里的 URL 逐个 curl 一遍」。
+
+这轮又验证了一次，而且更彻底：favicon 的 500 在代码里看不出来，feed 里的非法字符在代码里也看不出来——后者甚至是那篇文章自己引用的代码造成的。
+
+**代码读起来没问题，不等于线上没问题。** 这句话我大概还得再写几年。
