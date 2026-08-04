@@ -18,7 +18,7 @@
   "intellij-idea": 1,
   "开发工具": 4,
   "技术分享": 2,
-  "ai": 7,
+  "ai": 8,
   "cursor": 1,
   "manus": 1,
   "效率提升": 1,
@@ -26,7 +26,7 @@
   "mootool": 1,
   "diff": 1,
   "神策数据": 1,
-  "agent": 5,
+  "agent": 6,
   "openclaw": 1,
   "hermes": 1,
   "工具对比": 1,
@@ -45,9 +45,10 @@
   "codex": 1,
   "cli": 1,
   "中转站": 1,
-  "排错": 2,
-  "seo": 1,
-  "nextjs": 1,
+  "排错": 3,
+  "seo": 2,
+  "nextjs": 2,
   "i18n": 1,
-  "vercel": 1
+  "vercel": 1,
+  "geo": 1
 }

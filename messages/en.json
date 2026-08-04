@@ -246,7 +246,9 @@
     "nextjs": "Next.js",
     "i18n": "i18n",
     "Vercel": "Vercel",
-    "vercel": "Vercel"
+    "vercel": "Vercel",
+    "GEO": "GEO",
+    "geo": "GEO"
   },
   "seo": {
     "siteTitle": "Cassian Florin | AI Engineering Tool Builder",
