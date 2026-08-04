@@ -12602,7 +12602,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rehype-stringify@npm:^10.0.0":
+"rehype-stringify@npm:^10.0.0, rehype-stringify@npm:^10.0.1":
   version: 10.0.1
   resolution: "rehype-stringify@npm:10.0.1"
   dependencies:
@@ -12684,6 +12684,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"remark-mdx@npm:^3.1.0":
+  version: 3.1.1
+  resolution: "remark-mdx@npm:3.1.1"
+  dependencies:
+    mdast-util-mdx: ^3.0.0
+    micromark-extension-mdxjs: ^3.0.0
+  checksum: 9e6406ba83e545b5232ce98de71c29ad5746c2d920eed070a2c58687412453875bad52dfdfaf21bee6de59d3a45fa84cf785b3111c5eb4822f29b67cf1dfec96
+  languageName: node
+  linkType: hard
+
 "remark-parse@npm:^11.0.0":
   version: 11.0.0
   resolution: "remark-parse@npm:11.0.0"
@@ -12706,6 +12716,19 @@ __metadata:
     unified: ^11.0.0
     vfile: ^6.0.0
   checksum: e199dff098ae6a560e13dd1778dec9c61440f979cc931c4ca4dcde0d58e51c0723243a901c1842379b189083cf4d74f224f57833738095ffa9535179d7cf3f01
+  languageName: node
+  linkType: hard
+
+"remark-rehype@npm:^11.1.1":
+  version: 11.1.2
+  resolution: "remark-rehype@npm:11.1.2"
+  dependencies:
+    "@types/hast": ^3.0.0
+    "@types/mdast": ^4.0.0
+    mdast-util-to-hast: ^13.0.0
+    unified: ^11.0.0
+    vfile: ^6.0.0
+  checksum: 6eab55cb3464ec01d8e002cc9fe02ae57f48162899693fd53b5ba553ac8699dae7b55fce9df7131a5981313b19b495d6fbfa98a9d6bd243e7485591364d9b5b3
   languageName: node
   linkType: hard
 
@@ -13779,12 +13802,17 @@ __metadata:
     rehype-preset-minify: 7.0.0
     rehype-prism-plus: ^2.0.0
     rehype-slug: ^6.0.0
+    rehype-stringify: ^10.0.1
     remark: ^15.0.0
     remark-gfm: ^4.0.0
     remark-github-blockquote-alert: ^1.2.1
     remark-math: ^6.0.0
+    remark-mdx: ^3.1.0
+    remark-parse: ^11.0.0
+    remark-rehype: ^11.1.1
     tailwindcss: ^4.0.5
     typescript: ^5.1.3
+    unified: ^11.0.5
     unist-util-visit: ^5.0.0
   languageName: unknown
   linkType: soft
