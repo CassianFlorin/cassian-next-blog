@@ -173,11 +173,27 @@ function checkPost(file, raw) {
     }
   }
 
-  // --- date ----------------------------------------------------------------
+  // --- date / lastmod ------------------------------------------------------
   if (!fm.date) {
     addError(file, 'frontmatter 缺少 date');
   } else if (Number.isNaN(new Date(fm.date).getTime())) {
     addError(file, `date 无法解析：${fm.date}`);
+  }
+
+  // `lastmod` feeds `dateModified` and the sitemap; a value older than the
+  // publication date would tell engines the page went backwards in time.
+  if (fm.lastmod) {
+    const modified = new Date(fm.lastmod);
+    if (Number.isNaN(modified.getTime())) {
+      addError(file, `lastmod 无法解析：${fm.lastmod}`);
+    } else if (
+      fm.date &&
+      modified < new Date(new Date(fm.date).toDateString())
+    ) {
+      addError(file, `lastmod（${fm.lastmod}）早于 date（${fm.date}）`);
+    } else if (modified.getTime() > Date.now() + 86400000) {
+      addWarning(file, `lastmod（${fm.lastmod}）在未来`);
+    }
   }
 
   // --- tags ----------------------------------------------------------------
