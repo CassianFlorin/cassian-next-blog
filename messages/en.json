@@ -248,7 +248,17 @@
     "Vercel": "Vercel",
     "vercel": "Vercel",
     "GEO": "GEO",
-    "geo": "GEO"
+    "geo": "GEO",
+    "Linux": "Linux",
+    "linux": "Linux",
+    "数据恢复": "数据恢复",
+    "Docker": "Docker",
+    "ext4": "ext4",
+    "photorec": "photorec",
+    "SQLite": "SQLite",
+    "sqlite": "SQLite",
+    "运维": "运维",
+    "事故复盘": "事故复盘"
   },
   "seo": {
     "siteTitle": "Cassian Florin | AI Engineering Tool Builder",

@@ -34,7 +34,7 @@
   "harness-engineering": 1,
   "工程方法论": 1,
   "traefik": 1,
-  "docker": 1,
+  "docker": 2,
   "reverse-proxy": 1,
   "devops": 1,
   "obsidian": 2,
@@ -50,5 +50,12 @@
   "nextjs": 2,
   "i18n": 1,
   "vercel": 1,
-  "geo": 1
+  "geo": 1,
+  "linux": 1,
+  "数据恢复": 1,
+  "ext4": 1,
+  "photorec": 1,
+  "sqlite": 1,
+  "运维": 1,
+  "事故复盘": 1
 }
