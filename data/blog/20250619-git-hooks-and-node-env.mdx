@@ -1,7 +1,7 @@
 ---
 title: Git Hooks 与 Node 环境问题
 date: '2025-06-19 23:17:00'
-lastmod: '2026-08-04'
+lastmod: '2026-09-16'
 tags:
   - Git
   - 开发习惯
@@ -36,11 +36,11 @@ faq:
 
 ## 🧠起因
 
-我在之前解决了 [Git Hooks与多JDK环境问题解决](/blog/git-hooks-and-multi-java-env) 的这个问题。但在今天又出现了本地node环境🪝钩子读不到了。真的是命运多舛。
+我在之前解决了 [Git Hooks与多JDK环境问题解决](/blog/20250619-git-hooks-and-multi-java-env) 的这个问题。但在今天又出现了本地node环境🪝钩子读不到了。真的是命运多舛。
 
 <Callout emoji="📖">
   如果您还没有阅读过 JDK 环境问题的解决方案，建议先查看 [Git
-  Hooks与多JDK环境问题解决](/blog/git-hooks-and-multi-java-env)
+  Hooks与多JDK环境问题解决](/blog/20250619-git-hooks-and-multi-java-env)
   这篇文章，了解如何使用 SDKMAN 管理 Java 环境。
 </Callout>
 
@@ -108,7 +108,8 @@ husky - command not found in PATH=node_modules/.bin:/opt/homebrew/opt/git/libexe
 > 我后面说明的都是如何解决这个问题
 
 <Callout emoji="💡">
-  这个问题与之前解决的 [JDK 环境问题](/blog/git-hooks-and-multi-java-env)
+  这个问题与之前解决的 [JDK
+  环境问题](/blog/20250619-git-hooks-and-multi-java-env)
   类似，都是由于环境管理工具导致的 PATH 配置问题。不同的是，这次我们需要管理
   Node.js 环境而不是 Java 环境。
 </Callout>
@@ -192,14 +193,14 @@ OK了。能跑到这说明你已经完成了。接下来正常使用就行。
 
 1. **避免使用 Homebrew 安装开发语言环境**：虽然 Homebrew 安装方便，但会导致路径不一致，影响 Git hooks 的正常工作
 2. **推荐使用版本管理工具**：
-   - Java 环境：使用 [SDKMAN](/blog/git-hooks-and-multi-java-env) 进行管理
+   - Java 环境：使用 [SDKMAN](/blog/20250619-git-hooks-and-multi-java-env) 进行管理
    - Node.js 环境：使用 NVM 进行管理
    - Python 环境：使用 pyenv 进行管理
 
 ### 🔗 相关文章
 
-- [Git Hooks与多JDK环境问题解决](/blog/git-hooks-and-multi-java-env) - 解决 Java 环境问题
-- [SDKMAN 安装与配置指南](/blog/install-sdkman) - SDKMAN 的详细安装教程
+- [Git Hooks与多JDK环境问题解决](/blog/20250619-git-hooks-and-multi-java-env) - 解决 Java 环境问题
+- [SDKMAN 安装与配置指南](/blog/20250619-install-sdkman) - SDKMAN 的详细安装教程
 
 ### 💡 最佳实践
 
