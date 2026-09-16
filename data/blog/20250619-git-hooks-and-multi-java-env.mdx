@@ -1,7 +1,7 @@
 ---
 title: Git Hooks与多JDK环境问题解决
 date: '2025-06-19 22:00:00'
-lastmod: '2026-08-04'
+lastmod: '2026-09-16'
 tags:
   - Git
   - 开发习惯
@@ -58,7 +58,7 @@ husky - pre-commit script failed (code 1)
 
 ## ⚙️ 安装 SDKMAN
 
-参考 [SDKMAN 安装与配置指南](/blog/install-sdkman) 文档，其中对 Mac 系统环境与 Windows 系统环境的安装都有详细指导。
+参考 [SDKMAN 安装与配置指南](/blog/20250619-install-sdkman) 文档，其中对 Mac 系统环境与 Windows 系统环境的安装都有详细指导。
 
 <Callout emoji="📖">
   如果您还没有安装 SDKMAN，请先阅读安装指南，然后再继续本文的配置步骤。
@@ -127,7 +127,7 @@ your-project/
 #
 # 注意：
 # 1. 此文件需要 SDKMAN 支持才能生效
-# 2. 如果您没有安装 SDKMAN，请参考 [SDKMAN 安装与配置指南](/blog/install-sdkman)
+# 2. 如果您没有安装 SDKMAN，请参考 [SDKMAN 安装与配置指南](/blog/20250619-install-sdkman)
 # 3. Windows 用户需要在 Git Bash 或类似的 Unix-like 环境中使用 SDKMAN
 # 4. 如果您使用的是 IDE（如 IntelliJ IDEA），请确保在项目设置中也配置了正确的 JDK
 #
@@ -228,7 +228,7 @@ Using java version 8.0.452-amzn in this shell.
   details={['SDKMAN 未正确安装', '.sdkmanrc 文件不存在', '需要先安装 SDKMAN']}
 />
 
-**解决方案**: 参考 [SDKMAN 安装与配置指南](/blog/install-sdkman)
+**解决方案**: 参考 [SDKMAN 安装与配置指南](/blog/20250619-install-sdkman)
 
 <ErrorDisplay
   title="Java 版本仍然不匹配"
@@ -244,9 +244,9 @@ Using java version 8.0.452-amzn in this shell.
 
 ### 相关博客文章
 
-- [SDKMAN 安装与配置指南](/blog/install-sdkman) - 详细的 SDKMAN 安装和配置步骤
-- [Git Hooks 与 Node 环境问题](/blog/git-hooks-and-node-env) - 解决 Git Hooks 中的 Node.js 环境问题
-- [多环境 Git 配置管理](/blog/multi-environmental-gitconfig) - 管理多个环境的 Git 配置
+- [SDKMAN 安装与配置指南](/blog/20250619-install-sdkman) - 详细的 SDKMAN 安装和配置步骤
+- [Git Hooks 与 Node 环境问题](/blog/20250619-git-hooks-and-node-env) - 解决 Git Hooks 中的 Node.js 环境问题
+- [多环境 Git 配置管理](/blog/20250619-multi-environmental-gitconfig) - 管理多个环境的 Git 配置
 
 ### 相关工具
 
