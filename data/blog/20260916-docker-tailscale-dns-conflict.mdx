@@ -1,5 +1,5 @@
 ---
-title: Docker 容器 DNS 失败排查：Tailscale MagicDNS 劫持导致的代理服务故障
+title: Docker 容器 DNS 被 Tailscale 劫持的排查过程
 date: '2026-09-16 10:45:00'
 tags:
   - Docker
@@ -10,9 +10,9 @@ tags:
   - 运维
   - 故障排查
 draft: false
-summary: 3x-ui 代理服务突然全部连接失败返回 EOF。排查发现容器内 DNS 被 Tailscale MagicDNS 劫持，但 MagicDNS 实际未启用，导致所有公网域名解析 SERVFAIL。本文完整复盘从现象到根因的诊断路径，以及如何为 Docker 容器正确配置 DNS。
+summary: 3x-ui 代理突然全部返回 EOF。容器内 DNS 被指向 Tailscale 的 100.100.100.100，而 MagicDNS 并未启用，公网域名全部 SERVFAIL。
 tldr: >-
-  Docker 容器默认继承宿主机的 DNS 配置。当宿主机运行 Tailscale 时，即使 MagicDNS 未启用，容器 DNS 也会被指向 100.100.100.100，导致公网域名解析失败。解决方法：在 docker-compose.yml 或 docker run 中显式指定 `dns: [8.8.8.8, 114.114.114.114]`，绕过 Tailscale DNS。此问题影响所有依赖外部域名解析的容器化服务，包括代理、API 客户端等。
+  Docker 容器默认继承宿主机 DNS。宿主机跑 Tailscale 时，即使 MagicDNS 未启用，容器 DNS 也会被指到 100.100.100.100，公网域名解析失败。在 compose 里显式写 dns 即可绕开，依赖外部域名解析的容器都会中招。
 ---
 
 <div className="not-prose">
