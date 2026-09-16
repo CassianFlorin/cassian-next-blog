@@ -1,0 +1,195 @@
+---
+title: 在飞牛 NAS 上给联想 M1688W Pro 装 CUPS 驱动
+date: '2026-09-16 21:00:00'
+tags:
+  - Linux
+  - CUPS
+  - 打印机
+  - NAS
+  - 飞牛
+  - Debian
+  - 驱动
+  - 运维
+draft: false
+summary: 把联想 M1688W Pro 挂到飞牛 NAS 的 CUPS 上。PPD 是纯文本可跨平台搬，栅格过滤器必须同架构；官网三个名字相似的驱动包，只有一个含 W Pro。
+tldr: >-
+  CUPS 要 PPD 和栅格过滤器两样东西。PPD 跨平台通用，过滤器必须同 OS 同架构，从 macOS 搬 PPD 到 Linux 走不通。联想官网三个相似包里只有麒麟 V10 那个含 W Pro 的 PPD，deb 里参与打印的只有三个文件共 121 KB。
+---
+
+<div className="not-prose">
+  <div className="mb-8 rounded-lg bg-gradient-to-r from-sky-700 to-indigo-900 p-8 text-white shadow-lg">
+    <h1 className="mb-4 text-4xl font-bold">
+      🖨️ 给家里的打印机找一个 NAS 队列
+    </h1>
+    <div className="text-xl opacity-90">
+      一个 PPD、一个 112 KB 的二进制，和三个名字很像的驱动包
+    </div>
+  </div>
+</div>
+
+家里那台联想 M1688W Pro 是无线机型，谁要打印谁在手机上连一次，连上了还不一定认。前几天想一劳永逸，把它挂到飞牛 NAS 上做成一个常驻队列。我当时估计十分钟，找个 PPD 传上去就完事。实际花了一个晚上，绕的路几乎全在型号名上。
+
+## 📄 PPD 只管描述，干活的是另一个程序
+
+先说清楚 PPD 是个什么东西。CUPS 里每台打印机对应一个 PPD 文件，纯文本，描述它能吃多大的纸、能出多少 dpi、有没有彩色。我 Mac 上装过联想的驱动，就先去翻驱动库。
+
+```bash
+ls /Library/Printers/PPDs/Contents/Resources/
+```
+
+三十个 `.ppd.gz`，里面躺着 `lenovom1688dwpro.ppd.gz`。我挺高兴，解压出来准备直接传到 NAS。
+
+解压完顺手看了眼内容，卡在这一行。
+
+```
+*cupsFilter: "application/vnd.cups-raster 50 rastertolenovo"
+```
+
+这行的意思是，PPD 只管描述能力，把页面转成打印机认的字节流这一步，交给一个叫 `rastertolenovo` 的外部程序。PPD 是文本，搬到哪台机器上都能读。那个程序就不一定了。
+
+```bash
+file /usr/libexec/cups/filter/rastertolenovo
+# Mach-O universal binary with 2 architectures [x86_64] [arm64]
+```
+
+Mach-O。拷到 Debian 上就是一堆没人认识的字节。到这里我才意识到，光有 PPD 等于只搬了说明书，干活的机器还在原地。
+
+<Callout emoji="🔑">
+  <strong>PPD 跨平台通用，栅格过滤器必须同 OS 同架构。</strong>
+  从别的系统掏一个 PPD 传到 Linux 的 CUPS 上，任务会卡在队列里报 Filter failed。
+</Callout>
+
+## 📦 官网三个包，只有一个含 W Pro
+
+联想的 Linux 驱动页在[联想图像官网](https://www.lenovoimage.com/index.php/services/servers_drivers?cat_id=2&OS=Linux)。跟 1688 沾边的有三个包，名字都不带型号，得把「适用型号」那一栏展开，一个一个比对。
+
+比对结果有点反直觉。
+
+| 驱动包                              | 含 M1688W Pro | 格式        | 型号列表止于       |
+| ----------------------------------- | ------------- | ----------- | ------------------ |
+| G系列GM系列麒麟V10驱动              | ✅            | zip / 115MB | `M1688W Pro`       |
+| G系列GM系列UOS                      | ❌            | zip / 164MB | `M1688DW Pro`      |
+| lenovo-100-m1520-m1688-series-linux | ❌            | 7z / 78MB   | `M1688W`（无 Pro） |
+
+名字最像的那个叫 `lenovo-100-m1520-m1688-series-linux`，型号列表里写着 `M1688W` 和 `M1688DW`，都没有 Pro。含 `M1688W Pro` 的是第三个，「G系列GM系列麒麟V10驱动」，名字里连一个 1 都没有。差一个 Pro 就是另一套 PPD，我是拆开包对着文件才看出来的，后面说。
+
+下载链接还有个小插曲。页面上那个下载图标的 `href` 是空的，地址挂在 `data-href` 属性里，由 js 现拼。扒出来是这个。
+
+```bash
+curl -L -o lenovo-kylin.zip \
+  "https://lenovo-upload.oss-cn-beijing.aliyuncs.com/drivers/G262DN_Series_drivers_Lin_20240109140629.zip"
+```
+
+解开是四个 deb，按架构分。
+
+```text
+lenovo-printer-driver_1.51-230329_amd64.deb
+lenovo-printer-driver_1.51-230329_arm64.deb
+lenovo-printer-driver_1.51-230329_loongarch64.deb
+lenovo-printer-driver_1.51-230329_mips64el.deb
+```
+
+龙芯和 mips64el 也在，因为这套东西本来是给麒麟和统信做的。飞牛跑在 x86 上，取 amd64 那个，30.4 MB。
+
+## 🔧 拆开 deb，有用的只有 121 KB
+
+`ar x` 剥掉 deb 外壳，`tar tJf data.tar.xz` 列一遍，第一个想找的东西就出来了。
+
+```bash
+ar x lenovo-printer-driver_1.51-230329_amd64.deb
+tar tJf data.tar.xz | grep -iE '1688|filter'
+# ./usr/share/cups/model/lenovo/lenovom1688wpro.ppd
+# ./usr/lib/cups/filter/rastertolenovo.sh
+```
+
+`lenovom1688wpro.ppd`，正好是我那台，不用拿 DW 版将就。两个文件摆在一起对比，能看出他们是照着机器实际能力分的。DW 版是 v1.14，里面有 `*OpenUI *Duplex/2-Sided Printing`；W Pro 版是 v1.51，`grep -c Duplex` 数出来是 0。硬件上 DW 带自动双面，W 不带，PPD 跟着硬件走。拿 DW 版也能打印，只是界面上会多一个按了没用的双面开关。
+
+接着看这个包到底装了些什么。30.4 MB 展开是 102 MB，里面 31 MB 挤在 `/opt/lenovo/vop`，一整套 Qt5 库，是给桌面系统准备的图形界面。NAS 上没有 X，这部分完全用不着。
+
+打印链路用到的只有三个文件。
+
+```text
+/usr/share/cups/model/lenovo/lenovom1688wpro.ppd   8.7 KB
+/usr/lib/cups/filter/rastertolenovo.sh              110 B
+/opt/lenovo/printer/rastertolenovo                  112 KB
+```
+
+那个 `.sh` 全文三行。
+
+```sh
+#!/bin/sh
+LD_LIBRARY_PATH=/opt/lenovo/printer
+export LD_LIBRARY_PATH
+/opt/lenovo/printer/rastertolenovo "$@"
+```
+
+干活的是最后那个 112 KB 的 ELF。我本来以为它会拖一串私有 so 出来，扒了一下 `.dynamic` 段，NEEDED 只有五条。
+
+```text
+libcupsimage.so.2  libcups.so.2  libpthread.so.0  libm.so.6  libc.so.6
+```
+
+全是系统库。装了 CUPS 就都有，一个厂商私有依赖都没有。这个结果比我预期好得多。`libcupsimage2` 在 Debian 上偶尔不跟 CUPS 一起装，真报找不到库就 `apt install libcupsimage2`。
+
+还有一件我提前担心过的事。这台 NAS 是 Celeron J1900，没有 AVX2，之前装 mihomo 时普通 amd64 版启动就崩，必须换 compatible 版。这次我特意看了一眼编译目标。
+
+```text
+ELF 64-bit LSB executable, x86-64, for GNU/Linux 2.6.32, stripped
+```
+
+2023 年编的东西，目标定在 2.6.32，基线 x86-64。老派做法这回帮了忙。
+
+## ⬆️ 装的时候别走错入口
+
+飞牛的设置里有个「上传驱动」，直接把那个 amd64 的 deb 丢进去就行。传完驱动列表里出现 `Lenovo M1688W Pro`，加队列、打印测试页，纸出来了。
+
+<Callout emoji="⚠️">
+  CUPS 自带的 631 网页界面也有上传，但它只收单个 <code>.ppd</code>，deb
+  传不进去。飞牛那个界面收的是驱动包。两个入口长得像，要的东西不一样。
+</Callout>
+
+想跳过那 31 MB 用不着的 Qt 库，把三个文件按原路径打包，解到根目录也一样能用。
+
+```bash
+sudo tar xzf m1688wpro.tar.gz -C /
+sudo systemctl restart cups
+lpinfo -m | grep -i 1688
+```
+
+包里还写着一行 `Conflicts: zx-printer-driver, lenovo-cups-driver`。以前在同一台机器上试装过别的联想或至像驱动的话，dpkg 会直接拒绝，得先清干净。
+
+```bash
+dpkg -l | grep -iE 'lenovo|zx-printer'
+```
+
+顺带一个发现。deb 的 maintainer 写的是 `Githon Technology Co., Ltd.`，PPD 目录里 `lenovo*.ppd` 和 `zx_*.ppd` 混在一块，`Conflicts` 也指着至像。联想这批打印机跟至像出自同一家 OEM，所以一个驱动包通吃两个牌子。
+
+## 🧭 回头看
+
+国产打印机驱动的封闭程度比我想的低。deb 拆开就是一个 8.7 KB 的文本 PPD 加一个 112 KB 的转换器，依赖干净，路径规规矩矩摆在 `/usr/lib/cups/filter` 和 `/usr/share/cups/model` 下面，完全是标准 CUPS 那一套。
+
+难的地方在找。三个包名字互相像，型号列表得展开才看得见，下载地址还藏在属性里。我那一晚上的时间基本都花在这上面，而不是花在装。
+
+队列建好之后顺手共享了出去，Mac 那边就不用再装联想驱动了。
+
+```bash
+sudo cupsctl --share-printers --remote-any
+sudo lpadmin -p M1688WPro -o printer-is-shared=true
+```
+
+CUPS 会按 IPP Everywhere 广播，Mac 的「添加打印机」直接能发现它，选默认的 AirPrint 驱动，栅格化留在 NAS 上做。排障看 `/var/log/cups/error_log`。
+
+如果你的打印机本身支持 AirPrint，其实可以完全跳过本文。一条命令就够了，PPD 和过滤器都不用碰。
+
+```bash
+lpadmin -p 打印机名 -E -v ipp://打印机IP/ipp/print -m everywhere
+```
+
+只有打印机用 USB 接在 NAS 上、要靠 NAS 转成网络打印机时，才非得走厂商过滤器这条路。
+
+---
+
+**相关阅读**
+
+- [误删生产数据卷之后](/blog/20260813-ext4-docker-volume-data-recovery) - 同一台机器上的另一次折腾，ext4 空闲块数据恢复
+- [Traefik 云服务器部署指南](/blog/20260511-traefik-cloud-server-guide) - 自托管服务的反代配置
