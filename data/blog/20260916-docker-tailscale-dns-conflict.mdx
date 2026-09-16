@@ -1,0 +1,402 @@
+---
+title: Docker 容器 DNS 失败排查：Tailscale MagicDNS 劫持导致的代理服务故障
+date: '2026-09-16 10:45:00'
+tags:
+  - Docker
+  - Tailscale
+  - DNS
+  - 网络故障
+  - 3x-ui
+  - 运维
+  - 故障排查
+draft: false
+summary: 3x-ui 代理服务突然全部连接失败返回 EOF。排查发现容器内 DNS 被 Tailscale MagicDNS 劫持，但 MagicDNS 实际未启用，导致所有公网域名解析 SERVFAIL。本文完整复盘从现象到根因的诊断路径，以及如何为 Docker 容器正确配置 DNS。
+tldr: >-
+  Docker 容器默认继承宿主机的 DNS 配置。当宿主机运行 Tailscale 时，即使 MagicDNS 未启用，容器 DNS 也会被指向 100.100.100.100，导致公网域名解析失败。解决方法：在 docker-compose.yml 或 docker run 中显式指定 `dns: [8.8.8.8, 114.114.114.114]`，绕过 Tailscale DNS。此问题影响所有依赖外部域名解析的容器化服务，包括代理、API 客户端等。
+---
+
+<div className="not-prose">
+  <div className="mb-8 rounded-lg bg-gradient-to-r from-slate-700 to-blue-900 p-8 text-white shadow-lg">
+    <h1 className="mb-4 text-4xl font-bold">🔍 Docker DNS 失败排查</h1>
+    <div className="text-xl opacity-90">
+      当 Tailscale 劫持了容器 DNS，但 MagicDNS 并未真正启用
+    </div>
+  </div>
+</div>
+
+## 故障现象
+
+某天早上，所有通过 3x-ui 代理的连接突然全部失败，客户端日志显示：
+
+```log
+[TCP] dial PROXY (match Match/) 127.0.0.1:56096 --> claude.ai:443
+  error: blog.cassianflorin.com:443 connect error: EOF
+
+[TCP] dial PROXY (match Match/) 127.0.0.1:55911 --> chat.openai.com:443
+  error: blog.cassianflorin.com:443 connect error: EOF
+```
+
+所有目标都指向同一个错误：无法连接到 `blog.cassianflorin.com:443`，返回 EOF（连接意外关闭）。
+
+## 初步诊断
+
+### 服务状态检查
+
+首先检查服务器上的 3x-ui 容器状态：
+
+```bash
+docker ps -a | grep xui
+# 输出：3xui_app   Up 7 hours   127.0.0.1:2053->2053/tcp
+```
+
+容器正常运行，端口映射正常。检查日志：
+
+```bash
+docker logs --tail 20 3xui_app
+# 输出显示 x-ui 3.4.2 和 Xray 26.6.27 正常启动
+```
+
+服务本身没有异常。
+
+### 配置检查
+
+查看 3x-ui 的 REALITY 配置，发现使用了 `externalProxy` 功能，配置为将流量伪装成访问某个公开网站的 HTTPS 流量。但现在连接时直接返回 EOF。
+
+### 443 端口检查
+
+```bash
+# 宿主机上测试
+curl -I https://example.com
+# 输出：HTTP/1.1 301 Moved Permanently
+
+# SSL 证书检查
+openssl s_client -connect example.com:443 -servername example.com
+# 输出：Verification: OK
+```
+
+宿主机上访问该域名完全正常，证书有效。
+
+## 关键发现：容器内 DNS 失败
+
+尝试在容器内解析域名：
+
+```bash
+docker exec 3xui_app nslookup example.com
+```
+
+输出：
+
+```
+Server:    127.0.0.11
+Address:   127.0.0.11:53
+
+** server can't find example.com: SERVFAIL
+```
+
+**容器内无法解析该域名！** 这是问题根源。
+
+### DNS 配置追踪
+
+查看容器的 DNS 配置：
+
+```bash
+docker exec 3xui_app cat /etc/resolv.conf
+```
+
+输出：
+
+```
+nameserver 127.0.0.11
+search tailxxxxx.ts.net
+options ndots:0
+
+# Based on host file: '/etc/resolv.conf' (internal resolver)
+# ExtServers: [host(100.100.100.100) host(fd7a:xxxx:xxxx::xx)]
+# Overrides: []
+```
+
+关键信息：
+
+- 容器 DNS 为 Docker 内置 resolver `127.0.0.11`
+- 它转发到外部服务器 `100.100.100.100`（**Tailscale MagicDNS**）
+- 搜索域为 Tailscale 网络域名
+
+### Tailscale 状态检查
+
+```bash
+# 检查 Tailscale 运行状态
+systemctl status tailscaled
+# 输出：active (running)
+
+# 检查 MagicDNS 配置
+tailscale status --json | grep -i MagicDNS
+```
+
+输出：
+
+```json
+{
+  "MagicDNSSuffix": "example.ts.net",
+  "MagicDNSEnabled": false
+}
+```
+
+**问题确认**：
+
+- Tailscale 正在运行
+- MagicDNS 配置了服务器地址 `100.100.100.100`
+- 但 **MagicDNS 实际未启用**（`MagicDNSEnabled: false`）
+
+容器的 DNS 请求被发到一个不工作的 DNS 服务器，导致所有公网域名解析失败。
+
+## 根因分析
+
+### Docker DNS 继承机制
+
+Docker 容器的 DNS 配置默认行为：
+
+1. 容器内使用 Docker 内置 DNS resolver（`127.0.0.11`）
+2. Docker daemon 读取宿主机的 `/etc/resolv.conf`
+3. 提取其中的 `nameserver`，作为容器 DNS 的上游转发目标
+4. 容器内的 DNS 查询路径：容器 → `127.0.0.11` → 宿主机 DNS → 公网
+
+### Tailscale 的 DNS 劫持
+
+当宿主机安装 Tailscale 后：
+
+1. Tailscale 会在 `/etc/resolv.conf` 中注入自己的 DNS 服务器地址
+2. 即使 MagicDNS 功能未启用，DNS 地址仍然存在
+3. Docker 读取这个配置，并将其传递给容器
+4. 容器的所有 DNS 查询被转发到一个不工作的 Tailscale DNS
+
+### 为什么宿主机正常？
+
+宿主机的 `/etc/resolv.conf` 通常有多个 `nameserver`：
+
+```
+nameserver 8.8.8.8
+nameserver 114.114.114.114
+```
+
+系统会依次尝试，即使第一个失败也能用后备 DNS。但 Docker 的 DNS 继承逻辑不同，可能只使用第一个或特定的 DNS。
+
+## 解决方案
+
+### 方法 1：显式指定容器 DNS（推荐）
+
+在 `docker-compose.yml` 中添加 DNS 配置：
+
+```yaml
+services:
+  3xui:
+    # ... 其他配置
+    dns:
+      - 8.8.8.8
+      - 114.114.114.114
+    # ... 其他配置
+```
+
+或使用 `docker run` 命令：
+
+```bash
+docker run -d \
+  --name 3xui_app \
+  --dns 8.8.8.8 \
+  --dns 114.114.114.114 \
+  # ... 其他参数
+  3x-ui-3xui:latest
+```
+
+### 方法 2：配置 Docker daemon 默认 DNS
+
+编辑 `/etc/docker/daemon.json`：
+
+```json
+{
+  "dns": ["8.8.8.8", "114.114.114.114"]
+}
+```
+
+重启 Docker 服务：
+
+```bash
+systemctl restart docker
+```
+
+**注意**：这会影响所有没有显式配置 DNS 的容器。
+
+### 方法 3：配置 Tailscale 分割 DNS
+
+如果需要保留 Tailscale 的 DNS 功能（解析内网域名），可以配置分割 DNS：
+
+```bash
+tailscale set --accept-dns=true
+```
+
+并在 Tailscale 管理后台配置 DNS 转发规则，让公网域名查询转发到公共 DNS。
+
+## 验证修复
+
+重启容器后验证：
+
+```bash
+# 检查容器 DNS 配置
+docker exec 3xui_app cat /etc/resolv.conf
+```
+
+输出应该显示：
+
+```
+nameserver 127.0.0.11
+options ndots:0
+
+# ExtServers: [8.8.8.8 114.114.114.114]
+# Overrides: [nameservers]
+```
+
+测试域名解析：
+
+```bash
+docker exec 3xui_app nslookup google.com
+```
+
+输出：
+
+```
+Server:    127.0.0.11
+Address:   127.0.0.11:53
+
+Non-authoritative answer:
+Name:   google.com
+Address: 142.250.xxx.xxx
+```
+
+✅ 解析成功！
+
+## 排查路径总结
+
+1. **现象**：代理连接全部失败，EOF 错误
+2. **服务检查**：容器运行正常，配置正确
+3. **网络检查**：宿主机能正常访问目标域名
+4. **容器测试**：容器内无法解析域名（关键发现）
+5. **DNS 追踪**：发现 Tailscale DNS 劫持但未启用
+6. **根因**：Docker 继承了不工作的 Tailscale DNS
+7. **修复**：显式指定容器 DNS 为公共 DNS
+
+## 预防措施
+
+### 1. 显式配置容器 DNS
+
+对于生产环境的容器，始终显式指定 DNS，不依赖继承：
+
+```yaml
+services:
+  app:
+    dns:
+      - 8.8.8.8
+      - 114.114.114.114
+```
+
+### 2. 监控容器 DNS 健康
+
+在容器启动脚本中添加 DNS 检查：
+
+```bash
+#!/bin/bash
+# 容器启动前检查 DNS
+if ! nslookup google.com > /dev/null 2>&1; then
+  echo "ERROR: DNS resolution failed"
+  exit 1
+fi
+```
+
+### 3. 文档化 Tailscale 配置
+
+在服务器运维文档中记录：
+
+- Tailscale 是否启用
+- MagicDNS 配置状态
+- Docker 容器 DNS 配置策略
+
+### 4. 容器健康检查
+
+在 docker-compose 中添加健康检查：
+
+```yaml
+services:
+  app:
+    healthcheck:
+      test: ['CMD', 'nslookup', 'google.com']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+```
+
+## 相关问题
+
+### Q1：为什么今天突然出现这个问题？
+
+可能的原因：
+
+- Tailscale 服务最近重启或更新
+- Docker 容器重建时继承了新的 DNS 配置
+- Tailscale 的 MagicDNS 配置发生变化
+
+### Q2：是否应该禁用 Tailscale？
+
+不需要。Tailscale 是有用的内网互联工具，只需：
+
+- 显式配置容器 DNS
+- 或配置 Tailscale 分割 DNS
+- 或确保 MagicDNS 正确启用并工作
+
+### Q3：还有哪些服务会受影响？
+
+所有依赖外部域名解析的容器化服务：
+
+- 代理服务（如本文的 3x-ui）
+- API 客户端（调用外部 API）
+- 邮件服务器（发送邮件）
+- 监控告警（webhook 通知）
+
+### Q4：127.0.0.11 是什么？
+
+这是 Docker 内置的 DNS resolver，运行在每个 Docker 网络中。它负责：
+
+- 容器名解析（容器间通信）
+- 外部 DNS 查询转发
+- DNS 缓存
+
+## 经验教训
+
+1. **不要假设容器继承正确的 DNS**  
+   生产环境始终显式配置
+
+2. **Tailscale 的隐性影响**  
+   即使功能未启用，配置仍可能影响系统
+
+3. **分层诊断**  
+   从现象 → 服务 → 网络 → DNS 逐层深入
+
+4. **容器内测试是关键**  
+   很多问题只在容器内部才能重现
+
+## 总结
+
+Docker 容器 DNS 问题的排查要点：
+
+- ✅ 容器内测试 DNS 解析（不只在宿主机测）
+- ✅ 检查 `/etc/resolv.conf` 的上游 DNS
+- ✅ 识别 Tailscale/VPN 的 DNS 劫持
+- ✅ 显式配置容器 DNS，不依赖继承
+- ✅ 添加健康检查，及时发现 DNS 故障
+
+通过本次排查，我们认识到：**容器化环境的网络配置需要显式管理，不能依赖隐式继承**。一个看似无害的系统工具（Tailscale），也可能通过 DNS 配置影响容器服务。
+
+---
+
+## 相关资源
+
+- [Docker 官方文档：容器网络配置](https://docs.docker.com/config/containers/container-networking/)
+- [Tailscale MagicDNS 文档](https://tailscale.com/kb/1081/magicdns/)
+- [ext4 数据恢复实战](/blog/20260813-ext4-docker-volume-data-recovery)（另一个 Docker 运维案例）
