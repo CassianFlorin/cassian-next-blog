@@ -274,7 +274,14 @@
     "飞牛": "飞牛",
     "Debian": "Debian",
     "debian": "Debian",
-    "驱动": "驱动"
+    "驱动": "驱动",
+    "Tailscale": "Tailscale",
+    "tailscale": "Tailscale",
+    "DNS": "DNS",
+    "dns": "DNS",
+    "网络故障": "网络故障",
+    "3x-ui": "3x-ui",
+    "故障排查": "故障排查"
   },
   "seo": {
     "siteTitle": "Cassian Florin｜AI 工程工具构建者",

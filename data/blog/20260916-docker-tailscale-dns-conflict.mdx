@@ -1,0 +1,249 @@
+---
+title: Docker 容器 DNS 被 Tailscale 劫持的排查过程
+date: '2026-09-16 10:45:00'
+tags:
+  - Docker
+  - Tailscale
+  - DNS
+  - 网络故障
+  - 3x-ui
+  - 运维
+  - 故障排查
+draft: false
+summary: 3x-ui 代理突然全部返回 EOF。容器内 DNS 被指向 Tailscale 的 100.100.100.100，而 MagicDNS 并未启用，公网域名全部 SERVFAIL。
+tldr: >-
+  Docker 容器默认继承宿主机 DNS。宿主机跑 Tailscale 时，即使 MagicDNS 未启用，容器 DNS 也会被指到 100.100.100.100，公网域名解析失败。在 compose 里显式写 dns 即可绕开，依赖外部域名解析的容器都会中招。
+---
+
+<div className="not-prose">
+  <div className="mb-8 rounded-lg bg-gradient-to-r from-slate-700 to-blue-900 p-8 text-white shadow-lg">
+    <h1 className="mb-4 text-4xl font-bold">🔍 Docker DNS 失败排查</h1>
+    <div className="text-xl opacity-90">
+      Tailscale 劫持了容器 DNS，而 MagicDNS 并没有真的启用
+    </div>
+  </div>
+</div>
+
+某天早上，所有走 3x-ui 的代理连接全部断掉，客户端日志长这样。
+
+```log
+[TCP] dial PROXY (match Match/) 127.0.0.1:56096 --> claude.ai:443
+  error: blog.cassianflorin.com:443 connect error: EOF
+
+[TCP] dial PROXY (match Match/) 127.0.0.1:55911 --> chat.openai.com:443
+  error: blog.cassianflorin.com:443 connect error: EOF
+```
+
+不管访问哪个目标，错误都停在同一个地方，连不上 `blog.cassianflorin.com:443`，返回 EOF。下文命令里的域名统一写成 `example.com`，指的就是它。
+
+## 服务本身没毛病
+
+先看容器还在不在。
+
+```bash
+docker ps -a | grep xui
+# 输出：3xui_app   Up 7 hours   127.0.0.1:2053->2053/tcp
+```
+
+跑了 7 小时，端口映射正常。再看日志。
+
+```bash
+docker logs --tail 20 3xui_app
+# 输出显示 x-ui 3.4.2 和 Xray 26.6.27 正常启动
+```
+
+也没异常。3x-ui 那边用了 `externalProxy`，把流量伪装成访问某个公开网站的 HTTPS 流量，配置翻了一遍没问题，可连上去就是 EOF。
+
+那就在宿主机上直接打那个域名试试。
+
+```bash
+curl -I https://example.com
+# 输出：HTTP/1.1 301 Moved Permanently
+
+openssl s_client -connect example.com:443 -servername example.com
+# 输出：Verification: OK
+```
+
+宿主机访问完全正常，证书也有效。到这里服务、配置、网络三层都排掉了，剩下的差别只有一个，之前所有测试都在宿主机上做的。
+
+## 换到容器里面测
+
+同样的域名，在容器里解析一下。
+
+```bash
+docker exec 3xui_app nslookup example.com
+```
+
+```
+Server:    127.0.0.11
+Address:   127.0.0.11:53
+
+** server can't find example.com: SERVFAIL
+```
+
+容器里解析不了。宿主机能通、容器不能通，问题锁定在容器的 DNS 上。
+
+```bash
+docker exec 3xui_app cat /etc/resolv.conf
+```
+
+```
+nameserver 127.0.0.11
+search tailxxxxx.ts.net
+options ndots:0
+
+# Based on host file: '/etc/resolv.conf' (internal resolver)
+# ExtServers: [host(100.100.100.100) host(fd7a:xxxx:xxxx::xx)]
+# Overrides: []
+```
+
+三行信息凑在一起就说明问题了。容器用的是 Docker 内置 resolver `127.0.0.11`，它往外转发的目标是 `100.100.100.100`，搜索域是一个 `.ts.net`。这三样都指向 Tailscale。
+
+## Tailscale 在跑，MagicDNS 却是关的
+
+```bash
+systemctl status tailscaled
+# 输出：active (running)
+
+tailscale status --json | grep -i MagicDNS
+```
+
+```json
+{
+  "MagicDNSSuffix": "example.ts.net",
+  "MagicDNSEnabled": false
+}
+```
+
+Tailscale 确实在跑，`100.100.100.100` 这个地址也确实配上了，但 `MagicDNSEnabled` 是 `false`。容器把所有 DNS 查询发给了一个没在工作的服务器，公网域名自然全部 SERVFAIL。
+
+## 为什么容器中招、宿主机没事
+
+Docker 容器的 DNS 是这么串起来的。容器内部只认 `127.0.0.11` 这个内置 resolver，Docker daemon 启动时读宿主机的 `/etc/resolv.conf`，把里面的 `nameserver` 取出来当作转发目标。查询路径是容器 → `127.0.0.11` → 宿主机那份 DNS → 公网。
+
+Tailscale 装上以后会往 `/etc/resolv.conf` 里塞自己的 DNS 地址，而且这个动作跟 MagicDNS 开没开没关系，功能关着地址照样在。Docker 读到它，原样传给容器，于是整条链的出口就变成了那台不工作的 DNS。
+
+宿主机躲过一劫是因为它的 `/etc/resolv.conf` 里通常不止一个 `nameserver`。
+
+```
+nameserver 8.8.8.8
+nameserver 114.114.114.114
+```
+
+系统会挨个试，第一个不通还有后备。Docker 的继承逻辑跟这个不一样，具体取哪一个我没有深究，但从结果看它没有沿用这套挨个重试的行为。
+
+## 三个修法
+
+**显式给容器指定 DNS**，改 `docker-compose.yml`，这是我最后用的办法。
+
+```yaml
+services:
+  3xui:
+    # ... 其他配置
+    dns:
+      - 8.8.8.8
+      - 114.114.114.114
+    # ... 其他配置
+```
+
+`docker run` 的写法。
+
+```bash
+docker run -d \
+  --name 3xui_app \
+  --dns 8.8.8.8 \
+  --dns 114.114.114.114 \
+  # ... 其他参数
+  3x-ui-3xui:latest
+```
+
+**改 Docker daemon 的默认 DNS**，编辑 `/etc/docker/daemon.json`。
+
+```json
+{
+  "dns": ["8.8.8.8", "114.114.114.114"]
+}
+```
+
+```bash
+systemctl restart docker
+```
+
+这条会影响这台机器上所有没有显式配 DNS 的容器，动之前想清楚。
+
+**让 Tailscale 的 DNS 正常工作**，如果你还要靠它解析内网域名。
+
+```bash
+tailscale set --accept-dns=true
+```
+
+然后在 Tailscale 管理后台配好转发规则，把公网域名的查询交给公共 DNS。
+
+## 验证
+
+重启容器，先看配置有没有换过来。
+
+```bash
+docker exec 3xui_app cat /etc/resolv.conf
+```
+
+```
+nameserver 127.0.0.11
+options ndots:0
+
+# ExtServers: [8.8.8.8 114.114.114.114]
+# Overrides: [nameservers]
+```
+
+`ExtServers` 换成了公共 DNS，`Overrides` 里多了 `nameservers`，说明显式配置生效了。再解析一次。
+
+```bash
+docker exec 3xui_app nslookup google.com
+```
+
+```
+Server:    127.0.0.11
+Address:   127.0.0.11:53
+
+Non-authoritative answer:
+Name:   google.com
+Address: 142.250.xxx.xxx
+```
+
+通了，代理也跟着恢复。
+
+## 几点补充
+
+`127.0.0.11` 是 Docker 在每个自定义网络里跑的内置 DNS。容器之间靠容器名互相找就是它在做，外部域名的查询也从它这里转发出去，顺带做缓存。所以容器里看到的 `nameserver` 永远是它，实际的上游要看 `ExtServers` 那一行。
+
+这个坑不只影响代理。任何要解析外部域名的容器都会中招，调外部 API 的客户端、发信的邮件服务、往 webhook 推告警的监控，症状都是突然连不上而服务本身看着一切正常。
+
+至于为什么偏偏那天出问题，我没查实。Tailscale 重启过、容器重建时重新继承了配置、后台的 MagicDNS 设置被动过，都有可能，日志不足以分辨。
+
+Tailscale 本身不用卸。它做内网互联挺好用，把容器 DNS 显式配掉就行。
+
+## 留下的习惯
+
+生产环境的容器别指望继承到正确的 DNS，`dns` 字段写死，一行的事。
+
+想早点发现同类故障，可以让健康检查顺手把解析测了。
+
+```yaml
+services:
+  app:
+    healthcheck:
+      test: ['CMD', 'nslookup', 'google.com']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+```
+
+这次花时间最多的地方，是前面那一个多小时全在宿主机上测。服务在跑、端口通、证书有效、域名能访问，每一项都正常，唯独没人想到进容器里再测一遍。
+
+---
+
+## 相关资源
+
+- [Docker 官方文档，容器网络配置](https://docs.docker.com/config/containers/container-networking/)
+- [Tailscale MagicDNS 文档](https://tailscale.com/kb/1081/magicdns/)
+- [ext4 数据恢复实战](/blog/20260813-ext4-docker-volume-data-recovery)（另一个 Docker 运维案例）
