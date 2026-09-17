@@ -27,7 +27,7 @@ export default function SectionHeading({
     <header className="grid gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
       <div className="space-y-6">
         <p
-          className={`type-meta ${inverse ? 'text-gray-400' : 'text-gray-500 dark:text-gray-400'}`}
+          className={`type-meta ${inverse ? 'text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}
         >
           CF / {index}
         </p>
@@ -44,7 +44,7 @@ export default function SectionHeading({
         </p>
         {description && (
           <p
-            className={`max-w-xl text-base leading-7 ${inverse ? 'text-gray-400' : 'text-gray-600 dark:text-gray-400'}`}
+            className={`max-w-xl text-base leading-7 ${inverse ? 'text-gray-500' : 'text-gray-600 dark:text-gray-400'}`}
           >
             {description}
           </p>

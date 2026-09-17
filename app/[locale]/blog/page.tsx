@@ -88,7 +88,7 @@ export default async function BlogPage(props: {
                   className="group inline-flex items-baseline gap-2 text-gray-700 transition-colors hover:text-gray-950 dark:text-gray-300 dark:hover:text-gray-50"
                 >
                   {tk(`nodes.${node.key}.label`)}
-                  <span className="font-mono text-xs text-gray-400 tabular-nums">
+                  <span className="font-mono text-xs text-gray-500 tabular-nums">
                     {String(node.articles.length).padStart(2, '0')}
                   </span>
                 </Link>

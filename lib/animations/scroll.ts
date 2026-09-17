@@ -44,6 +44,11 @@ export function smoothScrollTo(
 ) {
   const targetPosition = typeof target === 'number' ? target : target.offsetTop;
 
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    window.scrollTo({ top: targetPosition });
+    return;
+  }
+
   animate(document.documentElement, {
     scrollTop: targetPosition,
     duration,

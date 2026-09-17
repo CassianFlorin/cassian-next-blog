@@ -48,6 +48,7 @@ export async function generateMetadata(props: {
     }),
     locale,
     path: knowledgeNodeHref(node),
+    image: `/og/knowledge/${node}.png`,
   });
 }
 
@@ -202,7 +203,7 @@ export default async function KnowledgeNodePage(props: { params: Params }) {
                               {tagline}
                             </span>
                           </span>
-                          <span className="type-meta flex items-center gap-3 text-gray-400 transition-colors group-hover:text-gray-950 dark:text-gray-500 dark:group-hover:text-gray-50">
+                          <span className="type-meta flex items-center gap-3 text-gray-500 transition-colors group-hover:text-gray-950 dark:text-gray-400 dark:group-hover:text-gray-50">
                             {project.techStack.slice(0, 3).join(' · ')}
                             <span aria-hidden="true">
                               {external ? '↗' : '→'}
@@ -255,7 +256,7 @@ export default async function KnowledgeNodePage(props: { params: Params }) {
                         className="flex items-baseline justify-between gap-4 py-2 text-gray-700 transition-colors hover:text-gray-950 dark:text-gray-300 dark:hover:text-gray-50"
                       >
                         <span>{topic.label}</span>
-                        <span className="font-mono text-xs text-gray-400 tabular-nums">
+                        <span className="font-mono text-xs text-gray-500 tabular-nums">
                           {String(topic.count).padStart(2, '0')}
                         </span>
                       </Link>
@@ -280,7 +281,7 @@ export default async function KnowledgeNodePage(props: { params: Params }) {
                         <span className="group-hover:text-primary-700 dark:group-hover:text-primary-300 text-gray-950 transition-colors dark:text-gray-50">
                           {label(relation.key)}
                         </span>
-                        <span className="type-meta shrink-0 text-gray-400">
+                        <span className="type-meta shrink-0 text-gray-500">
                           {t('shared', { count: relation.weight })}
                         </span>
                       </Link>

@@ -49,7 +49,7 @@ export default async function AboutSection() {
             ))}
           </div>
 
-          <ul className="type-meta grid grid-cols-2 gap-y-3 border-t border-white/15 pt-6 text-gray-400">
+          <ul className="type-meta grid grid-cols-2 gap-y-3 border-t border-white/15 pt-6 text-gray-500">
             {focus.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -71,7 +71,7 @@ export default async function AboutSection() {
             </ul>
             <Link
               href="/about"
-              className="type-meta group inline-flex items-center gap-2 text-gray-400 transition-colors hover:text-white"
+              className="type-meta group inline-flex items-center gap-2 text-gray-500 transition-colors hover:text-white"
             >
               {t('more')}
               <span

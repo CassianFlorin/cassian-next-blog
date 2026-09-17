@@ -14,7 +14,8 @@
     "menu": "Menu",
     "close": "Close",
     "primaryNav": "Primary",
-    "knowledgeNav": "Knowledge"
+    "knowledgeNav": "Knowledge",
+    "skipToContent": "Skip to content"
   },
   "home": {
     "title": "Cassian Florin",
@@ -445,28 +446,28 @@
     "故障排查": "Troubleshooting"
   },
   "seo": {
-    "siteTitle": "Cassian Florin | AI Engineering Tool Builder",
-    "siteDescription": "Cassian Florin's technical blog on AI agent engineering, developer workflows, personal knowledge systems, and backend development.",
-    "blogTitle": "All Posts",
-    "blogDescription": "Every post and field note on AI agents, developer tooling, workflow automation, and backend engineering.",
+    "siteTitle": "Cassian Florin — AI Engineering · Tool Builder",
+    "siteDescription": "Cassian Florin builds AI engineering tools, developer workflows, and knowledge systems.",
+    "blogTitle": "Writing",
+    "blogDescription": "Field notes on AI agents, developer tools, self-hosted infrastructure, and knowledge systems — every article, newest first.",
     "blogPageTitle": "All Posts · Page {page}",
-    "tagsTitle": "Tags",
-    "tagsDescription": "Browse every topic on the site and jump straight to AI agents, developer tools, or Java backend content.",
-    "tagTitle": "Tag: {tag}",
+    "tagsTitle": "Topics",
+    "tagsDescription": "Every tag on the site, grouped by knowledge territory: AI agents, developer tools, infrastructure, knowledge systems, and more.",
+    "tagTitle": "{tag} · Topic",
     "tagDescription": "All {count} posts and notes tagged “{tag}”.",
     "tagPageTitle": "Tag: {tag} · Page {page}",
     "aboutTitle": "About",
-    "aboutDescription": "About Cassian Florin: the AI engineering tools I build, what I focus on, and how to get in touch.",
-    "projectsTitle": "Projects",
-    "projectsDescription": "Projects I build and contribute to: AI agent tooling, developer productivity tools, and open source work.",
+    "aboutDescription": "Cassian Florin builds tools, workflows, and systems around software, AI, and knowledge. Background, current focus, and how to get in touch.",
+    "projectsTitle": "Work",
+    "projectsDescription": "Things Cassian Florin builds — Litho, skill-hub, database-cli — each with a case study on why it exists and how it works.",
     "knowledgeTitle": "Knowledge Map",
-    "knowledgeDescription": "Explore how posts, tags, and knowledge notes connect across the site as a graph.",
+    "knowledgeDescription": "An interactive map of how Cassian Florin's writing connects: explore the whole graph or focus on one territory.",
     "breadcrumbHome": "Home",
     "breadcrumbBlog": "Blog",
     "breadcrumbTags": "Tags",
     "knowledgeNodeTitle": "{node} · Knowledge",
     "knowledgeNodeDescription": "{node}: {description} {articles} articles and {topics} topics on Cassian Florin's knowledge map.",
-    "projectCaseTitle": "{project} — Case study",
+    "projectCaseTitle": "{project} · Case study",
     "projectCaseDescription": "{project}: {summary} Why it exists, how the system works, and the decisions behind it."
   }
 }

@@ -248,7 +248,7 @@ export default async function PostLayout({
                         <span className="group-hover:text-primary-700 dark:group-hover:text-primary-300 text-gray-950 transition-colors dark:text-gray-50">
                           {tk(`nodes.${territory.key}.label`)}
                         </span>
-                        <span className="font-mono text-xs text-gray-400 tabular-nums">
+                        <span className="font-mono text-xs text-gray-500 tabular-nums">
                           {pad(territory.articles)}
                         </span>
                       </Link>
@@ -273,7 +273,7 @@ export default async function PostLayout({
                           </span>
                           <span
                             aria-hidden="true"
-                            className="text-gray-400 transition-transform duration-200 group-hover:translate-x-0.5"
+                            className="text-gray-500 transition-transform duration-200 group-hover:translate-x-0.5"
                           >
                             →
                           </span>
@@ -281,7 +281,7 @@ export default async function PostLayout({
                         <span className="mt-1 block text-sm leading-6 text-gray-600 dark:text-gray-400">
                           {project.tagline}
                         </span>
-                        <span className="type-meta mt-2 block text-gray-400 dark:text-gray-500">
+                        <span className="type-meta mt-2 block text-gray-500 dark:text-gray-400">
                           {project.reason === 'explicit'
                             ? t('article.citedBy')
                             : t('article.sameTerritory')}

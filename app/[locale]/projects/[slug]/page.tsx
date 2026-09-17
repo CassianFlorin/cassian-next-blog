@@ -71,6 +71,7 @@ export async function generateMetadata(props: {
     }),
     locale,
     path: `/projects/${slug}`,
+    image: `/og/projects/${slug}.png`,
   });
 }
 
@@ -90,7 +91,7 @@ function Chapter({
   return (
     <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-8">
       <header className="flex items-baseline gap-4 border-b border-gray-900/20 pb-4 dark:border-white/20">
-        <span className="type-meta text-gray-400 dark:text-gray-500">
+        <span className="type-meta text-gray-500 dark:text-gray-400">
           {pad(index + 1)}
         </span>
         <h2
@@ -272,7 +273,7 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
                         className="group inline-flex items-center gap-1.5 text-gray-950 underline-offset-4 hover:underline dark:text-gray-50"
                       >
                         {link.label[lang]}
-                        <span aria-hidden="true" className="text-gray-400">
+                        <span aria-hidden="true" className="text-gray-500">
                           ↗
                         </span>
                       </Link>
@@ -330,7 +331,7 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
                     key={i}
                     className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 py-5 first:pt-0"
                   >
-                    <span className="type-meta pt-1.5 text-gray-400 dark:text-gray-500">
+                    <span className="type-meta pt-1.5 text-gray-500 dark:text-gray-400">
                       {pad(i + 1)}
                     </span>
                     <p className="text-lg leading-8 text-gray-800 dark:text-gray-200">
@@ -367,7 +368,7 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
                       )}
                       <div className="grid gap-3 border border-gray-900/20 bg-gray-50 p-6 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-8 dark:border-white/20 dark:bg-white/[0.02]">
                         <p className="space-y-1">
-                          <span className="type-meta block text-gray-400 dark:text-gray-500">
+                          <span className="type-meta block text-gray-500 dark:text-gray-400">
                             L{i + 1}
                           </span>
                           <span className="block font-semibold tracking-tight text-gray-950 dark:text-gray-50">
@@ -416,7 +417,7 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
                     key={decision.title}
                     className="grid gap-3 sm:grid-cols-[3.5rem_minmax(0,1fr)] sm:gap-6"
                   >
-                    <span className="type-editorial text-3xl text-gray-400 italic dark:text-gray-500">
+                    <span className="type-editorial text-3xl text-gray-500 italic dark:text-gray-400">
                       D{i + 1}
                     </span>
                     <div className="space-y-3">
@@ -487,7 +488,7 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
                             <span className="group-hover:text-primary-700 dark:group-hover:text-primary-300 text-gray-950 transition-colors dark:text-gray-50">
                               {tk(`nodes.${node.key}.label`)}
                             </span>
-                            <span className="font-mono text-xs text-gray-400 tabular-nums">
+                            <span className="font-mono text-xs text-gray-500 tabular-nums">
                               {pad(node.articles.length)}
                             </span>
                           </Link>
@@ -528,7 +529,7 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
                 </span>
                 <span
                   aria-hidden="true"
-                  className="ease-atelier text-3xl text-gray-400 transition-transform duration-200 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-gray-950 md:text-5xl dark:group-hover:text-gray-50"
+                  className="ease-atelier text-3xl text-gray-500 transition-transform duration-200 group-hover:-translate-y-1 group-hover:translate-x-1 group-hover:text-gray-950 md:text-5xl dark:group-hover:text-gray-50"
                 >
                   ↗
                 </span>

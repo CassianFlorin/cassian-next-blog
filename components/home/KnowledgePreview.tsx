@@ -134,7 +134,7 @@ export default function KnowledgePreview({ overview }: Props) {
                         cx={tag.x}
                         cy={tag.y}
                         r={3.5}
-                        className="fill-gray-400 dark:fill-gray-500"
+                        className="fill-gray-500 dark:fill-gray-400"
                       />
                       <text
                         x={tag.labelX}

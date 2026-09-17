@@ -89,7 +89,7 @@ export default async function WritingSection({
                     </span>
                     <span
                       aria-hidden="true"
-                      className="text-gray-400 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                      className="text-gray-500 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
                     >
                       →
                     </span>

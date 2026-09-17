@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteMetadata.siteUrl),
   title: {
     default: siteMetadata.title,
-    template: `%s | ${siteMetadata.title}`,
+    template: `%s — ${siteMetadata.author}`,
   },
   description: siteMetadata.description,
   authors: [{ name: siteMetadata.author }],
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     title: siteMetadata.title,
     description: siteMetadata.description,
     url: './',
-    siteName: siteMetadata.title,
+    siteName: siteMetadata.author,
     images: [siteMetadata.socialBanner],
     // Overridden per locale in app/[locale]/layout.tsx.
     locale: ogLocaleByLocale[defaultLocale],

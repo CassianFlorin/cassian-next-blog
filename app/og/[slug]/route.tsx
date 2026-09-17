@@ -43,7 +43,8 @@ export async function GET(
 
   return renderOgCard({
     title: post.title,
-    tags: post.tags,
-    date: new Date(post.date).toISOString().split('T')[0],
+    kicker: 'CF / 03 · WRITING',
+    meta: post.tags,
+    aside: new Date(post.date).toISOString().split('T')[0].replace(/-/g, '.'),
   });
 }

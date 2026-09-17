@@ -98,6 +98,9 @@ module.exports = () => {
       dirs: ['app', 'components', 'layouts', 'scripts'],
     },
     images: {
+      // AVIF first: the hero portrait is a 1 MB PNG source, and AVIF roughly
+      // halves the WebP payload for the same quality.
+      formats: ['image/avif', 'image/webp'],
       remotePatterns: [
         {
           protocol: 'https',

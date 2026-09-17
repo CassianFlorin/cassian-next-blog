@@ -111,7 +111,7 @@ export default async function ProjectsPage(props: {
                       <span className="type-meta block text-gray-500 dark:text-gray-400">
                         {t(`items.${project.id}.status`)}
                       </span>
-                      <span className="type-meta block text-gray-400 dark:text-gray-500">
+                      <span className="type-meta block text-gray-500 dark:text-gray-400">
                         {project.techStack.slice(0, 3).join(' · ')}
                       </span>
                     </span>
@@ -155,14 +155,14 @@ export default async function ProjectsPage(props: {
                         <span className="block leading-7 text-gray-600 dark:text-gray-400">
                           {t(`items.${project.id}.description`)}
                         </span>
-                        <span className="type-meta block text-gray-400 dark:text-gray-500">
+                        <span className="type-meta block text-gray-500 dark:text-gray-400">
                           {t(`items.${project.id}.status`)} ·{' '}
                           {project.techStack.slice(0, 3).join(' · ')}
                         </span>
                       </span>
                       <span
                         aria-hidden="true"
-                        className="text-gray-400 transition-colors group-hover:text-gray-950 dark:group-hover:text-gray-50"
+                        className="text-gray-500 transition-colors group-hover:text-gray-950 dark:group-hover:text-gray-50"
                       >
                         {href.startsWith('/') ? '→' : '↗'}
                       </span>

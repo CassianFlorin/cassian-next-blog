@@ -67,7 +67,7 @@ export default async function WorkSection() {
                 <p className="type-meta text-gray-700 dark:text-gray-300">
                   {t(`projects.items.${project.id}.tagline`)}
                 </p>
-                <p className="type-meta text-gray-400 transition-colors duration-200 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:text-gray-300">
+                <p className="type-meta text-gray-500 transition-colors duration-200 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300">
                   {project.techStack.slice(0, 3).join(' · ')}
                 </p>
                 <span

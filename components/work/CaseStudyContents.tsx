@@ -53,7 +53,7 @@ export default function CaseStudyContents({
                 className={`type-meta flex items-center gap-3 py-1.5 transition-colors duration-200 ${
                   active
                     ? 'text-gray-950 dark:text-gray-50'
-                    : 'text-gray-400 hover:text-gray-950 dark:text-gray-500 dark:hover:text-gray-50'
+                    : 'text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-gray-50'
                 }`}
               >
                 <span
@@ -61,7 +61,7 @@ export default function CaseStudyContents({
                   className={`ease-atelier h-px transition-[width] duration-300 ${
                     active
                       ? 'w-6 bg-gray-950 dark:bg-gray-50'
-                      : 'w-3 bg-gray-400 dark:bg-gray-600'
+                      : 'w-3 bg-gray-500 dark:bg-gray-600'
                   }`}
                 />
                 {String(index + 1).padStart(2, '0')} {chapter.label}

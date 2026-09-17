@@ -96,7 +96,7 @@ export default async function TagsPage() {
                   <Link
                     href={group.href}
                     aria-label={`${t('topics.openTerritory')}: ${group.title}`}
-                    className="type-meta text-gray-400 transition-colors hover:text-gray-950 dark:hover:text-gray-50"
+                    className="type-meta text-gray-500 transition-colors hover:text-gray-950 dark:hover:text-gray-50"
                   >
                     →
                   </Link>
@@ -110,7 +110,7 @@ export default async function TagsPage() {
                       className="flex items-baseline justify-between gap-4 py-2 text-gray-700 transition-colors hover:text-gray-950 dark:text-gray-300 dark:hover:text-gray-50"
                     >
                       <span>{label(topic)}</span>
-                      <span className="font-mono text-xs text-gray-400 tabular-nums">
+                      <span className="font-mono text-xs text-gray-500 tabular-nums">
                         {String(topic.count).padStart(2, '0')}
                       </span>
                     </Link>

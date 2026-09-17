@@ -312,6 +312,9 @@ export default function KnowledgeGraphExplorer({
     initialTerritory ?? null,
   );
   const [fontFamily, setFontFamily] = useState('ui-sans-serif, sans-serif');
+  // Reduced motion: the layout is computed up front and the camera jumps
+  // instead of gliding, so nothing on the map animates.
+  const [reducedMotion, setReducedMotion] = useState(false);
   const territoryLabel = useCallback(
     (key: KnowledgeCategoryKey) => t(`nodes.${key}.label`),
     [t],
@@ -333,6 +336,9 @@ export default function KnowledgeGraphExplorer({
     setMounted(true);
     // next/font hashes family names, so read the resolved stack for canvas.
     setFontFamily(getComputedStyle(document.body).fontFamily);
+    setReducedMotion(
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
   }, []);
 
   const displayGraphData = useMemo(() => {
@@ -531,7 +537,8 @@ export default function KnowledgeGraphExplorer({
   ]);
 
   const fitGraph = useCallback(
-    (duration = 700) => {
+    (requestedDuration = 700) => {
+      const duration = reducedMotion ? 0 : requestedDuration;
       const fg = graphRef.current;
       if (!fg) return;
       hasFitted.current = true;
@@ -552,7 +559,7 @@ export default function KnowledgeGraphExplorer({
       }
       fg.zoomToFit(duration, compact ? 42 : 124);
     },
-    [compact, focusedPost, graphLayoutData.nodes, visualCompact],
+    [compact, focusedPost, graphLayoutData.nodes, reducedMotion, visualCompact],
   );
 
   const handleEngineStop = useCallback(() => {
@@ -672,7 +679,7 @@ export default function KnowledgeGraphExplorer({
             }}
             linkDirectionalParticles={0}
             warmupTicks={visualCompact ? 160 : 300}
-            cooldownTicks={visualCompact ? 130 : 210}
+            cooldownTicks={reducedMotion ? 0 : visualCompact ? 130 : 210}
             d3AlphaDecay={0.06}
             d3VelocityDecay={0.62}
             minZoom={0.35}

@@ -20,7 +20,7 @@ export default function Footer() {
             ))}
           </p>
         </div>
-        <p className="type-meta text-gray-500 dark:text-gray-500">
+        <p className="type-meta text-gray-500 dark:text-gray-400">
           © {new Date().getFullYear()} {siteMetadata.author}
         </p>
       </div>

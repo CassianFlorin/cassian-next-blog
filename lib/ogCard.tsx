@@ -40,98 +40,133 @@ function titleSize(title: string) {
   return 66;
 }
 
-export interface OgCardInput {
-  title: string;
-  tags?: string[];
-  date?: string;
-  kicker?: string;
+/**
+ * V2 card palette: warm ink on near-black, one mineral-green accent. Matches
+ * the site's dark mode so a shared link looks like the page it opens.
+ */
+const INK = '#f0eee9';
+const MUTED = '#9d998f';
+const FAINT = 'rgba(240, 238, 233, 0.16)';
+const ACCENT = '#8fbfa6';
+const NIGHT = '#141312';
+
+const host = () =>
+  siteMetadata.siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+/** Top bar shared by every card: the CF mark, the name, and a chapter kicker. */
+function Masthead({ kicker }: { kicker: string }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingBottom: 28,
+        borderBottom: `1px solid ${FAINT}`,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div
+          style={{
+            color: INK,
+            fontSize: 34,
+            fontWeight: 700,
+            letterSpacing: -2,
+          }}
+        >
+          CF
+        </div>
+        <div
+          style={{
+            marginLeft: 22,
+            color: MUTED,
+            fontSize: 19,
+            letterSpacing: 5,
+          }}
+        >
+          CASSIAN FLORIN
+        </div>
+      </div>
+      <div style={{ color: ACCENT, fontSize: 19, letterSpacing: 4 }}>
+        {kicker}
+      </div>
+    </div>
+  );
 }
 
-export function renderOgCard({ title, tags = [], date, kicker }: OgCardInput) {
-  const host = siteMetadata.siteUrl
-    .replace(/^https?:\/\//, '')
-    .replace(/\/$/, '');
+function Frame({ children }: { children: React.ReactNode }) {
+  return (
+    // Satori supports a flexbox subset only — no grid, and every container
+    // with more than one child needs an explicit `display: flex`.
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '64px 80px 60px',
+        backgroundColor: NIGHT,
+        fontFamily: '"Noto Sans SC"',
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
+export interface OgCardInput {
+  title: string;
+  /** Chapter marker, e.g. `CF / 03 · WRITING`. */
+  kicker: string;
+  /** One editorial line under the title. */
+  subtitle?: string;
+  /** Bottom-left metadata, joined with middots (tags, tech stack, counts). */
+  meta?: string[];
+  /** Bottom-right line above the host, e.g. a date. */
+  aside?: string;
+}
+
+export function renderOgCard({
+  title,
+  kicker,
+  subtitle,
+  meta = [],
+  aside,
+}: OgCardInput) {
   return new ImageResponse(
     (
-      // Satori supports a flexbox subset only — no grid, and every container
-      // with more than one child needs an explicit `display: flex`.
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          padding: '72px 80px',
-          backgroundColor: '#0b100f',
-          backgroundImage:
-            'radial-gradient(900px 500px at 82% -10%, rgba(45,212,168,0.20), transparent 60%), radial-gradient(700px 460px at 8% 108%, rgba(45,212,168,0.10), transparent 62%)',
-          fontFamily: '"Noto Sans SC"',
-          position: 'relative',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: 10,
-            backgroundImage: 'linear-gradient(#34d3a4, #17795f)',
-          }}
-        />
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 14,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundImage: 'linear-gradient(140deg, #34d3a4, #17795f)',
-                color: '#05100c',
-                fontSize: 26,
-                fontWeight: 700,
-              }}
-            >
-              C
-            </div>
-            <div
-              style={{
-                marginLeft: 16,
-                color: '#eef4f1',
-                fontSize: 26,
-                fontWeight: 700,
-              }}
-            >
-              {siteMetadata.author}
-            </div>
-          </div>
-          <div style={{ color: '#4bd6ab', fontSize: 20, fontWeight: 700 }}>
-            {kicker || 'BLOG'}
-          </div>
-        </div>
+      <Frame>
+        <Masthead kicker={kicker} />
 
-        <div
-          style={{
-            display: 'flex',
-            color: '#f4f8f6',
-            fontSize: titleSize(title),
-            fontWeight: 700,
-            lineHeight: 1.26,
-            maxWidth: 980,
-          }}
-        >
-          {title}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div
+            style={{
+              display: 'flex',
+              color: INK,
+              fontSize: titleSize(title),
+              fontWeight: 700,
+              lineHeight: 1.2,
+              letterSpacing: -1,
+              maxWidth: 1020,
+            }}
+          >
+            {title}
+          </div>
+          {subtitle && (
+            <div
+              style={{
+                display: 'flex',
+                marginTop: 22,
+                color: MUTED,
+                fontSize: 28,
+                lineHeight: 1.4,
+                maxWidth: 960,
+              }}
+            >
+              {subtitle}
+            </div>
+          )}
         </div>
 
         <div
@@ -139,41 +174,88 @@ export function renderOgCard({ title, tags = [], date, kicker }: OgCardInput) {
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'space-between',
+            paddingTop: 26,
+            borderTop: `1px solid ${FAINT}`,
+            fontSize: 20,
+            letterSpacing: 2,
           }}
         >
-          <div style={{ display: 'flex' }}>
-            {tags.slice(0, 3).map((tag) => (
-              <div
-                key={tag}
-                style={{
-                  display: 'flex',
-                  marginRight: 12,
-                  padding: '9px 20px',
-                  borderRadius: 999,
-                  border: '1px solid rgba(75,214,171,0.34)',
-                  backgroundColor: 'rgba(52,211,164,0.09)',
-                  color: '#a8e9d3',
-                  fontSize: 21,
-                }}
-              >
-                {tag}
-              </div>
-            ))}
+          <div style={{ display: 'flex', color: MUTED, maxWidth: 720 }}>
+            {meta.slice(0, 4).join('  ·  ')}
           </div>
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'flex-end',
-              color: '#97a5a0',
-              fontSize: 21,
+              color: MUTED,
             }}
           >
-            {date && <div>{date}</div>}
-            <div>{host}</div>
+            {aside && <div style={{ color: INK }}>{aside}</div>}
+            <div>{host()}</div>
           </div>
         </div>
-      </div>
+      </Frame>
+    ),
+    { ...OG_SIZE, fonts: fonts() },
+  );
+}
+
+/** The site's own card: the name, the three signature lines, CF / year. */
+export function renderSiteCard() {
+  const lines = ['Building things.', 'Mapping ideas.', 'Leaving traces.'];
+
+  return new ImageResponse(
+    (
+      <Frame>
+        <Masthead kicker={`CF / ${new Date().getFullYear()}`} />
+
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div
+            style={{
+              display: 'flex',
+              color: INK,
+              fontSize: 112,
+              fontWeight: 700,
+              lineHeight: 1,
+              letterSpacing: -5,
+            }}
+          >
+            CASSIAN FLORIN
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              marginTop: 34,
+              color: MUTED,
+              fontSize: 38,
+              lineHeight: 1.3,
+            }}
+          >
+            {lines.map((line) => (
+              <div key={line}>{line}</div>
+            ))}
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            paddingTop: 26,
+            borderTop: `1px solid ${FAINT}`,
+            color: MUTED,
+            fontSize: 19,
+            letterSpacing: 2,
+          }}
+        >
+          <div style={{ display: 'flex', color: ACCENT, marginRight: 40 }}>
+            AI ENGINEERING · DEVELOPER TOOLS · KNOWLEDGE SYSTEMS
+          </div>
+          <div>{host()}</div>
+        </div>
+      </Frame>
     ),
     { ...OG_SIZE, fonts: fonts() },
   );

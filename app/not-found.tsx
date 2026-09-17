@@ -1,48 +1,37 @@
-'use client';
-
-import { useRef } from 'react';
 import Link from '@/components/Link';
-import { useAnime } from '@/lib/hooks/useAnime';
-import { fadeInUp, popIn } from '@/lib/animations/fadeIn';
 
+/**
+ * 404. Rendered outside the locale segment's providers for unknown top-level
+ * paths, so it avoids translations and keeps the copy bilingual and static.
+ */
 export default function NotFound() {
-  const numberRef = useRef<HTMLHeadingElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  useAnime({
-    targets: numberRef,
-    ...popIn(0),
-  });
-
-  useAnime({
-    targets: contentRef,
-    ...fadeInUp(260, 'medium'),
-  });
-
   return (
-    <div className="flex flex-col items-start justify-start md:mt-24 md:flex-row md:items-center md:justify-center md:space-x-6">
-      <div className="space-x-2 pt-6 pb-8 md:space-y-5">
-        <h1
-          ref={numberRef}
-          className="text-6xl leading-9 font-extrabold tracking-tight text-gray-900 md:border-r-2 md:px-6 md:text-8xl md:leading-14 dark:text-gray-100"
-          style={{ opacity: 0 }}
-        >
-          404
+    <div className="bleed">
+      <div className="container-atelier grid min-h-[60vh] content-center gap-10 py-16">
+        <p className="type-meta text-gray-500 dark:text-gray-400">CF / 404</p>
+        <h1 className="type-hero text-gray-950 dark:text-gray-50">
+          <span className="block">Not</span>
+          <span className="block">found.</span>
         </h1>
-      </div>
-      <div ref={contentRef} className="max-w-md" style={{ opacity: 0 }}>
-        <p className="mb-4 text-xl leading-normal font-bold md:text-2xl">
-          Sorry we couldn't find this page.
-        </p>
-        <p className="mb-8">
-          But dont worry, you can find plenty of other things on our homepage.
-        </p>
-        <Link
-          href="/"
-          className="focus:shadow-outline-blue inline rounded-lg border border-transparent bg-blue-600 px-4 py-2 text-sm leading-5 font-medium text-white shadow-xs transition-all duration-200 hover:scale-105 hover:bg-blue-700 focus:outline-hidden dark:hover:bg-blue-500"
-        >
-          Back to homepage
-        </Link>
+        <div className="max-w-xl space-y-3">
+          <p className="type-editorial text-2xl text-gray-700 italic sm:text-3xl dark:text-gray-300">
+            This trace leads nowhere.
+          </p>
+          <p lang="zh-CN" className="text-gray-600 dark:text-gray-400">
+            这条路径不存在，可能已经移动或被删除。
+          </p>
+        </div>
+        <nav aria-label="Recovery" className="flex flex-wrap gap-3">
+          <Link href="/" className="btn btn-primary">
+            Home · 首页
+          </Link>
+          <Link href="/blog" className="btn btn-ghost">
+            Writing · 写作
+          </Link>
+          <Link href="/knowledge" className="btn btn-ghost">
+            Knowledge · 知识
+          </Link>
+        </nav>
       </div>
     </div>
   );

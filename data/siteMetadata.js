@@ -1,10 +1,10 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  title: 'Cassian Florin | AI Engineering Tool Builder',
+  title: 'Cassian Florin — AI Engineering · Tool Builder',
   author: 'Cassian Florin',
   headerTitle: 'Cassian Florin',
   description:
-    'Cassian Florin builds AI engineering tools, developer workflows, and personal knowledge systems.',
+    'Cassian Florin builds AI engineering tools, developer workflows, and knowledge systems.',
   language: 'zh-cn',
   theme: 'system', // system, dark or light
   // Must match the primary domain configured in Vercel — every canonical,
@@ -13,7 +13,8 @@ const siteMetadata = {
   siteUrl: 'https://www.cassianflorin.com',
   siteRepo: 'https://github.com/CassianFlorin/cassian-next-blog',
   siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
-  socialBanner: `${process.env.BASE_PATH || ''}/static/images/social-card.png`,
+  // Rendered by app/og/site.png/route.tsx.
+  socialBanner: `${process.env.BASE_PATH || ''}/og/site.png`,
   mastodon: '',
   email: 'flowercard591@gmail.com',
   github: 'https://github.com/CassianFlorin',

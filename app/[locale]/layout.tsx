@@ -38,7 +38,7 @@ export async function generateMetadata(props: {
       // `absolute` opts this layout's own title out of the root template,
       // which would otherwise append the site name a second time.
       absolute: title,
-      template: `%s | ${title}`,
+      template: `%s — ${siteMetadata.author}`,
     },
     description,
     alternates: {
@@ -51,7 +51,7 @@ export async function generateMetadata(props: {
       title,
       description,
       url: localeUrl(resolvedLocale, '/'),
-      siteName: siteMetadata.title,
+      siteName: siteMetadata.author,
       images,
       locale: ogLocaleByLocale[resolvedLocale],
       alternateLocale: locales
@@ -98,6 +98,7 @@ export default async function LocaleLayout({
     notFound();
   }
   const messages = (await import(`../../messages/${locale}.json`)).default;
+  const t = await getTranslations({ locale, namespace: 'common' });
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
@@ -111,13 +112,26 @@ export default async function LocaleLayout({
         <Analytics
           analyticsConfig={siteMetadata.analytics as AnalyticsConfig}
         />
+        {/* First focusable element: lets keyboard and screen-reader users jump
+            past the navigation. Visible only while focused. */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-gray-950 focus:px-4 focus:py-3 focus:text-sm focus:text-gray-50 dark:focus:bg-gray-50 dark:focus:text-gray-950"
+        >
+          {t('skipToContent')}
+        </a>
         <SectionContainer>
           <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
             <RouteTransitionOrchestrator>
               <div data-route-section="header" className="relative z-50">
                 <Header />
               </div>
-              <main className="mb-auto" data-route-section="main">
+              <main
+                id="main"
+                tabIndex={-1}
+                className="mb-auto outline-none"
+                data-route-section="main"
+              >
                 {children}
               </main>
               <div data-route-section="footer">
