@@ -37,7 +37,7 @@ export default function ArticleKnowledgeGraph({
       />
       <Link
         href={`/knowledge?post=${encodeURIComponent(currentSlug)}`}
-        className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500"
+        className="btn btn-ghost mt-3 w-full"
       >
         {t('openFullGraph')}
       </Link>

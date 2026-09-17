@@ -90,9 +90,9 @@ try {
   const categoryLabels = new Set(
     KNOWLEDGE_CATEGORIES.map((item) => item.label),
   );
-  assert.equal(categoryLabels.has('Languages'), true);
-  assert.equal(categoryLabels.has('AI / Agent'), true);
-  assert.equal(categoryLabels.has('Projects'), true);
+  assert.equal(categoryLabels.has('Languages & Platforms'), true);
+  assert.equal(categoryLabels.has('AI / Agents'), true);
+  assert.equal(categoryLabels.has('Products'), true);
 
   const languages = model.nodes.find(
     (node) => node.id === 'category:languages',

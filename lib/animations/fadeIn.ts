@@ -1,16 +1,18 @@
 import { AnimationParams } from 'animejs';
 
+// One motion language across the site: ease-out only, never bounce,
+// elastic or overshoot. Mirrors the --motion-* tokens in css/tailwind.css.
 export const ANIMATION_EASING = {
   gentle: 'out(2)',
   expressive: 'out(3)',
   snappy: 'out(4)',
-  pop: 'outElastic(1, 0.6)',
+  pop: 'out(3)',
 } as const;
 
 export const ANIMATION_DURATION = {
-  fast: 380,
-  normal: 600,
-  slow: 820,
+  fast: 220,
+  normal: 520,
+  slow: 1000,
 } as const;
 
 export type AnimationIntensity = 'light' | 'medium' | 'strong';
@@ -66,7 +68,7 @@ export const fadeInLeft = (
 
 export const popIn = (delay: number = 0): Partial<AnimationParams> => ({
   opacity: [0, 1],
-  scale: [0.82, 1],
+  scale: [0.96, 1],
   ease: ANIMATION_EASING.pop,
   duration: ANIMATION_DURATION.slow,
   delay,

@@ -20,6 +20,10 @@ interface LayoutProps {
   children: ReactNode;
   next?: { path: string; title: string };
   prev?: { path: string; title: string };
+  /** Accepted for layout interchangeability; this layout does not show them. */
+  knowledgeGraph?: unknown;
+  relations?: unknown;
+  authorDetails?: unknown;
 }
 
 export default function PostMinimal({

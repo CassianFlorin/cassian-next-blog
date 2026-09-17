@@ -1,7 +1,6 @@
 import 'css/prism.css';
 import 'katex/dist/katex.css';
 
-import PageTitle from '@/components/PageTitle';
 import { components } from '@/components/MDXComponents';
 import { MDXLayoutRenderer } from 'pliny/mdx-components';
 import {
@@ -19,6 +18,12 @@ import siteMetadata from '@/data/siteMetadata';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { buildLocalKnowledgeGraph } from '@/lib/knowledgeGraph';
+import { getKnowledgeIndex } from '@/lib/knowledgeData';
+import { getNodesForTags } from '@/lib/knowledgeNodes';
+import { relatedArticles, relatedProjects } from '@/lib/writingRelations';
+import { caseStudies, getCaseStudy, projectHref } from '@/data/caseStudies';
+import projectsData from '@/data/projectsData';
+import type { ArticleRelations } from '@/layouts/PostLayout';
 import JsonLd from '@/components/JsonLd';
 import {
   buildBlogPostingJsonLd,
@@ -90,7 +95,7 @@ export async function generateMetadata(props: {
     openGraph: {
       title: post.title,
       description: post.summary,
-      siteName: siteMetadata.title,
+      siteName: siteMetadata.author,
       locale: ogLocaleByLocale[locale],
       type: 'article',
       publishedTime: publishedAt,
@@ -139,6 +144,47 @@ export default async function Page(props: {
   });
   const mainContent = coreContent(post);
   const localKnowledgeGraph = buildLocalKnowledgeGraph(allBlogs, slug);
+
+  // Article → territories, projects and nearby writing, from the same model
+  // as the knowledge map so both sides of every link agree.
+  const tProjects = await getTranslations({ locale, namespace: 'projects' });
+  const knowledgeIndex = getKnowledgeIndex();
+  const citations = new Map(
+    caseStudies.map((entry) => [entry.projectId, entry.relatedPostSlugs || []]),
+  );
+  const relations: ArticleRelations = {
+    territories: getNodesForTags(post.tags).map((key) => ({
+      key,
+      articles: knowledgeIndex.byKey.get(key)?.articles.length ?? 0,
+    })),
+    projects: relatedProjects(
+      { slug, tags: post.tags },
+      projectsData.filter((project) => getCaseStudy(project.id)),
+      citations,
+    ).map(({ project, reason }) => ({
+      id: project.id,
+      title: project.title,
+      href: projectHref(project),
+      tagline: tProjects(`items.${project.id}.tagline`),
+      reason,
+    })),
+    articles: relatedArticles(
+      {
+        slug,
+        title: post.title,
+        path: post.path,
+        date: post.date,
+        tags: post.tags,
+      },
+      sortedCoreContents,
+    ).map((article) => ({
+      key: article.slug,
+      href: `/${article.path}`,
+      title: article.title,
+      date: article.date,
+      tags: article.tags || [],
+    })),
+  };
 
   const articleJsonLd = buildBlogPostingJsonLd(locale, {
     title: post.title,
@@ -194,6 +240,7 @@ export default async function Page(props: {
         next={next}
         prev={prev}
         knowledgeGraph={localKnowledgeGraph}
+        relations={relations}
       >
         <MDXLayoutRenderer
           code={post.body.code}

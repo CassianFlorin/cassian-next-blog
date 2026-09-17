@@ -1,4 +1,3 @@
-import { Space_Grotesk } from 'next/font/google';
 import { Analytics, AnalyticsConfig } from 'pliny/analytics';
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import { SearchProvider, SearchConfig } from 'pliny/search';
@@ -6,7 +5,6 @@ import Header from '@/components/Header';
 import SectionContainer from '@/components/SectionContainer';
 import Footer from '@/components/Footer';
 import RouteTransitionOrchestrator from '@/components/RouteTransitionOrchestrator';
-import EntryCurtain from '@/components/EntryCurtain';
 import siteMetadata from '@/data/siteMetadata';
 import { ThemeProviders } from '../theme-providers';
 import { Metadata } from 'next';
@@ -24,12 +22,6 @@ import {
   resolveLocale,
 } from '@/lib/seo';
 
-const space_grotesk = Space_Grotesk({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-space-grotesk',
-});
-
 export async function generateMetadata(props: {
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
@@ -46,7 +38,7 @@ export async function generateMetadata(props: {
       // `absolute` opts this layout's own title out of the root template,
       // which would otherwise append the site name a second time.
       absolute: title,
-      template: `%s | ${title}`,
+      template: `%s — ${siteMetadata.author}`,
     },
     description,
     alternates: {
@@ -59,7 +51,7 @@ export async function generateMetadata(props: {
       title,
       description,
       url: localeUrl(resolvedLocale, '/'),
-      siteName: siteMetadata.title,
+      siteName: siteMetadata.author,
       images,
       locale: ogLocaleByLocale[resolvedLocale],
       alternateLocale: locales
@@ -106,17 +98,12 @@ export default async function LocaleLayout({
     notFound();
   }
   const messages = (await import(`../../messages/${locale}.json`)).default;
+  const t = await getTranslations({ locale, namespace: 'common' });
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
       <ThemeProviders>
         <JsonLd data={buildSiteJsonLd(resolveLocale(locale))} />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{if(sessionStorage.getItem('entry-curtain-played')==='1'){document.documentElement.classList.add('entry-curtain-done')}}catch(e){}`,
-          }}
-        />
-        <EntryCurtain />
         {/* Vercel Web Analytics: same-origin script, so the strict CSP in
             next.config.js covers it without an allowlist entry. */}
         <VercelAnalytics />
@@ -125,17 +112,26 @@ export default async function LocaleLayout({
         <Analytics
           analyticsConfig={siteMetadata.analytics as AnalyticsConfig}
         />
-        <div className="site-backdrop" aria-hidden="true">
-          <div className="site-backdrop-aurora" />
-          <div className="site-backdrop-grid" />
-        </div>
+        {/* First focusable element: lets keyboard and screen-reader users jump
+            past the navigation. Visible only while focused. */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-gray-950 focus:px-4 focus:py-3 focus:text-sm focus:text-gray-50 dark:focus:bg-gray-50 dark:focus:text-gray-950"
+        >
+          {t('skipToContent')}
+        </a>
         <SectionContainer>
           <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
             <RouteTransitionOrchestrator>
-              <div data-route-section="header" className="sticky top-0 z-50">
+              <div data-route-section="header" className="relative z-50">
                 <Header />
               </div>
-              <main className="mb-auto" data-route-section="main">
+              <main
+                id="main"
+                tabIndex={-1}
+                className="mb-auto outline-none"
+                data-route-section="main"
+              >
                 {children}
               </main>
               <div data-route-section="footer">

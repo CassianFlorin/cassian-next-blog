@@ -1,67 +1,82 @@
 'use client';
 
-import { useRef } from 'react';
+import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import siteMetadata from '@/data/siteMetadata';
 import headerNavLinks from '@/data/headerNavLinks';
-import Logo from '@/data/logo.svg';
+import { isNavActive, stripLocale } from '@/lib/navigation';
+import CFMark from './brand/CFMark';
 import Link from './Link';
 import MobileNav from './MobileNav';
 import ThemeSwitch from './ThemeSwitch';
 import SearchButton from './SearchButton';
 import LanguageSwitch from './LanguageSwitch';
-import { useTranslations } from 'next-intl';
-import { useAnime } from '@/lib/hooks/useAnime';
-import { fadeIn } from '@/lib/animations/fadeIn';
 
 const Header = () => {
   const t = useTranslations();
-  const shellRef = useRef<HTMLDivElement>(null);
-
-  useAnime({
-    targets: shellRef,
-    ...fadeIn(0),
-    translateY: [-16, 0],
-  });
+  const pathname = usePathname();
+  // On the homepage the header floats over the hero, so the misty backdrop
+  // runs to the top of the viewport instead of starting below a solid band.
+  const overlay = stripLocale(pathname) === '/';
 
   return (
-    <header className="pt-3 pb-4">
-      <div
-        ref={shellRef}
-        className="flex items-center justify-between gap-3 rounded-full border border-gray-900/10 bg-white/70 py-2 pr-2.5 pl-3 shadow-[0_12px_40px_rgba(10,18,15,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-gray-950/55 dark:shadow-[0_12px_40px_rgba(0,0,0,0.35)]"
-      >
+    <header
+      className={`bleed ${overlay ? 'absolute inset-x-0 top-0 z-50' : ''}`}
+    >
+      <div className="container-atelier flex items-start justify-between gap-6 pt-6 pb-6 md:pt-8 md:pb-10">
         <Link
           href="/"
           aria-label={siteMetadata.headerTitle}
-          className="flex shrink-0 items-center gap-2.5"
+          className="group flex items-center gap-3 text-gray-950 dark:text-gray-50"
         >
-          <div className="ring-primary-900/10 overflow-hidden rounded-full ring-1 dark:ring-white/15">
-            <Logo />
-          </div>
-          <span className="hidden text-base font-semibold tracking-tight text-gray-900 sm:block dark:text-gray-50">
+          <CFMark className="text-[2rem]" />
+          <span className="type-meta hidden text-gray-600 transition-colors duration-200 group-hover:text-gray-950 sm:block dark:text-gray-400 dark:group-hover:text-gray-50">
             {siteMetadata.headerTitle}
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
-          {headerNavLinks
-            .filter((link) => link.href !== '/')
-            .map((link) => (
-              <Link
-                key={link.title}
-                href={link.href}
-                className="hover:text-primary-800 dark:hover:text-primary-300 rounded-full px-3.5 py-1.5 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-900/[0.04] dark:text-gray-300 dark:hover:bg-white/[0.06]"
-              >
-                {t(link.title)}
-              </Link>
-            ))}
-        </nav>
+        <div className="hidden items-start gap-12 md:flex">
+          <div className="flex items-center gap-5 pt-0.5">
+            <SearchButton />
+            <LanguageSwitch />
+            <ThemeSwitch />
+          </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
-          <SearchButton />
-          <LanguageSwitch />
-          <ThemeSwitch />
-          <MobileNav />
+          <nav aria-label={t('common.primaryNav')}>
+            <ul className="grid gap-1.5">
+              {headerNavLinks.map((link) => {
+                const active = isNavActive(pathname, link.href);
+                return (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      aria-current={active ? 'page' : undefined}
+                      className={`group grid grid-cols-[1.75rem_auto] items-baseline gap-1 text-sm leading-6 transition-colors duration-200 ${
+                        active
+                          ? 'text-gray-950 dark:text-gray-50'
+                          : 'text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-gray-50'
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`type-meta transition-opacity duration-200 ${
+                          active
+                            ? 'opacity-100'
+                            : 'opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100'
+                        }`}
+                      >
+                        {link.index}
+                      </span>
+                      <span>{t(link.title)}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
         </div>
+
+        <MobileNav />
       </div>
     </header>
   );

@@ -1,33 +1,38 @@
-'use client';
-
-import { ReactNode, useRef } from 'react';
+import type { ReactNode } from 'react';
+import { slug as slugify } from 'github-slugger';
 import { CoreContent } from 'pliny/utils/contentlayer';
 import type { Blog, Authors } from 'contentlayer/generated';
-import { useTranslations } from 'next-intl';
-import Comments from '@/components/Comments';
-import Link from '@/components/Link';
-import PageTitle from '@/components/PageTitle';
-import SectionContainer from '@/components/SectionContainer';
-import Image from '@/components/Image';
-import Tag from '@/components/Tag';
-import siteMetadata from '@/data/siteMetadata';
-import ScrollTopAndComment from '@/components/ScrollTopAndComment';
-import { useAnime } from '@/lib/hooks/useAnime';
-import { fadeInLeft, fadeInUp } from '@/lib/animations/fadeIn';
+import { getTranslations } from 'next-intl/server';
 import ArticleKnowledgeGraph from '@/components/ArticleKnowledgeGraph';
+import Comments from '@/components/Comments';
+import Image from '@/components/Image';
+import Link from '@/components/Link';
+import ScrollTopAndComment from '@/components/ScrollTopAndComment';
 import Tldr from '@/components/Tldr';
+import TraceList, { type Trace } from '@/components/writing/TraceList';
+import siteMetadata from '@/data/siteMetadata';
 import type { KnowledgeGraphData } from '@/lib/knowledgeGraph';
+import { knowledgeNodeHref, type KnowledgeNodeKey } from '@/lib/knowledgeNodes';
 
-const editUrl = (path) => `${siteMetadata.siteRepo}/blob/main/data/${path}`;
-const discussUrl = (path) =>
+const editUrl = (path: string) =>
+  `${siteMetadata.siteRepo}/blob/main/data/${path}`;
+const discussUrl = (path: string) =>
   `https://mobile.twitter.com/search?q=${encodeURIComponent(`${siteMetadata.siteUrl}/${path}`)}`;
 
-const postDateTemplate: Intl.DateTimeFormatOptions = {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-};
+const pad = (value: number) => String(value).padStart(2, '0');
+
+/** Everything an article connects to, computed by the page. */
+export interface ArticleRelations {
+  territories: { key: KnowledgeNodeKey; articles: number }[];
+  projects: {
+    id: string;
+    title: string;
+    href: string;
+    tagline: string;
+    reason: 'explicit' | 'territory';
+  }[];
+  articles: Trace[];
+}
 
 interface LayoutProps {
   content: CoreContent<Blog>;
@@ -35,213 +40,317 @@ interface LayoutProps {
   next?: { path: string; title: string };
   prev?: { path: string; title: string };
   knowledgeGraph?: KnowledgeGraphData;
+  relations?: ArticleRelations;
   children: ReactNode;
 }
 
-export default function PostLayout({
+/**
+ * Article page, V2: the date is the anchor, the title carries the weight, and
+ * the article sits inside its relationships — the territories it is filed
+ * under, the projects it touches, and the writing closest to it.
+ */
+export default async function PostLayout({
   content,
   authorDetails,
   next,
   prev,
   knowledgeGraph,
+  relations,
   children,
 }: LayoutProps) {
-  const { filePath, path, slug, date, title, tags, tldr } = content;
-  const basePath = path.split('/')[0];
-  const t = useTranslations('blog');
+  const { filePath, path, slug, date, lastmod, title, summary, tags, tldr } =
+    content;
+  const t = await getTranslations('blog');
+  const tk = await getTranslations('knowledge');
+  const tt = await getTranslations('tags');
 
-  const authorRef = useRef<HTMLDListElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const published = new Date(date);
+  const updated = lastmod ? new Date(lastmod) : undefined;
+  const dayOf = (d: Date) => `${pad(d.getMonth() + 1)}.${pad(d.getDate())}`;
+  const showUpdated =
+    updated && updated.toDateString() !== published.toDateString();
+  const minutes = Math.max(
+    1,
+    Math.round(
+      (content as { readingTime?: { minutes?: number } }).readingTime
+        ?.minutes ?? 0,
+    ),
+  );
+  const tagLabel = (tag: string) =>
+    tt.has(slugify(tag)) ? tt(slugify(tag)) : tag;
 
-  useAnime({
-    targets: authorRef,
-    ...fadeInLeft(180, 'medium'),
-  });
+  const territories = relations?.territories ?? [];
+  const projects = relations?.projects ?? [];
+  const related = relations?.articles ?? [];
 
-  useAnime({
-    targets: contentRef,
-    ...fadeInUp(260, 'strong'),
-  });
+  const asideTitle =
+    'type-meta border-b border-gray-900/20 pb-3 text-gray-500 dark:border-white/20 dark:text-gray-400';
 
   return (
-    <div>
+    <div className="bleed">
       <ScrollTopAndComment />
-      <article>
-        <div className="xl:divide-y xl:divide-gray-200/60 xl:dark:divide-gray-800/60">
-          <header className="pt-6 xl:pb-8">
-            <div className="mx-auto max-w-3xl space-y-3 text-center">
-              <div>
-                <time
-                  dateTime={date}
-                  className="text-sm text-gray-400 dark:text-gray-500"
+      <article className="container-atelier pb-8">
+        <header className="pt-6 md:pt-10">
+          <nav aria-label="Breadcrumb" className="type-meta">
+            <ol className="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-400">
+              <li>
+                <Link
+                  href="/blog"
+                  className="transition-colors hover:text-gray-950 dark:hover:text-gray-50"
                 >
-                  {new Date(date).toLocaleDateString(
-                    siteMetadata.locale,
-                    postDateTemplate,
-                  )}
-                </time>
-              </div>
-              <div>
-                <PageTitle>{title}</PageTitle>
-              </div>
-              {tags && (
-                <div className="flex flex-wrap justify-center gap-2 pt-2">
-                  {tags.map((tag) => (
-                    <Tag key={tag} text={tag} />
-                  ))}
-                </div>
+                  CF / 03 · {t('article.writing')}
+                </Link>
+              </li>
+              <li aria-hidden="true">/</li>
+              <li className="text-gray-950 dark:text-gray-50">
+                {published.getFullYear()}
+              </li>
+            </ol>
+          </nav>
+
+          <div className="mt-12 grid gap-4 md:mt-16 lg:grid-cols-[10rem_minmax(0,1fr)] lg:gap-12">
+            <time
+              dateTime={date}
+              className="font-mono text-xl text-gray-500 tabular-nums lg:pt-2 lg:text-3xl dark:text-gray-400"
+            >
+              {dayOf(published)}
+            </time>
+            <div className="max-w-4xl">
+              <h1 className="text-[2rem] leading-[1.15] font-semibold tracking-tight text-gray-950 sm:text-5xl lg:text-6xl lg:leading-[1.08] dark:text-gray-50">
+                {title}
+              </h1>
+              {summary && (
+                <p className="type-editorial mt-6 text-xl leading-snug text-gray-600 md:text-2xl dark:text-gray-300">
+                  {summary}
+                </p>
               )}
             </div>
-          </header>
-          <div className="grid-rows-[auto_1fr] divide-y divide-gray-200/60 pb-8 xl:grid xl:grid-cols-5 xl:gap-x-8 xl:divide-y-0 dark:divide-gray-800/60">
-            <dl
-              ref={authorRef}
-              className="pt-6 pb-10 xl:border-b xl:border-gray-200/60 xl:pt-11 xl:dark:border-gray-800/60"
-              style={{ opacity: 0 }}
-            >
-              <dt className="sr-only">Authors</dt>
-              <dd>
-                <ul className="flex flex-wrap justify-center gap-4 sm:space-x-12 xl:block xl:space-y-8 xl:space-x-0">
-                  {authorDetails.map((author) => (
-                    <li
-                      className="flex items-center space-x-3"
-                      key={author.name}
-                    >
-                      {author.avatar && (
-                        <Image
-                          src={author.avatar}
-                          width={40}
-                          height={40}
-                          alt="avatar"
-                          className="h-10 w-10 rounded-full"
-                        />
-                      )}
-                      <dl className="text-sm leading-5 whitespace-nowrap">
-                        <dt className="sr-only">Name</dt>
-                        <dd className="font-medium text-gray-700 dark:text-gray-200">
-                          {author.name}
-                        </dd>
-                        <dt className="sr-only">Twitter</dt>
-                        <dd>
-                          {author.twitter && (
-                            <Link
-                              href={author.twitter}
-                              className="hover:text-primary-600 dark:hover:text-primary-400 text-gray-400 transition-colors duration-200 dark:text-gray-500"
-                            >
-                              {author.twitter
-                                .replace('https://twitter.com/', '@')
-                                .replace('https://x.com/', '@')}
-                            </Link>
-                          )}
-                        </dd>
-                      </dl>
-                    </li>
-                  ))}
-                </ul>
+          </div>
+
+          <dl className="mt-12 grid border-y border-gray-900/15 sm:grid-cols-2 lg:grid-cols-4 dark:border-white/15">
+            <div className="space-y-2 border-b border-gray-900/10 py-5 sm:pr-6 lg:border-r lg:border-b-0 dark:border-white/10">
+              <dt className="type-meta text-gray-500 dark:text-gray-400">
+                {t('article.filedUnder')}
+              </dt>
+              <dd className="flex flex-wrap gap-x-3 gap-y-1">
+                {territories.map((territory) => (
+                  <Link
+                    key={territory.key}
+                    href={knowledgeNodeHref(territory.key)}
+                    className="text-gray-950 underline-offset-4 hover:underline dark:text-gray-50"
+                  >
+                    {tk(`nodes.${territory.key}.label`)}
+                  </Link>
+                ))}
               </dd>
-            </dl>
-            <div className="divide-y divide-gray-200/60 xl:col-span-3 xl:row-span-2 xl:pb-0 dark:divide-gray-800/60">
-              <div
-                ref={contentRef}
-                className="prose prose-gray dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-a:text-primary-600 dark:prose-a:text-primary-400 prose-p:leading-relaxed max-w-none pt-8 pb-6"
-                style={{ opacity: 0 }}
-              >
-                <Tldr>{tldr}</Tldr>
-                {children}
-              </div>
-              {knowledgeGraph && (
-                <ArticleKnowledgeGraph
-                  graphData={knowledgeGraph}
-                  currentSlug={slug}
-                  className="py-6 xl:hidden"
-                />
-              )}
-              <div className="pt-6 pb-6 text-sm text-gray-400 dark:text-gray-500">
+            </div>
+            <div className="space-y-2 border-b border-gray-900/10 py-5 sm:pl-6 lg:border-r lg:border-b-0 lg:pr-6 dark:border-white/10">
+              <dt className="type-meta text-gray-500 dark:text-gray-400">
+                {t('article.topics')}
+              </dt>
+              <dd className="flex flex-wrap gap-x-3 gap-y-1">
+                {(tags || []).map((tag) => (
+                  <Link
+                    key={tag}
+                    href={`/tags/${slugify(tag)}`}
+                    className="text-gray-700 underline-offset-4 hover:text-gray-950 hover:underline dark:text-gray-300 dark:hover:text-gray-50"
+                  >
+                    {tagLabel(tag)}
+                  </Link>
+                ))}
+              </dd>
+            </div>
+            <div className="space-y-2 border-b border-gray-900/10 py-5 sm:border-b-0 sm:pr-6 lg:border-r lg:pl-6 dark:border-white/10">
+              <dt className="type-meta text-gray-500 dark:text-gray-400">
+                {t('readingTime')}
+              </dt>
+              <dd className="text-gray-950 dark:text-gray-50">
+                {t('article.readingTime', { minutes })}
+              </dd>
+            </div>
+            <div className="space-y-2 py-5 sm:pl-6">
+              <dt className="type-meta text-gray-500 dark:text-gray-400">
+                {showUpdated ? t('article.updated') : t('publishedOn')}
+              </dt>
+              <dd className="font-mono text-gray-950 tabular-nums dark:text-gray-50">
+                {(showUpdated && updated ? updated : published)
+                  .toISOString()
+                  .slice(0, 10)
+                  .replace(/-/g, '.')}
+              </dd>
+            </div>
+          </dl>
+        </header>
+
+        <div className="mt-14 grid gap-16 md:mt-20 lg:grid-cols-[minmax(0,1fr)_17rem] xl:grid-cols-[minmax(0,1fr)_19rem] xl:gap-24">
+          <div className="min-w-0">
+            <div className="prose prose-gray dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-lg max-w-3xl">
+              <Tldr>{tldr}</Tldr>
+              {children}
+            </div>
+
+            <div className="type-meta mt-14 flex max-w-3xl flex-wrap items-center justify-between gap-4 border-t border-gray-900/15 pt-6 text-gray-500 dark:border-white/15 dark:text-gray-400">
+              <span className="flex items-center gap-3">
+                {authorDetails.map((author) => (
+                  <span key={author.name} className="flex items-center gap-3">
+                    {author.avatar && (
+                      <Image
+                        src={author.avatar}
+                        width={28}
+                        height={28}
+                        alt=""
+                        className="h-7 w-7 rounded-full"
+                      />
+                    )}
+                    <span className="text-gray-950 dark:text-gray-50">
+                      {author.name}
+                    </span>
+                  </span>
+                ))}
+              </span>
+              <span className="flex gap-5">
                 <Link
                   href={discussUrl(path)}
                   rel="nofollow"
-                  className="transition-colors duration-200 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="transition-colors hover:text-gray-950 dark:hover:text-gray-50"
                 >
-                  {t('discussOnTwitter')}
+                  {t('discussOnTwitter')} ↗
                 </Link>
-                {` · `}
                 <Link
                   href={editUrl(filePath)}
-                  className="transition-colors duration-200 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="transition-colors hover:text-gray-950 dark:hover:text-gray-50"
                 >
-                  {t('viewOnGitHub')}
+                  {t('viewOnGitHub')} ↗
                 </Link>
-              </div>
-              {siteMetadata.comments && (
-                <div
-                  className="pt-6 pb-6 text-center text-gray-700 dark:text-gray-300"
-                  id="comment"
-                >
-                  <Comments slug={slug} />
-                </div>
-              )}
+              </span>
             </div>
-            {knowledgeGraph && (
-              <aside className="hidden xl:col-start-5 xl:row-span-2 xl:block xl:pt-11">
+
+            {siteMetadata.comments && (
+              <div className="mt-12 max-w-3xl" id="comment">
+                <Comments slug={slug} />
+              </div>
+            )}
+          </div>
+
+          <aside className="min-w-0 space-y-14 lg:sticky lg:top-8 lg:self-start">
+            {territories.length > 0 && (
+              <section aria-labelledby="article-territories">
+                <h2 id="article-territories" className={asideTitle}>
+                  {t('article.filedUnder')}
+                </h2>
+                <ul className="mt-1">
+                  {territories.map((territory) => (
+                    <li key={territory.key}>
+                      <Link
+                        href={knowledgeNodeHref(territory.key)}
+                        className="group flex items-baseline justify-between gap-4 py-2.5"
+                      >
+                        <span className="group-hover:text-primary-700 dark:group-hover:text-primary-300 text-gray-950 transition-colors dark:text-gray-50">
+                          {tk(`nodes.${territory.key}.label`)}
+                        </span>
+                        <span className="font-mono text-xs text-gray-500 tabular-nums">
+                          {pad(territory.articles)}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {projects.length > 0 && (
+              <section aria-labelledby="article-projects">
+                <h2 id="article-projects" className={asideTitle}>
+                  {t('article.relatedProjects')}
+                </h2>
+                <ul className="divide-y divide-gray-900/10 dark:divide-white/10">
+                  {projects.map((project) => (
+                    <li key={project.id}>
+                      <Link href={project.href} className="group block py-4">
+                        <span className="flex items-baseline justify-between gap-3">
+                          <span className="text-lg font-semibold tracking-tight text-gray-950 dark:text-gray-50">
+                            {project.title}
+                          </span>
+                          <span
+                            aria-hidden="true"
+                            className="text-gray-500 transition-transform duration-200 group-hover:translate-x-0.5"
+                          >
+                            →
+                          </span>
+                        </span>
+                        <span className="mt-1 block text-sm leading-6 text-gray-600 dark:text-gray-400">
+                          {project.tagline}
+                        </span>
+                        <span className="type-meta mt-2 block text-gray-500 dark:text-gray-400">
+                          {project.reason === 'explicit'
+                            ? t('article.citedBy')
+                            : t('article.sameTerritory')}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {knowledgeGraph && knowledgeGraph.nodes.length > 0 && (
+              <section aria-labelledby="article-map">
+                <h2 id="article-map" className={`${asideTitle} mb-4`}>
+                  {t('article.inTheMap')}
+                </h2>
                 <ArticleKnowledgeGraph
                   graphData={knowledgeGraph}
                   currentSlug={slug}
-                  className="sticky top-8"
                 />
-              </aside>
+              </section>
             )}
-            <footer className="xl:col-start-1 xl:row-start-2">
-              <div className="divide-gray-200/60 text-sm leading-5 xl:col-start-1 xl:row-start-2 xl:divide-y dark:divide-gray-800/60">
-                {(next || prev) && (
-                  <div className="flex justify-between py-4 xl:block xl:space-y-6 xl:py-8">
-                    {prev && prev.path && (
-                      <div>
-                        <h2 className="mb-1 text-xs text-gray-400 dark:text-gray-500">
-                          {t('previous')}
-                        </h2>
-                        <div className="hover:text-primary-600 dark:hover:text-primary-400 font-medium text-gray-700 transition-colors duration-200 dark:text-gray-300">
-                          <Link href={`/${prev.path}`}>{prev.title}</Link>
-                        </div>
-                      </div>
-                    )}
-                    {next && next.path && (
-                      <div>
-                        <h2 className="mb-1 text-xs text-gray-400 dark:text-gray-500">
-                          {t('next')}
-                        </h2>
-                        <div className="hover:text-primary-600 dark:hover:text-primary-400 font-medium text-gray-700 transition-colors duration-200 dark:text-gray-300">
-                          <Link href={`/${next.path}`}>{next.title}</Link>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="pt-4 xl:pt-8">
-                <Link
-                  href={`/${basePath}`}
-                  className="hover:text-primary-600 dark:hover:text-primary-400 inline-flex items-center text-sm text-gray-500 transition-colors duration-200 dark:text-gray-400"
-                  aria-label="Back to the blog"
-                >
-                  <svg
-                    className="mr-1.5 h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 16l-4-4m0 0l4-4m-4 4h18"
-                    />
-                  </svg>
-                  {t('backToBlog')}
-                </Link>
-              </div>
-            </footer>
-          </div>
+          </aside>
         </div>
+
+        {related.length > 0 && (
+          <section
+            aria-labelledby="keep-reading"
+            className="mt-24 border-t border-gray-900/20 pt-8 dark:border-white/20"
+          >
+            <h2
+              id="keep-reading"
+              className="type-meta mb-4 text-gray-950 dark:text-gray-50"
+            >
+              {t('article.keepReading')}
+            </h2>
+            <TraceList traces={related} size="compact" />
+          </section>
+        )}
+
+        {(prev || next) && (
+          <nav
+            aria-label={t('article.writing')}
+            className="mt-20 grid border-t border-gray-900/20 sm:grid-cols-2 dark:border-white/20"
+          >
+            {[prev, next].map((item, i) =>
+              item?.path ? (
+                <Link
+                  key={item.path}
+                  href={`/${item.path}`}
+                  className={`group block space-y-3 py-8 ${
+                    i === 1
+                      ? 'border-t border-gray-900/10 sm:border-t-0 sm:border-l sm:pl-8 sm:text-right dark:border-white/10'
+                      : 'sm:pr-8'
+                  }`}
+                >
+                  <span className="type-meta block text-gray-500 dark:text-gray-400">
+                    {i === 0 ? `← ${t('previous')}` : `${t('next')} →`}
+                  </span>
+                  <span className="block text-xl leading-snug font-semibold tracking-tight text-gray-950 transition-colors group-hover:text-gray-600 md:text-2xl dark:text-gray-50 dark:group-hover:text-gray-300">
+                    {item.title}
+                  </span>
+                </Link>
+              ) : (
+                <span key={i} aria-hidden="true" />
+              ),
+            )}
+          </nav>
+        )}
       </article>
     </div>
   );

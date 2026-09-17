@@ -1,3 +1,5 @@
+import type { KnowledgeCategoryKey } from '@/lib/knowledgeGraphMapModel';
+
 export interface Project {
   /** Key into messages `projects.items.<id>` for localized copy */
   id: string;
@@ -7,10 +9,8 @@ export interface Project {
   sourceHref?: string;
   category: 'app' | 'featured' | 'ecosystem' | 'open-source';
   techStack: string[];
-  relatedPosts?: Array<{
-    title: string;
-    href: string;
-  }>;
+  /** Knowledge territories this project belongs to (see lib/knowledgeNodes). */
+  knowledgeNodes?: KnowledgeCategoryKey[];
 }
 
 const projectsData: Project[] = [
@@ -29,6 +29,7 @@ const projectsData: Project[] = [
       'Discourse API',
       'GRDB',
     ],
+    knowledgeNodes: ['projects', 'languages'],
   },
   {
     id: 'skillHub',
@@ -37,12 +38,7 @@ const projectsData: Project[] = [
     sourceHref: 'https://github.com/CassianFlorin/skill-hub',
     category: 'featured',
     techStack: ['Go', 'CLI', 'AI Agent', 'Developer Tools'],
-    relatedPosts: [
-      {
-        title: 'Agent 光会 grep 还不够：CodeGraph 让它先看懂代码结构',
-        href: '/blog/20260526-codegraph-agent-coding',
-      },
-    ],
+    knowledgeNodes: ['ai-agent', 'tools'],
   },
   {
     id: 'databaseCli',
@@ -51,6 +47,7 @@ const projectsData: Project[] = [
     sourceHref: 'https://github.com/CassianFlorin/database-cli',
     category: 'featured',
     techStack: ['Python', 'CLI', 'Codex Skill', 'Database'],
+    knowledgeNodes: ['ai-agent', 'tools', 'data-integration'],
   },
   {
     id: 'skillHubRegistry',
@@ -59,6 +56,7 @@ const projectsData: Project[] = [
     sourceHref: 'https://github.com/CassianFlorin/skill-hub-registry',
     category: 'ecosystem',
     techStack: ['Python', 'Registry', 'Catalog', 'Automation'],
+    knowledgeNodes: ['ai-agent', 'tools'],
   },
   {
     id: 'mooTool',
@@ -67,12 +65,7 @@ const projectsData: Project[] = [
     sourceHref: 'https://github.com/CassianFlorin/MooTool',
     category: 'open-source',
     techStack: ['Java', 'Developer Tools', 'Desktop Utility'],
-    relatedPosts: [
-      {
-        title: '今天成为了 MooTool 贡献者',
-        href: '/blog/20250927-MooToolContributors',
-      },
-    ],
+    knowledgeNodes: ['tools', 'projects'],
   },
 ];
 

@@ -17,12 +17,12 @@ export default function Tldr({ children }: { children?: string }) {
     <section
       data-tldr
       aria-label={t('tldrLabel')}
-      className="not-prose border-primary-500 dark:bg-primary-900/10 mb-8 rounded-r border-l-4 bg-gray-50 p-4 sm:p-5 dark:bg-gray-800/40"
+      className="not-prose border-primary-600 dark:border-primary-400 mb-10 border-l-2 py-1 pl-5"
     >
-      <p className="text-primary-700 dark:text-primary-300 mb-1.5 text-xs font-semibold tracking-wide uppercase">
+      <p className="type-meta text-primary-700 dark:text-primary-300 mb-2">
         {t('tldrLabel')}
       </p>
-      <p className="text-base leading-relaxed text-gray-800 dark:text-gray-200">
+      <p className="type-editorial text-xl leading-snug text-gray-900 md:text-2xl dark:text-gray-100">
         {children}
       </p>
     </section>

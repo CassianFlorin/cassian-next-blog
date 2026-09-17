@@ -8,49 +8,81 @@
     "knowledge": "Knowledge Map",
     "search": "Search",
     "theme": "Theme",
-    "language": "Language"
+    "language": "Language",
+    "work": "Work",
+    "writing": "Writing",
+    "menu": "Menu",
+    "close": "Close",
+    "primaryNav": "Primary",
+    "knowledgeNav": "Knowledge",
+    "skipToContent": "Skip to content"
   },
   "home": {
     "title": "Cassian Florin",
     "description": "I build AI engineering tools, developer workflows, and knowledge systems for serious software work.",
-    "projectsAction": "View Projects",
-    "blogAction": "Read Articles",
-    "githubAction": "GitHub",
-    "focusAreas": {
-      "aiAgent": "AI Agent",
-      "developerTools": "Developer Tools",
-      "knowledgeWorkflows": "Knowledge Workflows",
-      "systemDesign": "System Design"
+    "hero": {
+      "lines": ["Building things.", "Mapping ideas.", "Leaving traces."],
+      "areas": ["AI Engineering", "Developer Tools", "Knowledge Systems"],
+      "explore": "Explore",
+      "summary": "A personal system for building tools, thinking clearly, and leaving traces."
     },
-    "featuredProjects": "Featured Projects",
-    "featuredProjectsDescription": "Public tools shaped around agents, database investigation, and skill distribution.",
-    "projectProblem": "Problem",
-    "projectProvides": "Provides",
-    "viewProject": "View Project",
-    "relatedArticle": "Related article",
-    "writingTopics": "Writing Topics",
-    "writingTopicsDescription": "Long-running notes on tool building, engineering efficiency, and Obsidian workflows.",
-    "writingTopicCards": {
-      "aiTools": {
-        "title": "AI Agents and Developer Tools",
-        "description": "Notes on CodeGraph, skill-hub, agent frameworks, and AI-assisted development practice."
-      },
-      "engineeringEfficiency": {
-        "title": "System Design and Engineering Efficiency",
-        "description": "Backend systems, development environments, deployment entry points, and engineering toolchain practice."
-      },
-      "knowledgeManagement": {
-        "title": "Personal Knowledge Management and Obsidian",
-        "description": "How agents, Obsidian, and knowledge graphs can form a durable knowledge workflow."
+    "work": {
+      "title": "Work",
+      "lede": "Things I build.",
+      "description": "Tools shaped by daily engineering: agents, skills, databases, and communities.",
+      "all": "All projects",
+      "explore": "Explore",
+      "whyLabel": "Why"
+    },
+    "knowledge": {
+      "title": "Knowledge",
+      "lede": "Ideas are connected.",
+      "description": "Every article is tagged into a small set of territories. The map shows how they overlap.",
+      "explore": "Explore the map",
+      "graphLabel": "Overview of knowledge territories and how they connect",
+      "overview": "All territories",
+      "notes": "{count, plural, one {# note} other {# notes}}",
+      "tags": "{count, plural, one {# topic} other {# topics}}",
+      "connections": "{count, plural, one {# connection} other {# connections}}",
+      "hint": "Hover or focus a node to trace its connections."
+    },
+    "writing": {
+      "title": "Writing",
+      "lede": "Recent traces.",
+      "description": "Field notes from building with agents, running systems, and keeping knowledge.",
+      "archive": "Full archive",
+      "areasTitle": "Areas of exploration",
+      "areas": {
+        "building": {
+          "label": "Building",
+          "items": ["AI Agents", "Developer Tools"]
+        },
+        "thinking": {
+          "label": "Thinking",
+          "items": ["System Design", "Engineering", "Architecture"]
+        },
+        "remembering": {
+          "label": "Remembering",
+          "items": ["Obsidian", "Knowledge", "Personal Systems"]
+        }
       }
     },
-    "knowledgeMapTitle": "My Knowledge Map",
-    "knowledgeMapDescription": "Browse the real connections between posts, tags, and knowledge notes.",
-    "openKnowledgeMap": "Open Knowledge Map",
-    "selectedArticles": "Selected Articles",
-    "selectedArticlesDescription": "Recent writing on agent coding, engineering workflows, and knowledge systems.",
-    "readMore": "Read More",
-    "viewAllPosts": "View All Posts"
+    "about": {
+      "title": "About",
+      "lede": "Cassian Florin",
+      "body": [
+        "I build tools, workflows and systems around software, AI and knowledge.",
+        "Some become products. Some become notes. Some simply become experiments."
+      ],
+      "focus": [
+        "AI Engineering",
+        "Developer Tools",
+        "Knowledge Systems",
+        "Independent Projects"
+      ],
+      "more": "More about me",
+      "email": "Email"
+    }
   },
   "blog": {
     "readMore": "Read More",
@@ -70,7 +102,36 @@
     "discussOnTwitter": "Discuss on Twitter",
     "viewOnGitHub": "View on GitHub",
     "backToBlog": "Back to blog",
-    "tldrLabel": "In short"
+    "tldrLabel": "In short",
+    "archive": {
+      "title": "Writing",
+      "lede": "Recent traces.",
+      "description": "Field notes from building with agents, running systems, and keeping knowledge. Every article, newest first.",
+      "count": "{count, plural, one {# article} other {# articles}} since {year}",
+      "browseTerritories": "Browse by territory",
+      "allTopics": "All topics"
+    },
+    "topics": {
+      "title": "Topics",
+      "lede": "Every tag, by territory.",
+      "description": "Tags are how articles are filed. Each group below is a knowledge territory; the general group holds tags too broad to belong to one.",
+      "general": "General",
+      "articles": "{count, plural, one {# article} other {# articles}}",
+      "territory": "Territory",
+      "openTerritory": "Open the territory"
+    },
+    "article": {
+      "writing": "Writing",
+      "readingTime": "{minutes} min read",
+      "updated": "Updated",
+      "filedUnder": "Filed under",
+      "topics": "Topics",
+      "relatedProjects": "Related projects",
+      "citedBy": "Case study cites this",
+      "sameTerritory": "Same territory",
+      "keepReading": "Keep reading",
+      "inTheMap": "In the knowledge map"
+    }
   },
   "about": {
     "title": "About Me",
@@ -96,18 +157,24 @@
     "items": {
       "litho": {
         "status": "Daily driver · iOS beta / Android released",
+        "tagline": "Native client for linux.do",
+        "why": "A community deserved a native, logged-in experience on the phone — not a challenge page.",
         "description": "A native third-party client for linux.do on iOS and Android: SwiftUI on iOS, Compose on Android, rendering the Discourse community natively while punching through Cloudflare and keeping you logged in.",
         "problem": "linux.do runs on Discourse behind Cloudflare, so third-party tools and even simple scripts constantly hit challenge pages and lose their session. There is no smooth, native way to browse and interact from an iPhone.",
         "solution": "Litho routes every request through an off-screen WKWebView gateway that borrows the browser UA / Cookie / TLS fingerprint, so it sails past Cloudflare and holds the login state. On that foundation it delivers a full SwiftUI experience: topic feeds, single-document post rendering, reactions, chat, private messages and real-time notifications via MessageBus."
       },
       "skillHub": {
         "status": "Active",
+        "tagline": "The package manager for AI agent skills",
+        "why": "Agent skills were scattered across repos and folders with no way to install, update, or govern them.",
         "description": "The package manager for AI agent skills. Install, update, sync, and govern skills across coding agents.",
         "problem": "AI coding agents are becoming part of daily development, but their reusable skills are still scattered across repos, local folders, and different agent ecosystems.",
         "solution": "skill-hub turns skills into manageable packages so they can be installed, updated, synchronized, and governed across Codex, Claude, Gemini, and similar workflows."
       },
       "databaseCli": {
         "status": "Active",
+        "tagline": "Safe database investigation for agents",
+        "why": "Production debugging needs real data, without turning an AI session into an unguarded SQL client.",
         "description": "Read-only database CLI skill for Codex.",
         "problem": "Real production debugging often needs schema lookup, safe read-only SQL, and cross-environment comparison without turning an AI session into an unsafe database client.",
         "solution": "database-cli gives Codex a controlled database investigation workflow: inspect schema, search metadata, run read-only queries, and compare records with guardrails."
@@ -124,10 +191,43 @@
         "problem": "Developers repeatedly need small local utilities for text, encoding, diffing, and daily engineering tasks.",
         "solution": "MooTool collects practical developer utilities in a Java desktop tool. This site presents it as open-source participation in developer tooling."
       }
+    },
+    "caseStudy": {
+      "chapters": {
+        "why": "",
+        "problem": "",
+        "system": "",
+        "implementation": "",
+        "decisions": "",
+        "result": "",
+        "related": ""
+      },
+      "contents": "Contents",
+      "projectLabel": "Project",
+      "status": "Status",
+      "started": "Started",
+      "stack": "Stack",
+      "links": "Links",
+      "work": "Work",
+      "relatedNodes": "Knowledge territories",
+      "relatedArticles": "Written about it",
+      "sameTerritory": "From the same territories",
+      "previous": "Previous",
+      "next": "Next",
+      "systemLabel": "{project} system layers, top to bottom"
+    },
+    "index": {
+      "title": "Work",
+      "lede": "Things I build.",
+      "description": "Tools shaped by daily engineering. Each one has a case study: why it exists, how it works, and the decisions behind it.",
+      "caseStudies": "Case studies",
+      "ecosystem": "Ecosystem & open source",
+      "readCaseStudy": "Read the case study",
+      "visit": "Visit"
     }
   },
   "knowledge": {
-    "title": "Knowledge Map",
+    "title": "Knowledge",
     "description": "Explore how posts, tags, and knowledge notes connect across the site.",
     "graphLabel": "Categorized Knowledge Map",
     "stats": "{categories} categories · {posts} posts · {tags} tags",
@@ -145,7 +245,68 @@
     "noMatches": "No matching nodes",
     "searchHint": "Try another keyword or clear search to restore the full graph.",
     "exploreDesc": "Explore tags and related posts connected to this article.",
-    "openFullGraph": "Open full graph"
+    "openFullGraph": "Open full graph",
+    "lede": "Ideas are connected.",
+    "mapDescription": "Every article is filed into a few territories by its tags. Explore the whole graph, or focus on one territory to see what it holds.",
+    "modeLabel": "Map mode",
+    "modeExplore": "Explore",
+    "modeFocus": "Focus",
+    "exploreHint": "Drag, zoom, hover. Click a territory to focus on it.",
+    "territories": "Territories",
+    "filterLabel": "Filter the graph by territory",
+    "filterAll": "All",
+    "nodeLabel": "Territory",
+    "backToMap": "Back to the map",
+    "articles": "{count, plural, one {# article} other {# articles}}",
+    "notesCount": "{count, plural, one {# note} other {# notes}}",
+    "topics": "{count, plural, one {# topic} other {# topics}}",
+    "projects": "{count, plural, one {# project} other {# projects}}",
+    "connectionsCount": "{count, plural, one {# connection} other {# connections}}",
+    "sectionProjects": "Projects",
+    "sectionArticles": "Articles",
+    "sectionNotes": "Notes",
+    "sectionTopics": "Topics",
+    "sectionRelated": "Related concepts",
+    "shared": "{count, plural, one {# shared piece} other {# shared pieces}}",
+    "noArticles": "Nothing filed here yet.",
+    "localGraphLabel": "{node} and the territories it connects to",
+    "otherTerritories": "Other territories",
+    "focusNode": "Focus on {node}",
+    "nodes": {
+      "ai-agent": {
+        "label": "AI / Agents",
+        "description": "Coding agents, AI workflows, and the tools around them."
+      },
+      "tools": {
+        "label": "Developer Tools",
+        "description": "CLIs, editors, Git, and everyday engineering utilities."
+      },
+      "knowledge-workflow": {
+        "label": "Knowledge Systems",
+        "description": "Notes, Obsidian, knowledge graphs, and publishing."
+      },
+      "engineering": {
+        "label": "Engineering Method",
+        "description": "Architecture, debugging, validation, and working habits."
+      },
+      "devops": {
+        "label": "Infrastructure",
+        "description": "Servers, networking, Docker, NAS, and operations."
+      },
+      "languages": {
+        "label": "Languages & Platforms",
+        "description": "Programming languages, frameworks, and platform notes."
+      },
+      "projects": {
+        "label": "Products",
+        "description": "Shipped apps, open-source work, and product thinking."
+      },
+      "data-integration": {
+        "label": "Data",
+        "description": "Analytics, integrations, and data systems."
+      }
+    },
+    "statConnections": "Connections"
   },
   "footer": {
     "copyright": "All rights reserved",
@@ -159,7 +320,8 @@
   "theme": {
     "light": "Light",
     "dark": "Dark",
-    "system": "System"
+    "system": "System",
+    "toggle": "Theme"
   },
   "tags": {
     "随笔": "Essay",
@@ -284,24 +446,28 @@
     "故障排查": "Troubleshooting"
   },
   "seo": {
-    "siteTitle": "Cassian Florin | AI Engineering Tool Builder",
-    "siteDescription": "Cassian Florin's technical blog on AI agent engineering, developer workflows, personal knowledge systems, and backend development.",
-    "blogTitle": "All Posts",
-    "blogDescription": "Every post and field note on AI agents, developer tooling, workflow automation, and backend engineering.",
+    "siteTitle": "Cassian Florin — AI Engineering · Tool Builder",
+    "siteDescription": "Cassian Florin builds AI engineering tools, developer workflows, and knowledge systems.",
+    "blogTitle": "Writing",
+    "blogDescription": "Field notes on AI agents, developer tools, self-hosted infrastructure, and knowledge systems — every article, newest first.",
     "blogPageTitle": "All Posts · Page {page}",
-    "tagsTitle": "Tags",
-    "tagsDescription": "Browse every topic on the site and jump straight to AI agents, developer tools, or Java backend content.",
-    "tagTitle": "Tag: {tag}",
+    "tagsTitle": "Topics",
+    "tagsDescription": "Every tag on the site, grouped by knowledge territory: AI agents, developer tools, infrastructure, knowledge systems, and more.",
+    "tagTitle": "{tag} · Topic",
     "tagDescription": "All {count} posts and notes tagged “{tag}”.",
     "tagPageTitle": "Tag: {tag} · Page {page}",
     "aboutTitle": "About",
-    "aboutDescription": "About Cassian Florin: the AI engineering tools I build, what I focus on, and how to get in touch.",
-    "projectsTitle": "Projects",
-    "projectsDescription": "Projects I build and contribute to: AI agent tooling, developer productivity tools, and open source work.",
+    "aboutDescription": "Cassian Florin builds tools, workflows, and systems around software, AI, and knowledge. Background, current focus, and how to get in touch.",
+    "projectsTitle": "Work",
+    "projectsDescription": "Things Cassian Florin builds — Litho, skill-hub, database-cli — each with a case study on why it exists and how it works.",
     "knowledgeTitle": "Knowledge Map",
-    "knowledgeDescription": "Explore how posts, tags, and knowledge notes connect across the site as a graph.",
+    "knowledgeDescription": "An interactive map of how Cassian Florin's writing connects: explore the whole graph or focus on one territory.",
     "breadcrumbHome": "Home",
     "breadcrumbBlog": "Blog",
-    "breadcrumbTags": "Tags"
+    "breadcrumbTags": "Tags",
+    "knowledgeNodeTitle": "{node} · Knowledge",
+    "knowledgeNodeDescription": "{node}: {description} {articles} articles and {topics} topics on Cassian Florin's knowledge map.",
+    "projectCaseTitle": "{project} · Case study",
+    "projectCaseDescription": "{project}: {summary} Why it exists, how the system works, and the decisions behind it."
   }
 }

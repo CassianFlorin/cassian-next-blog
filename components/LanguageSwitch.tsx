@@ -4,17 +4,22 @@ import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { locales } from '@/lib/i18nRouting';
 
-const navLanguageLabels = {
-  zh: '🇨🇳 中文',
-  en: '🇺🇸 EN',
+const languageLabels = {
+  zh: '中文',
+  en: 'EN',
 } as const;
 
-export default function LanguageSwitch() {
+export default function LanguageSwitch({
+  className = '',
+}: {
+  className?: string;
+}) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
 
   const handleLanguageChange = (newLocale: string) => {
+    if (newLocale === locale) return;
     const localePrefix = `/${locale}`;
     const pathWithoutLocale =
       pathname === localePrefix
@@ -28,18 +33,33 @@ export default function LanguageSwitch() {
   };
 
   return (
-    <div className="relative inline-flex items-center text-left">
-      <select
-        value={locale}
-        onChange={(e) => handleLanguageChange(e.target.value)}
-        className="border-primary-900/10 focus:ring-primary-500 h-9 min-w-[5.9rem] rounded-full border bg-transparent py-1.5 pr-2 pl-3 text-sm font-medium text-gray-700 transition-colors hover:bg-white/50 focus:ring-2 focus:outline-none dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/5"
-      >
-        {locales.map((loc) => (
-          <option key={loc} value={loc}>
-            {navLanguageLabels[loc]}
-          </option>
-        ))}
-      </select>
+    <div
+      role="group"
+      aria-label="Language"
+      className={`type-meta inline-flex min-h-9 items-center gap-1 ${className}`}
+    >
+      {locales.map((loc, index) => (
+        <span key={loc} className="inline-flex items-center gap-1">
+          {index > 0 && (
+            <span aria-hidden="true" className="text-gray-400">
+              /
+            </span>
+          )}
+          <button
+            type="button"
+            lang={loc === 'zh' ? 'zh-CN' : 'en'}
+            aria-pressed={loc === locale}
+            onClick={() => handleLanguageChange(loc)}
+            className={`px-0.5 transition-colors duration-200 ${
+              loc === locale
+                ? 'text-gray-950 dark:text-gray-50'
+                : 'text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-gray-50'
+            }`}
+          >
+            {languageLabels[loc]}
+          </button>
+        </span>
+      ))}
     </div>
   );
 }

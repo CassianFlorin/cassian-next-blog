@@ -57,21 +57,25 @@ export default function RouteTransitionOrchestrator({ children }: Props) {
       previousPathRef.current = pathname;
       return;
     }
-    const sections = isInitialRender
-      ? rootRef.current.querySelectorAll<HTMLElement>('[data-route-section]')
-      : rootRef.current.querySelectorAll<HTMLElement>(
-          '[data-route-section="main"]',
-        );
+    // First paint belongs to the page itself (the homepage hero stages its
+    // own slow reveal); only client-side navigations get a quiet settle.
+    if (isInitialRender) {
+      initialRenderRef.current = false;
+      previousPathRef.current = pathname;
+      return;
+    }
+
+    const sections = rootRef.current.querySelectorAll<HTMLElement>(
+      '[data-route-section="main"]',
+    );
     if (!sections.length) return;
 
     animationRef.current?.pause();
     animationRef.current = animate(sections, {
-      opacity: isInitialRender ? [0, 1] : [0.92, 1],
-      translateY: isInitialRender ? [16, 0] : [8, 0],
-      ease: ANIMATION_EASING.snappy,
-      duration: isInitialRender
-        ? ANIMATION_DURATION.normal
-        : ANIMATION_DURATION.fast,
+      opacity: [0.6, 1],
+      translateY: [8, 0],
+      ease: ANIMATION_EASING.expressive,
+      duration: ANIMATION_DURATION.normal,
     });
     initialRenderRef.current = false;
     previousPathRef.current = pathname;

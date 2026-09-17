@@ -2,18 +2,27 @@ import 'css/tailwind.css';
 import 'pliny/search/algolia.css';
 import 'remark-github-blockquote-alert/alert.css';
 
-import { Space_Grotesk, JetBrains_Mono } from 'next/font/google';
+import { Geist, Instrument_Serif, JetBrains_Mono } from 'next/font/google';
 import { ThemeProviders } from './theme-providers';
 import { Metadata } from 'next';
-import { defaultLocale, locales } from '../i18n';
+import { getLocale } from 'next-intl/server';
+import { defaultLocale } from '../i18n';
 import siteMetadata from '@/data/siteMetadata';
 import adsenseConfig, { shouldLoadAdsenseScript } from '@/data/adsenseConfig';
 import { htmlLangByLocale, ogLocaleByLocale, resolveLocale } from '@/lib/seo';
 
-const space_grotesk = Space_Grotesk({
+const geist = Geist({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-space-grotesk',
+  variable: '--font-geist',
+});
+
+const instrument_serif = Instrument_Serif({
+  subsets: ['latin'],
+  weight: '400',
+  style: ['normal', 'italic'],
+  display: 'swap',
+  variable: '--font-instrument-serif',
 });
 
 const jetbrains_mono = JetBrains_Mono({
@@ -26,7 +35,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteMetadata.siteUrl),
   title: {
     default: siteMetadata.title,
-    template: `%s | ${siteMetadata.title}`,
+    template: `%s — ${siteMetadata.author}`,
   },
   description: siteMetadata.description,
   authors: [{ name: siteMetadata.author }],
@@ -46,7 +55,7 @@ export const metadata: Metadata = {
     title: siteMetadata.title,
     description: siteMetadata.description,
     url: './',
-    siteName: siteMetadata.title,
+    siteName: siteMetadata.author,
     images: [siteMetadata.socialBanner],
     // Overridden per locale in app/[locale]/layout.tsx.
     locale: ogLocaleByLocale[defaultLocale],
@@ -76,25 +85,23 @@ export const metadata: Metadata = {
   },
 };
 
-export async function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
-}
-
 export default async function RootLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
+  // The root layout sits above the `[locale]` segment, so it never receives a
+  // locale param. getLocale() resolves the locale of the current request (set
+  // by the next-intl middleware, see i18n.ts) and falls back to the default
+  // for requests that bypass it.
+  const locale = await getLocale();
   const basePath = process.env.BASE_PATH || '';
   const loadAdsense = shouldLoadAdsenseScript();
 
   return (
     <html
       lang={htmlLangByLocale[resolveLocale(locale)]}
-      className={`${space_grotesk.variable} ${jetbrains_mono.variable} scroll-smooth`}
+      className={`${geist.variable} ${instrument_serif.variable} ${jetbrains_mono.variable} scroll-smooth`}
       suppressHydrationWarning
     >
       <link
@@ -127,12 +134,12 @@ export default async function RootLayout({
       <meta
         name="theme-color"
         media="(prefers-color-scheme: light)"
-        content="#f6f9f8"
+        content="#f7f6f3"
       />
       <meta
         name="theme-color"
         media="(prefers-color-scheme: dark)"
-        content="#0d1211"
+        content="#0e0d0c"
       />
       <link
         rel="alternate"
@@ -157,7 +164,7 @@ export default async function RootLayout({
           crossOrigin="anonymous"
         />
       )}
-      <body className="dark:bg-night bg-gray-50 pl-[calc(100vw-100%)] font-sans text-gray-800 antialiased dark:text-gray-200">
+      <body className="dark:bg-night bg-gray-50 font-sans text-gray-800 antialiased dark:text-gray-200">
         <ThemeProviders>{children}</ThemeProviders>
       </body>
     </html>
