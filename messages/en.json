@@ -101,7 +101,36 @@
     "discussOnTwitter": "Discuss on Twitter",
     "viewOnGitHub": "View on GitHub",
     "backToBlog": "Back to blog",
-    "tldrLabel": "In short"
+    "tldrLabel": "In short",
+    "archive": {
+      "title": "Writing",
+      "lede": "Recent traces.",
+      "description": "Field notes from building with agents, running systems, and keeping knowledge. Every article, newest first.",
+      "count": "{count, plural, one {# article} other {# articles}} since {year}",
+      "browseTerritories": "Browse by territory",
+      "allTopics": "All topics"
+    },
+    "topics": {
+      "title": "Topics",
+      "lede": "Every tag, by territory.",
+      "description": "Tags are how articles are filed. Each group below is a knowledge territory; the general group holds tags too broad to belong to one.",
+      "general": "General",
+      "articles": "{count, plural, one {# article} other {# articles}}",
+      "territory": "Territory",
+      "openTerritory": "Open the territory"
+    },
+    "article": {
+      "writing": "Writing",
+      "readingTime": "{minutes} min read",
+      "updated": "Updated",
+      "filedUnder": "Filed under",
+      "topics": "Topics",
+      "relatedProjects": "Related projects",
+      "citedBy": "Case study cites this",
+      "sameTerritory": "Same territory",
+      "keepReading": "Keep reading",
+      "inTheMap": "In the knowledge map"
+    }
   },
   "about": {
     "title": "About Me",

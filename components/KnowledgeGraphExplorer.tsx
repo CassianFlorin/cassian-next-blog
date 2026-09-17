@@ -580,7 +580,7 @@ export default function KnowledgeGraphExplorer({
   );
 
   return (
-    <div className="border border-gray-900/15 bg-gray-50 dark:border-white/15 dark:bg-[#141312]">
+    <div className="min-w-0 overflow-hidden border border-gray-900/15 bg-gray-50 dark:border-white/15 dark:bg-[#141312]">
       {!compact && (
         <div className="space-y-5 border-b border-gray-900/15 p-4 sm:p-5 dark:border-white/15">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

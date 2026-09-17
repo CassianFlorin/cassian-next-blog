@@ -9,8 +9,6 @@ import { languageAlternates, localeUrl } from '@/lib/seo';
 
 export const dynamic = 'force-static';
 
-const POSTS_PER_PAGE = 5;
-
 type Entry = MetadataRoute.Sitemap[number];
 
 /**
@@ -74,19 +72,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
-  // Page 1 is the same content as /blog, so paginated entries start at 2.
-  const blogPageCount = Math.ceil(posts.length / POSTS_PER_PAGE);
-  const blogPaginationEntries = Array.from(
-    { length: Math.max(0, blogPageCount - 1) },
-    (_, i) => i + 2,
-  ).flatMap((page) =>
-    localizedEntries(`/blog/page/${page}`, {
-      lastModified: blogLastModified,
-      changeFrequency: 'weekly',
-      priority: 0.4,
-    }),
-  );
-
   const projectEntries = caseStudyProjects().flatMap((project) =>
     localizedEntries(`/projects/${projectSlug(project)}`, {
       lastModified: today,
@@ -116,7 +101,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     ...staticEntries,
     ...postEntries,
-    ...blogPaginationEntries,
     ...projectEntries,
     ...knowledgeNodeEntries,
     ...tagEntries,

@@ -101,7 +101,36 @@
     "discussOnTwitter": "在 Twitter 上讨论",
     "viewOnGitHub": "在 GitHub 上查看",
     "backToBlog": "返回博客",
-    "tldrLabel": "一句话结论"
+    "tldrLabel": "一句话结论",
+    "archive": {
+      "title": "Writing",
+      "lede": "Recent traces.",
+      "description": "关于 Agent 开发、系统运维与知识管理的现场笔记。全部文章，按时间倒序。",
+      "count": "自 {year} 年起共 {count} 篇",
+      "browseTerritories": "按领域浏览",
+      "allTopics": "全部主题"
+    },
+    "topics": {
+      "title": "Topics",
+      "lede": "Every tag, by territory.",
+      "description": "标签决定文章如何归档。下面每一组都是一个知识领域；「通用」里是范围太宽、不属于任何单一领域的标签。",
+      "general": "通用",
+      "articles": "{count} 篇文章",
+      "territory": "所属领域",
+      "openTerritory": "打开该领域"
+    },
+    "article": {
+      "writing": "写作",
+      "readingTime": "{minutes} 分钟阅读",
+      "updated": "更新于",
+      "filedUnder": "归入领域",
+      "topics": "主题",
+      "relatedProjects": "相关项目",
+      "citedBy": "案例中引用了本文",
+      "sameTerritory": "同领域",
+      "keepReading": "继续阅读",
+      "inTheMap": "在知识地图中"
+    }
   },
   "about": {
     "title": "关于我",
