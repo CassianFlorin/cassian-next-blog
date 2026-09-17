@@ -161,6 +161,39 @@
         "problem": "开发者在文本处理、编码转换、内容比对和日常工程任务中，反复需要各种小型本地工具。",
         "solution": "MooTool 把实用的开发者工具收进一个 Java 桌面应用。本站以此展示我在开发者工具领域的开源参与。"
       }
+    },
+    "caseStudy": {
+      "chapters": {
+        "why": "为什么",
+        "problem": "问题",
+        "system": "系统",
+        "implementation": "实现",
+        "decisions": "决策",
+        "result": "结果",
+        "related": "关联"
+      },
+      "contents": "目录",
+      "projectLabel": "项目",
+      "status": "状态",
+      "started": "开始于",
+      "stack": "技术栈",
+      "links": "链接",
+      "work": "作品",
+      "relatedNodes": "知识领域",
+      "relatedArticles": "相关文章",
+      "sameTerritory": "同领域的文章",
+      "previous": "上一个",
+      "next": "下一个",
+      "systemLabel": "{project} 的系统分层，自上而下"
+    },
+    "index": {
+      "title": "Work",
+      "lede": "Things I build.",
+      "description": "从日常工程里长出来的工具。每个项目都有一份案例：为什么做、怎么运作、背后做了哪些取舍。",
+      "caseStudies": "案例",
+      "ecosystem": "生态与开源参与",
+      "readCaseStudy": "阅读案例",
+      "visit": "访问"
     }
   },
   "knowledge": {
@@ -403,6 +436,8 @@
     "breadcrumbBlog": "博客",
     "breadcrumbTags": "标签",
     "knowledgeNodeTitle": "{node} · 知识地图",
-    "knowledgeNodeDescription": "{node}：{description}Cassian Florin 知识地图中的 {articles} 篇文章与 {topics} 个主题。"
+    "knowledgeNodeDescription": "{node}：{description}Cassian Florin 知识地图中的 {articles} 篇文章与 {topics} 个主题。",
+    "projectCaseTitle": "{project} 案例",
+    "projectCaseDescription": "{project}：{summary}为什么做、系统如何运作，以及背后的设计取舍。"
   }
 }

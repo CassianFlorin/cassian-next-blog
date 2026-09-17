@@ -7,6 +7,7 @@ import Link from '@/components/Link';
 import KnowledgeModeBar from '@/components/knowledge/KnowledgeModeBar';
 import LocalKnowledgeGraph from '@/components/knowledge/LocalKnowledgeGraph';
 import TraceList from '@/components/writing/TraceList';
+import { projectHref } from '@/data/caseStudies';
 import projectsData from '@/data/projectsData';
 import { getKnowledgeIndex } from '@/lib/knowledgeData';
 import { buildLocalGraph } from '@/lib/knowledgeLocalGraph';
@@ -182,14 +183,15 @@ export default async function KnowledgeNodePage(props: { params: Params }) {
                 </h2>
                 <ul className="divide-y divide-gray-900/10 dark:divide-white/10">
                   {projects.map((project) => {
-                    const external = !project.href?.startsWith('/');
+                    const href = projectHref(project);
+                    const external = !href.startsWith('/');
                     const tagline = tp.has(`items.${project.id}.tagline`)
                       ? tp(`items.${project.id}.tagline`)
                       : tp(`items.${project.id}.description`);
                     return (
                       <li key={project.id}>
                         <Link
-                          href={project.href || '/projects'}
+                          href={href}
                           className="group grid gap-2 py-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-baseline md:gap-8"
                         >
                           <span className="space-y-2">

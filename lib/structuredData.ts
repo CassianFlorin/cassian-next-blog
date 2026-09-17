@@ -135,6 +135,54 @@ export function buildBlogPostingJsonLd(
   };
 }
 
+export interface ProjectCaseStudyInput {
+  name: string;
+  description: string;
+  /** Locale-less path of the case study, e.g. `/projects/skill-hub`. */
+  path: string;
+  keywords: string[];
+  codeRepository?: string;
+  /** Product home outside this site, when there is one. */
+  productUrl?: string;
+  /** Set for apps; omitted for libraries and CLIs. */
+  operatingSystem?: string;
+}
+
+/**
+ * A project case study. Open-source tools are SoftwareSourceCode (pointing at
+ * their repository); shipped apps are SoftwareApplication. Both are authored
+ * by the site owner and described by the case-study page.
+ */
+export function buildProjectJsonLd(
+  locale: Locale,
+  project: ProjectCaseStudyInput,
+): JsonLd {
+  const url = localeUrl(locale, project.path);
+  const isApp = Boolean(project.operatingSystem);
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': isApp ? 'SoftwareApplication' : 'SoftwareSourceCode',
+    '@id': `${url}#project`,
+    name: project.name,
+    description: project.description,
+    url: project.productUrl || project.codeRepository || url,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    inLanguage: hreflangByLocale[locale],
+    keywords: project.keywords.join(', '),
+    author: { '@id': PERSON_ID },
+    ...(project.codeRepository
+      ? { codeRepository: project.codeRepository }
+      : {}),
+    ...(isApp
+      ? {
+          operatingSystem: project.operatingSystem,
+          applicationCategory: 'SocialNetworkingApplication',
+        }
+      : {}),
+  };
+}
+
 /** Listing pages (blog index, tag pages) as a CollectionPage. */
 export function buildCollectionPageJsonLd(
   locale: Locale,

@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import Link from '@/components/Link';
 import SectionHeading from '@/components/brand/SectionHeading';
 import Reveal from '@/components/motion/Reveal';
+import { projectHref } from '@/data/caseStudies';
 import projectsData from '@/data/projectsData';
 
 const HOME_PROJECTS = ['litho', 'skillHub', 'databaseCli'];
@@ -46,14 +47,15 @@ export default async function WorkSection() {
         className="mt-16 grid border-t border-gray-900/15 md:mt-20 md:grid-cols-3 dark:border-white/15"
       >
         {projects.map((project, index) => {
-          const external = !project.href?.startsWith('/');
+          const href = projectHref(project);
+          const external = !href.startsWith('/');
           return (
             <li
               key={project.id}
               className="border-b border-gray-900/15 md:border-r md:border-b-0 md:first:*:pl-0 md:last:border-r-0 md:last:*:pr-0 dark:border-white/15"
             >
               <Link
-                href={project.href || '/projects'}
+                href={href}
                 className="group ease-atelier relative flex h-full flex-col gap-5 py-8 transition-[transform,background-color] duration-500 hover:-translate-y-1 hover:bg-gray-900/[0.025] md:px-6 md:py-10 lg:px-8 dark:hover:bg-white/[0.03]"
               >
                 <span className="type-meta text-gray-500 dark:text-gray-400">

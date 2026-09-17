@@ -11,10 +11,6 @@ export interface Project {
   techStack: string[];
   /** Knowledge territories this project belongs to (see lib/knowledgeNodes). */
   knowledgeNodes?: KnowledgeCategoryKey[];
-  relatedPosts?: Array<{
-    title: string;
-    href: string;
-  }>;
 }
 
 const projectsData: Project[] = [
@@ -43,12 +39,6 @@ const projectsData: Project[] = [
     category: 'featured',
     techStack: ['Go', 'CLI', 'AI Agent', 'Developer Tools'],
     knowledgeNodes: ['ai-agent', 'tools'],
-    relatedPosts: [
-      {
-        title: 'Agent 光会 grep 还不够：CodeGraph 让它先看懂代码结构',
-        href: '/blog/20260526-codegraph-agent-coding',
-      },
-    ],
   },
   {
     id: 'databaseCli',
@@ -76,12 +66,6 @@ const projectsData: Project[] = [
     category: 'open-source',
     techStack: ['Java', 'Developer Tools', 'Desktop Utility'],
     knowledgeNodes: ['tools', 'projects'],
-    relatedPosts: [
-      {
-        title: '今天成为了 MooTool 贡献者',
-        href: '/blog/20250927-MooToolContributors',
-      },
-    ],
   },
 ];
 

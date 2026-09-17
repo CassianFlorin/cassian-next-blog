@@ -161,6 +161,39 @@
         "problem": "Developers repeatedly need small local utilities for text, encoding, diffing, and daily engineering tasks.",
         "solution": "MooTool collects practical developer utilities in a Java desktop tool. This site presents it as open-source participation in developer tooling."
       }
+    },
+    "caseStudy": {
+      "chapters": {
+        "why": "",
+        "problem": "",
+        "system": "",
+        "implementation": "",
+        "decisions": "",
+        "result": "",
+        "related": ""
+      },
+      "contents": "Contents",
+      "projectLabel": "Project",
+      "status": "Status",
+      "started": "Started",
+      "stack": "Stack",
+      "links": "Links",
+      "work": "Work",
+      "relatedNodes": "Knowledge territories",
+      "relatedArticles": "Written about it",
+      "sameTerritory": "From the same territories",
+      "previous": "Previous",
+      "next": "Next",
+      "systemLabel": "{project} system layers, top to bottom"
+    },
+    "index": {
+      "title": "Work",
+      "lede": "Things I build.",
+      "description": "Tools shaped by daily engineering. Each one has a case study: why it exists, how it works, and the decisions behind it.",
+      "caseStudies": "Case studies",
+      "ecosystem": "Ecosystem & open source",
+      "readCaseStudy": "Read the case study",
+      "visit": "Visit"
     }
   },
   "knowledge": {
@@ -403,6 +436,8 @@
     "breadcrumbBlog": "Blog",
     "breadcrumbTags": "Tags",
     "knowledgeNodeTitle": "{node} · Knowledge",
-    "knowledgeNodeDescription": "{node}: {description} {articles} articles and {topics} topics on Cassian Florin's knowledge map."
+    "knowledgeNodeDescription": "{node}: {description} {articles} articles and {topics} topics on Cassian Florin's knowledge map.",
+    "projectCaseTitle": "{project} — Case study",
+    "projectCaseDescription": "{project}: {summary} Why it exists, how the system works, and the decisions behind it."
   }
 }

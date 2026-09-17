@@ -1,6 +1,11 @@
 import { allBlogs } from 'contentlayer/generated';
 import siteMetadata from '@/data/siteMetadata';
 import { defaultLocale, locales } from '@/lib/i18nRouting';
+import {
+  caseStudyProjects,
+  getCaseStudy,
+  projectSlug,
+} from '@/data/caseStudies';
 import { getKnowledgeCategory } from '@/lib/knowledgeGraphMapModel';
 import { getKnowledgeIndex } from '@/lib/knowledgeData';
 import { knowledgeNodeHref } from '@/lib/knowledgeNodes';
@@ -65,6 +70,14 @@ export function GET() {
       const url = localeUrl(defaultLocale, `/${post.path}`);
       const description = oneLine(post.tldr) || oneLine(post.summary);
       return `- [${oneLine(post.title)}](${url})${description ? `: ${description}` : ''}`;
+    }),
+    '',
+    '## Project case studies',
+    '',
+    ...caseStudyProjects().map((project) => {
+      const url = localeUrl(defaultLocale, `/projects/${projectSlug(project)}`);
+      const summary = getCaseStudy(project.id)?.content.en.summary ?? '';
+      return `- [${project.title}](${url}): ${summary}`;
     }),
     '',
     '## Knowledge territories',

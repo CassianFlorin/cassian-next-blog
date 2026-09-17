@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next';
 import { allBlogs } from 'contentlayer/generated';
 import tagData from 'app/tag-data.json';
 import { defaultLocale, locales } from '@/lib/i18nRouting';
+import { caseStudyProjects, projectSlug } from '@/data/caseStudies';
 import { getKnowledgeIndex } from '@/lib/knowledgeData';
 import { knowledgeNodeHref } from '@/lib/knowledgeNodes';
 import { languageAlternates, localeUrl } from '@/lib/seo';
@@ -86,6 +87,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
+  const projectEntries = caseStudyProjects().flatMap((project) =>
+    localizedEntries(`/projects/${projectSlug(project)}`, {
+      lastModified: today,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    }),
+  );
+
   // Knowledge focus pages change whenever writing is filed under them.
   const knowledgeNodeEntries = getKnowledgeIndex().nodes.flatMap((node) =>
     localizedEntries(knowledgeNodeHref(node.key), {
@@ -108,6 +117,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...staticEntries,
     ...postEntries,
     ...blogPaginationEntries,
+    ...projectEntries,
     ...knowledgeNodeEntries,
     ...tagEntries,
   ];
