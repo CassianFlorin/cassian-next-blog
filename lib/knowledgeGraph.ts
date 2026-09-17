@@ -28,6 +28,7 @@ export interface KnowledgePost {
   path?: string;
   title: string;
   summary?: string;
+  date?: string;
   tags?: string[];
   draft?: boolean;
 }

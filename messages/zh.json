@@ -8,49 +8,80 @@
     "knowledge": "知识地图",
     "search": "搜索",
     "theme": "主题",
-    "language": "语言"
+    "language": "语言",
+    "work": "作品",
+    "writing": "写作",
+    "menu": "菜单",
+    "close": "关闭",
+    "primaryNav": "主导航",
+    "knowledgeNav": "知识"
   },
   "home": {
     "title": "Cassian Florin",
     "description": "我构建 AI 工程工具、开发者工作流和个人知识系统，把实践沉淀成可复用资产。",
-    "projectsAction": "查看项目",
-    "blogAction": "阅读文章",
-    "githubAction": "GitHub",
-    "focusAreas": {
-      "aiAgent": "AI Agent",
-      "developerTools": "开发者工具",
-      "knowledgeWorkflows": "知识工作流",
-      "systemDesign": "系统设计"
+    "hero": {
+      "lines": ["Building things.", "Mapping ideas.", "Leaving traces."],
+      "areas": ["AI Engineering", "Developer Tools", "Knowledge Systems"],
+      "explore": "Explore",
+      "summary": "一个持续构建工具、整理思想，并留下作品痕迹的个人数字空间。"
     },
-    "featuredProjects": "精选项目",
-    "featuredProjectsDescription": "围绕 Agent、数据库排查和技能分发沉淀的公开工具。",
-    "projectProblem": "问题",
-    "projectProvides": "提供能力",
-    "viewProject": "查看项目",
-    "relatedArticle": "相关文章",
-    "writingTopics": "写作主题",
-    "writingTopicsDescription": "从工具建设、工程效率到 Obsidian 工作流的长期记录。",
-    "writingTopicCards": {
-      "aiTools": {
-        "title": "AI Agent 与开发者工具",
-        "description": "记录 CodeGraph、skill-hub、Agent 框架和 AI 辅助开发的实践。"
-      },
-      "engineeringEfficiency": {
-        "title": "系统设计与工程效率",
-        "description": "沉淀后端系统、开发环境、部署入口和工程工具链经验。"
-      },
-      "knowledgeManagement": {
-        "title": "个人知识管理与 Obsidian",
-        "description": "探索 Agent、Obsidian 和知识图谱如何组成长期知识工作流。"
+    "work": {
+      "title": "Work",
+      "lede": "Things I build.",
+      "description": "从日常工程里长出来的工具：Agent、技能、数据库与社区。",
+      "all": "全部项目",
+      "explore": "查看",
+      "whyLabel": "为什么"
+    },
+    "knowledge": {
+      "title": "Knowledge",
+      "lede": "Ideas are connected.",
+      "description": "每篇文章都被归入少数几块领域，这张图展示它们如何彼此交叠。",
+      "explore": "探索知识地图",
+      "graphLabel": "知识领域及其连接概览",
+      "overview": "全部领域",
+      "notes": "{count} 篇笔记",
+      "tags": "{count} 个主题",
+      "connections": "{count} 条连接",
+      "hint": "悬停或聚焦节点，查看它连接到哪里。"
+    },
+    "writing": {
+      "title": "Writing",
+      "lede": "Recent traces.",
+      "description": "关于 Agent 开发、系统运维与知识管理的现场笔记。",
+      "archive": "全部文章",
+      "areasTitle": "Areas of exploration",
+      "areas": {
+        "building": {
+          "label": "Building",
+          "items": ["AI Agent", "开发者工具"]
+        },
+        "thinking": {
+          "label": "Thinking",
+          "items": ["系统设计", "工程方法", "架构"]
+        },
+        "remembering": {
+          "label": "Remembering",
+          "items": ["Obsidian", "知识管理", "个人系统"]
+        }
       }
     },
-    "knowledgeMapTitle": "我的知识地图",
-    "knowledgeMapDescription": "用图谱查看文章、标签和知识笔记之间的真实连接。",
-    "openKnowledgeMap": "打开知识地图",
-    "selectedArticles": "精选文章",
-    "selectedArticlesDescription": "近期关于 Agent 编程、工程工作流和知识系统的写作。",
-    "readMore": "阅读更多",
-    "viewAllPosts": "查看所有文章"
+    "about": {
+      "title": "About",
+      "lede": "Cassian Florin",
+      "body": [
+        "我围绕软件、AI 与知识，构建工具、工作流和系统。",
+        "有的变成产品，有的变成笔记，有的只是一次实验。"
+      ],
+      "focus": [
+        "AI Engineering",
+        "Developer Tools",
+        "Knowledge Systems",
+        "Independent Projects"
+      ],
+      "more": "更多关于我",
+      "email": "Email"
+    }
   },
   "blog": {
     "readMore": "阅读更多",
@@ -96,18 +127,24 @@
     "items": {
       "litho": {
         "status": "日常主力 · iOS 公测 / Android 已发布",
+        "tagline": "linux.do 原生客户端",
+        "why": "一个社区值得在手机上拥有原生、保持登录的体验，而不是一张人机验证页。",
         "description": "linux.do 的原生第三方客户端（iOS / Android）。iOS 用 SwiftUI、Android 用 Compose 原生渲染 Discourse 社区，同时穿透 Cloudflare 并保持登录状态。",
         "problem": "linux.do 基于 Discourse 且部署在 Cloudflare 之后，第三方工具甚至简单脚本都会频繁撞上人机验证页并丢失会话，iPhone 上一直没有流畅的原生浏览和互动方式。",
         "solution": "Litho 把所有请求路由到一个离屏 WKWebView 网关，借用浏览器的 UA / Cookie / TLS 指纹，因此能顺利通过 Cloudflare 并保持登录状态。在此基础上提供完整的 SwiftUI 体验：话题流、单文档帖子渲染、表情回应、聊天、私信，以及基于 MessageBus 的实时通知。"
       },
       "skillHub": {
         "status": "活跃开发中",
+        "tagline": "AI Agent 技能的包管理器",
+        "why": "Agent 技能散落在各个仓库和本地目录里，没法安装、更新，也没法治理。",
         "description": "AI Agent 技能的包管理器。跨编码 Agent 安装、更新、同步和治理技能。",
         "problem": "AI 编码 Agent 正在成为日常开发的一部分，但可复用的技能仍散落在各个仓库、本地目录和不同的 Agent 生态里。",
         "solution": "skill-hub 把技能变成可管理的包，让它们可以在 Codex、Claude、Gemini 等工作流之间安装、更新、同步和治理。"
       },
       "databaseCli": {
         "status": "活跃开发中",
+        "tagline": "给 Agent 用的安全数据库排查",
+        "why": "生产排查需要真实数据，但不能把 AI 会话变成一个不设防的 SQL 客户端。",
         "description": "面向 Codex 的只读数据库 CLI 技能。",
         "problem": "真实的生产排查经常需要查看 schema、执行安全的只读 SQL、做跨环境对比，同时不能把 AI 会话变成一个不受控的数据库客户端。",
         "solution": "database-cli 给 Codex 一套受控的数据库排查工作流：查看 schema、检索元数据、执行只读查询，并在护栏内对比记录。"
@@ -127,7 +164,7 @@
     }
   },
   "knowledge": {
-    "title": "知识地图",
+    "title": "Knowledge",
     "description": "通过文章、标签和知识笔记之间的连接，探索这个站点的内容脉络。",
     "graphLabel": "分类知识地图",
     "stats": "{categories} 个大类 · {posts} 篇文章 · {tags} 个标签",
@@ -145,7 +182,68 @@
     "noMatches": "没有匹配的节点",
     "searchHint": "换一个关键词，或清空搜索查看完整图谱。",
     "exploreDesc": "探索与本文相关的标签和文章。",
-    "openFullGraph": "查看完整图谱"
+    "openFullGraph": "查看完整图谱",
+    "lede": "Ideas are connected.",
+    "mapDescription": "每篇文章都按标签归入少数几块领域。你可以探索完整图谱，也可以聚焦某一块领域，看看里面有什么。",
+    "modeLabel": "地图模式",
+    "modeExplore": "探索",
+    "modeFocus": "聚焦",
+    "exploreHint": "拖拽、缩放、悬停查看。点击领域节点进入聚焦。",
+    "territories": "领域",
+    "filterLabel": "按领域筛选图谱",
+    "filterAll": "全部",
+    "nodeLabel": "领域",
+    "backToMap": "返回知识地图",
+    "articles": "{count} 篇文章",
+    "notesCount": "{count} 条笔记",
+    "topics": "{count} 个主题",
+    "projects": "{count} 个项目",
+    "connectionsCount": "{count} 条连接",
+    "sectionProjects": "项目",
+    "sectionArticles": "文章",
+    "sectionNotes": "笔记",
+    "sectionTopics": "主题",
+    "sectionRelated": "相关领域",
+    "shared": "共享 {count} 篇",
+    "noArticles": "这里暂时还没有内容。",
+    "localGraphLabel": "{node} 及其关联的领域",
+    "otherTerritories": "其他领域",
+    "focusNode": "聚焦 {node}",
+    "nodes": {
+      "ai-agent": {
+        "label": "AI / Agent",
+        "description": "编程 Agent、AI 工作流，以及围绕它们的工具。"
+      },
+      "tools": {
+        "label": "开发者工具",
+        "description": "CLI、编辑器、Git 与日常工程工具。"
+      },
+      "knowledge-workflow": {
+        "label": "知识系统",
+        "description": "笔记、Obsidian、知识图谱与发布。"
+      },
+      "engineering": {
+        "label": "工程方法",
+        "description": "架构、排错、验证与工作习惯。"
+      },
+      "devops": {
+        "label": "基础设施",
+        "description": "服务器、网络、Docker、NAS 与运维。"
+      },
+      "languages": {
+        "label": "语言与平台",
+        "description": "编程语言、框架与平台笔记。"
+      },
+      "projects": {
+        "label": "产品",
+        "description": "已发布的应用、开源工作与产品思考。"
+      },
+      "data-integration": {
+        "label": "数据",
+        "description": "数据分析、集成与数据系统。"
+      }
+    },
+    "statConnections": "连接"
   },
   "footer": {
     "copyright": "版权所有",
@@ -159,7 +257,8 @@
   "theme": {
     "light": "浅色",
     "dark": "深色",
-    "system": "系统"
+    "system": "系统",
+    "toggle": "主题"
   },
   "tags": {
     "随笔": "随笔",
@@ -302,6 +401,8 @@
     "knowledgeDescription": "以图谱方式浏览站内文章、标签与知识笔记之间的关联关系。",
     "breadcrumbHome": "首页",
     "breadcrumbBlog": "博客",
-    "breadcrumbTags": "标签"
+    "breadcrumbTags": "标签",
+    "knowledgeNodeTitle": "{node} · 知识地图",
+    "knowledgeNodeDescription": "{node}：{description}Cassian Florin 知识地图中的 {articles} 篇文章与 {topics} 个主题。"
   }
 }

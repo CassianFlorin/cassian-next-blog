@@ -1,4 +1,3 @@
-import { Space_Grotesk } from 'next/font/google';
 import { Analytics, AnalyticsConfig } from 'pliny/analytics';
 import { Analytics as VercelAnalytics } from '@vercel/analytics/next';
 import { SearchProvider, SearchConfig } from 'pliny/search';
@@ -6,7 +5,6 @@ import Header from '@/components/Header';
 import SectionContainer from '@/components/SectionContainer';
 import Footer from '@/components/Footer';
 import RouteTransitionOrchestrator from '@/components/RouteTransitionOrchestrator';
-import EntryCurtain from '@/components/EntryCurtain';
 import siteMetadata from '@/data/siteMetadata';
 import { ThemeProviders } from '../theme-providers';
 import { Metadata } from 'next';
@@ -23,12 +21,6 @@ import {
   ogLocaleByLocale,
   resolveLocale,
 } from '@/lib/seo';
-
-const space_grotesk = Space_Grotesk({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-space-grotesk',
-});
 
 export async function generateMetadata(props: {
   params: Promise<{ locale: string }>;
@@ -111,12 +103,6 @@ export default async function LocaleLayout({
     <NextIntlClientProvider messages={messages} locale={locale}>
       <ThemeProviders>
         <JsonLd data={buildSiteJsonLd(resolveLocale(locale))} />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `try{if(sessionStorage.getItem('entry-curtain-played')==='1'){document.documentElement.classList.add('entry-curtain-done')}}catch(e){}`,
-          }}
-        />
-        <EntryCurtain />
         {/* Vercel Web Analytics: same-origin script, so the strict CSP in
             next.config.js covers it without an allowlist entry. */}
         <VercelAnalytics />
@@ -125,14 +111,10 @@ export default async function LocaleLayout({
         <Analytics
           analyticsConfig={siteMetadata.analytics as AnalyticsConfig}
         />
-        <div className="site-backdrop" aria-hidden="true">
-          <div className="site-backdrop-aurora" />
-          <div className="site-backdrop-grid" />
-        </div>
         <SectionContainer>
           <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
             <RouteTransitionOrchestrator>
-              <div data-route-section="header" className="sticky top-0 z-50">
+              <div data-route-section="header" className="relative z-50">
                 <Header />
               </div>
               <main className="mb-auto" data-route-section="main">

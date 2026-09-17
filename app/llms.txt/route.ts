@@ -1,6 +1,9 @@
 import { allBlogs } from 'contentlayer/generated';
 import siteMetadata from '@/data/siteMetadata';
 import { defaultLocale, locales } from '@/lib/i18nRouting';
+import { getKnowledgeCategory } from '@/lib/knowledgeGraphMapModel';
+import { getKnowledgeIndex } from '@/lib/knowledgeData';
+import { knowledgeNodeHref } from '@/lib/knowledgeNodes';
 import { SITE_URL, localeUrl } from '@/lib/seo';
 
 /**
@@ -62,6 +65,14 @@ export function GET() {
       const url = localeUrl(defaultLocale, `/${post.path}`);
       const description = oneLine(post.tldr) || oneLine(post.summary);
       return `- [${oneLine(post.title)}](${url})${description ? `: ${description}` : ''}`;
+    }),
+    '',
+    '## Knowledge territories',
+    '',
+    ...getKnowledgeIndex().nodes.map((node) => {
+      const category = getKnowledgeCategory(node.key);
+      const url = localeUrl(defaultLocale, knowledgeNodeHref(node.key));
+      return `- [${category.label}](${url}): ${category.description} (${node.articles.length} posts)`;
     }),
     '',
     '## Pages',

@@ -2,6 +2,8 @@ import { MetadataRoute } from 'next';
 import { allBlogs } from 'contentlayer/generated';
 import tagData from 'app/tag-data.json';
 import { defaultLocale, locales } from '@/lib/i18nRouting';
+import { getKnowledgeIndex } from '@/lib/knowledgeData';
+import { knowledgeNodeHref } from '@/lib/knowledgeNodes';
 import { languageAlternates, localeUrl } from '@/lib/seo';
 
 export const dynamic = 'force-static';
@@ -84,6 +86,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
+  // Knowledge focus pages change whenever writing is filed under them.
+  const knowledgeNodeEntries = getKnowledgeIndex().nodes.flatMap((node) =>
+    localizedEntries(knowledgeNodeHref(node.key), {
+      lastModified: blogLastModified,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    }),
+  );
+
   const tagCounts = tagData as Record<string, number>;
   const tagEntries = Object.keys(tagCounts).flatMap((tag) =>
     localizedEntries(`/tags/${encodeURI(tag)}`, {
@@ -97,6 +108,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...staticEntries,
     ...postEntries,
     ...blogPaginationEntries,
+    ...knowledgeNodeEntries,
     ...tagEntries,
   ];
 }
