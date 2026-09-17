@@ -35,7 +35,7 @@ export default async function HeroSection() {
         <div className="dark:to-night absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-gray-50" />
       </div>
 
-      <div className="container-atelier flex min-h-[calc(100svh-6rem)] flex-col justify-between gap-10 pt-4 pb-8 md:min-h-[calc(100svh-10rem)] md:pb-10">
+      <div className="container-atelier flex min-h-svh flex-col justify-between gap-10 pt-24 pb-8 md:pt-48 md:pb-10">
         <p
           className="type-meta hero-stage text-gray-600 dark:text-gray-400"
           style={stage(0)}

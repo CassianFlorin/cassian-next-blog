@@ -260,14 +260,16 @@
   }
 
   /* Dissolve the image edges into the page so it reads as atmosphere */
+  /* The header floats over the hero, so only a short top fade is kept —
+     enough to settle the navigation, not a band. */
   .hero-mask {
-    mask-image: linear-gradient(to bottom, transparent, black 30%);
+    mask-image: linear-gradient(to bottom, transparent, black 16%);
   }
 
   @media (width >= 64rem) {
     .hero-mask {
       mask-image: linear-gradient(to right, transparent, black 42%),
-        linear-gradient(to bottom, transparent, black 30%);
+        linear-gradient(to bottom, transparent, black 16%);
       mask-composite: intersect;
     }
   }

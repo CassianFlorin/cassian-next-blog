@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import siteMetadata from '@/data/siteMetadata';
 import headerNavLinks from '@/data/headerNavLinks';
-import { isNavActive } from '@/lib/navigation';
+import { isNavActive, stripLocale } from '@/lib/navigation';
 import CFMark from './brand/CFMark';
 import Link from './Link';
 import MobileNav from './MobileNav';
@@ -15,9 +15,14 @@ import LanguageSwitch from './LanguageSwitch';
 const Header = () => {
   const t = useTranslations();
   const pathname = usePathname();
+  // On the homepage the header floats over the hero, so the misty backdrop
+  // runs to the top of the viewport instead of starting below a solid band.
+  const overlay = stripLocale(pathname) === '/';
 
   return (
-    <header className="bleed">
+    <header
+      className={`bleed ${overlay ? 'absolute inset-x-0 top-0 z-50' : ''}`}
+    >
       <div className="container-atelier flex items-start justify-between gap-6 pt-6 pb-6 md:pt-8 md:pb-10">
         <Link
           href="/"
@@ -46,7 +51,7 @@ const Header = () => {
                     <Link
                       href={link.href}
                       aria-current={active ? 'page' : undefined}
-                      className={`group flex items-baseline justify-end gap-3 text-sm leading-6 transition-colors duration-200 ${
+                      className={`group grid grid-cols-[1.75rem_auto] items-baseline gap-1 text-sm leading-6 transition-colors duration-200 ${
                         active
                           ? 'text-gray-950 dark:text-gray-50'
                           : 'text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-gray-50'
@@ -62,9 +67,7 @@ const Header = () => {
                       >
                         {link.index}
                       </span>
-                      <span className="min-w-[4.5rem] text-right">
-                        {t(link.title)}
-                      </span>
+                      <span>{t(link.title)}</span>
                     </Link>
                   </li>
                 );
