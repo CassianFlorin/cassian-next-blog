@@ -32,7 +32,7 @@ export default function StepProgress({ steps }: StepProgressProps) {
                   ? 'border-primary-600 bg-primary-600 dark:border-primary-400 dark:bg-primary-400 text-white dark:text-gray-950'
                   : current
                     ? 'border-primary-600 text-primary-700 dark:border-primary-400 dark:text-primary-300'
-                    : 'border-gray-300 text-gray-500 dark:border-gray-700 dark:text-gray-500'
+                    : 'border-gray-300 text-gray-500 dark:border-gray-700 dark:text-gray-400'
               }`}
             >
               {done ? (
@@ -56,7 +56,7 @@ export default function StepProgress({ steps }: StepProgressProps) {
                     ? 'text-primary-700 dark:text-primary-300'
                     : done
                       ? 'text-gray-900 dark:text-gray-100'
-                      : 'text-gray-500 dark:text-gray-500'
+                      : 'text-gray-500 dark:text-gray-400'
                 }`}
               >
                 <span className="sr-only">

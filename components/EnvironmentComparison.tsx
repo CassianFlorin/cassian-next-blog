@@ -68,7 +68,7 @@ export default function EnvironmentComparison({
               <span
                 className={`type-meta shrink-0 ${
                   problem
-                    ? 'text-gray-500 dark:text-gray-500'
+                    ? 'text-gray-500 dark:text-gray-400'
                     : 'text-primary-700 dark:text-primary-300'
                 }`}
               >
@@ -78,7 +78,7 @@ export default function EnvironmentComparison({
 
             <dl className="space-y-3 text-sm">
               <div>
-                <dt className="type-meta text-gray-500 dark:text-gray-500">
+                <dt className="type-meta text-gray-500 dark:text-gray-400">
                   路径
                 </dt>
                 <dd className="mt-1">
@@ -89,7 +89,7 @@ export default function EnvironmentComparison({
               </div>
 
               <div>
-                <dt className="type-meta text-gray-500 dark:text-gray-500">
+                <dt className="type-meta text-gray-500 dark:text-gray-400">
                   问题
                 </dt>
                 <dd className="mt-1 leading-6 text-gray-700 dark:text-gray-300">
@@ -122,7 +122,7 @@ export default function EnvironmentComparison({
 
               {env.cons && env.cons.length > 0 && (
                 <div>
-                  <dt className="type-meta text-gray-500 dark:text-gray-500">
+                  <dt className="type-meta text-gray-500 dark:text-gray-400">
                     缺点
                   </dt>
                   <dd>

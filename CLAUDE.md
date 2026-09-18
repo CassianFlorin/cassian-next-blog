@@ -37,7 +37,7 @@
 
 - 颜色只写令牌类名（`text-primary-700`、`bg-gray-200/70`），不写十六进制、不写 Tailwind 默认的 `yellow-*` `green-*` `blue-*` `red-*`。
 - 暗色用 `dark:` 变体或 `.dark …` 选择器。**布局里 prose 用的是 `dark:prose-invert`，不存在裸的 `prose-invert` 类**，CSS 里覆盖暗色 prose 要写 `.dark .prose`（见 `css/tailwind.css` 中的注释，这是踩过的坑）。
-- 文字最浅到 `gray-500`（浅色）/ `gray-400`（暗色），再浅的只能做装饰线，不能承载信息。
+- 文字最浅到 `gray-500`（浅色）/ `gray-400`（暗色，`gray-500` 在 paper-dark 上只有 3.4:1），再浅的只能做装饰线，不能承载信息。
 - `prefers-reduced-motion` 必须有降级：CSS 动画走 `@media` 关掉，JS 动画查 `matchMedia`。
 
 ## 3. 站点结构与命名
@@ -64,7 +64,10 @@
 - 每个组件都要在明暗两套下看过。本地切换：给 `<html>` 加/去 `dark` 类即可。
 - 新文章按 `docs/article-template.md`；frontmatter 必填 `title` `date` `tags` `summary` `tldr`；
   `tags` 优先复用已有的（`app/tag-data.json`），新 tag 要能归到某个领域，否则它在知识图谱里是孤点。
-- 文章里不要内嵌样式、不要 `<div style>`、不要自定义颜色。需要新视觉就加组件。
+- 文章里不要内嵌样式、不要 `<div style>`、不要自定义颜色。
+- **内容需要现有组件表达不了的形式时，就为它设计一个新组件**，而不是退回到原生 HTML 或硬凑表格。
+  流程、设计 DNA、可选形式、起步模板都在 skill `atelier-component`（`.claude/skills/atelier-component/`），
+  从判断要不要做，到登记、验证、写文档，按它走完。站点不预制组件库，组件是随文章长出来的。
 
 ## 5. 首页与各章节的语法
 
@@ -95,4 +98,6 @@ for t in tests/*.mjs; do node "$t"; done
 - `/` 不做预渲染（root layout 用了 `getLocale()`），这是有意的。
 - 浏览器面板隐藏时不合成帧，`ResizeObserver`、IntersectionObserver 看起来「不触发」，不是 bug。
 - 刚 `navigate` 后的第一张截图常常是空白，等 2 秒再截一次。
+- 面板隐藏时截图直接超时；此时用 headless Chrome 出整页图再裁切，命令在 skill `atelier-component` 第 6 节。
+  注意 `--blink-settings=preferredColorScheme=1` 是浅色、`=0` 是暗色。
 - Google PageSpeed API 有配额，跑不了就用网页版。

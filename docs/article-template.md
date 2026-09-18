@@ -240,8 +240,8 @@ public class Example {
 />
 ```
 
-需要新的视觉形式时，新增组件并登记到 `MDXComponents.tsx`，以 `Callout.tsx` 为样板，
-明暗两套都要看过。
+需要新的视觉形式时，用 skill `atelier-component`（`.claude/skills/atelier-component/SKILL.md`）
+设计一个新组件：它会带你判断要不要做、选形式、写代码、登记到 `MDXComponents.tsx`、明暗两套验证并回来更新本文档。
 
 ---
 
