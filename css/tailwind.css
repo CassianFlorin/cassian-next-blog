@@ -249,14 +249,29 @@
     color: white;
   }
 
-  /* Hero: staged, slow reveal (CSS only so it runs before hydration) */
+  /* Hero: staged, slow reveal (CSS only so it runs before hydration).
+     Desktop takes its time; on phones the whole sequence is compressed
+     (600ms fades, delays halved) because under mobile throttling the slow
+     version keeps the viewport visually unsettled for seconds and inflates
+     Speed Index without any of the atmosphere paying off on a small screen. */
   .hero-stage {
-    animation: hero-rise var(--motion-slow) var(--ease-atelier) both;
-    animation-delay: var(--stage-delay, 0ms);
+    animation: hero-rise var(--hero-rise, var(--motion-slow))
+      var(--ease-atelier) both;
+    animation-delay: calc(var(--stage-delay, 0ms) * var(--hero-tempo, 1));
   }
 
   .hero-backdrop {
-    animation: hero-backdrop-in 1500ms var(--ease-atelier) both;
+    animation: hero-backdrop-in var(--hero-backdrop-in, 1500ms)
+      var(--ease-atelier) both;
+  }
+
+  @media (width < 64rem) {
+    .hero-stage,
+    .hero-backdrop {
+      --hero-rise: 600ms;
+      --hero-backdrop-in: 600ms;
+      --hero-tempo: 0.5;
+    }
   }
 
   /* Dissolve the image edges into the page so it reads as atmosphere */
