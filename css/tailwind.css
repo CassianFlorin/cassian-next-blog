@@ -416,7 +416,9 @@
     }
   }
 
-  .prose-invert {
+  /* The layouts apply `dark:prose-invert`, never the bare `prose-invert`
+     class, so the dark overrides must key off `.dark` to take effect. */
+  .dark .prose {
     & a {
       color: var(--color-primary-400);
       &:hover {
