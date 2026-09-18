@@ -194,10 +194,38 @@ public class Example {
 
 ## 常用组件
 
+全部组件见 `components/MDXComponents.tsx`。它们已按站点 V2 设计规范（见根目录 `CLAUDE.md`）
+统一为单一强调色 + 暖灰 + 直角，**不要在文章里自带颜色或内联样式**。
+
 ### Callout（提示框）
 
 ```jsx
 <Callout emoji="💡">这是一个重要提示，用于突出关键信息。</Callout>
+```
+
+`emoji` 可选。没有 `type` 之分——警告、提示、引用都用同一种样式，语义靠文字表达。
+
+### StepProgress（步骤列表）
+
+```jsx
+<StepProgress
+  steps={[
+    { title: '打开终端', status: 'completed', description: '可选说明' },
+    { title: '运行安装命令', status: 'current' },
+    { title: '重新加载配置', status: 'pending' },
+  ]}
+/>
+```
+
+### EnvironmentComparison（环境对比）
+
+```jsx
+<EnvironmentComparison
+  environments={[
+    { name: 'Homebrew', path: '/opt/homebrew/bin/', issue: '…', cons: ['…'] },
+    { name: '原生环境', path: '/usr/bin/', issue: '…', pros: ['…'] },
+  ]}
+/>
 ```
 
 ### ErrorDisplay（错误展示）
@@ -211,6 +239,9 @@ public class Example {
   details={['详细说明1', '详细说明2']}
 />
 ```
+
+需要新的视觉形式时，用 skill `atelier-component`（`.claude/skills/atelier-component/SKILL.md`）
+设计一个新组件：它会带你判断要不要做、选形式、写代码、登记到 `MDXComponents.tsx`、明暗两套验证并回来更新本文档。
 
 ---
 

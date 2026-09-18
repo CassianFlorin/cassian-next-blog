@@ -14,7 +14,8 @@ const compat = new FlatCompat({
 
 export default [
   {
-    ignores: [],
+    // .claude/skills 里的模板文件不在 tsconfig 内，类型化规则会报错
+    ignores: ['.claude/**'],
   },
   js.configs.recommended,
   ...compat.extends(

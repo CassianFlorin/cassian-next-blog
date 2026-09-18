@@ -52,5 +52,7 @@ yarn-error.log*
 .codegraph/
 
 .idea
-.claude/
+# .claude 里只有 skills 进仓库（给 Agent 的项目级规范），本机配置继续忽略
+.claude/*
+!.claude/skills/
 /.cursor
