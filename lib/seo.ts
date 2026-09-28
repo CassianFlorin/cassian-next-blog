@@ -92,6 +92,30 @@ export function buildAlternates(
   };
 }
 
+/**
+ * Posts are written once, in the default locale. `/en/blog/...` renders that
+ * same body inside English chrome, so it is a duplicate, not a translation.
+ * Every locale variant points its canonical at the default-locale URL and only
+ * that language is advertised, which leaves one indexable page per post.
+ */
+export const postContentLocale: Locale = defaultLocale;
+
+/** hreflang set for a post: just the default-locale URL. */
+export function postLanguageAlternates(path: string): Record<string, string> {
+  const url = localeUrl(postContentLocale, path);
+  return { [hreflangByLocale[postContentLocale]]: url, 'x-default': url };
+}
+
+export function buildPostAlternates(
+  path: string,
+  canonicalOverride?: string,
+): Metadata['alternates'] {
+  return {
+    canonical: canonicalOverride || localeUrl(postContentLocale, path),
+    languages: postLanguageAlternates(path),
+  };
+}
+
 /** Turn a possibly-relative asset path into an absolute URL. */
 export function absoluteAsset(src?: string): string {
   const image = src || siteMetadata.socialBanner;

@@ -5,7 +5,12 @@ import { defaultLocale, locales } from '@/lib/i18nRouting';
 import { caseStudyProjects, projectSlug } from '@/data/caseStudies';
 import { getKnowledgeIndex } from '@/lib/knowledgeData';
 import { knowledgeNodeHref } from '@/lib/knowledgeNodes';
-import { languageAlternates, localeUrl } from '@/lib/seo';
+import {
+  languageAlternates,
+  localeUrl,
+  postContentLocale,
+  postLanguageAlternates,
+} from '@/lib/seo';
 
 export const dynamic = 'force-static';
 
@@ -56,6 +61,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/knowledge', changeFrequency: 'weekly' as const, priority: 0.7 },
     { path: '/about', changeFrequency: 'monthly' as const, priority: 0.7 },
     { path: '/tags', changeFrequency: 'weekly' as const, priority: 0.6 },
+    { path: '/privacy', changeFrequency: 'yearly' as const, priority: 0.3 },
   ].flatMap(({ path, changeFrequency, priority }) =>
     localizedEntries(path, {
       lastModified: path === '/' || path === '/blog' ? blogLastModified : today,
@@ -64,13 +70,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
-  const postEntries = posts.flatMap((post) =>
-    localizedEntries(`/${post.path}`, {
+  // Posts only exist in the default locale; the other locale's URL is a
+  // canonicalised duplicate and stays out of the sitemap.
+  const postEntries: MetadataRoute.Sitemap = posts.map((post) => {
+    const path = `/${post.path}`;
+    return {
+      url: localeUrl(postContentLocale, path),
       lastModified: new Date(post.lastmod || post.date).toISOString(),
       changeFrequency: 'monthly',
       priority: 0.8,
-    }),
-  );
+      alternates: {
+        languages: postLanguageAlternates(path),
+      },
+    };
+  });
 
   const projectEntries = caseStudyProjects().flatMap((project) =>
     localizedEntries(`/projects/${projectSlug(project)}`, {
