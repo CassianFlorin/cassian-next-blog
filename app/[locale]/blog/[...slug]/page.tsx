@@ -34,9 +34,10 @@ import {
 } from '@/lib/structuredData';
 import {
   absoluteImageList,
-  buildAlternates,
+  buildPostAlternates,
   localeUrl,
   ogLocaleByLocale,
+  postContentLocale,
   resolveLocale,
   SITE_URL,
 } from '@/lib/seo';
@@ -63,7 +64,6 @@ export async function generateMetadata(props: {
     return;
   }
 
-  const locale = resolveLocale(params.locale);
   const publishedAt = new Date(post.date).toISOString();
   const modifiedAt = new Date(post.lastmod || post.date).toISOString();
   const authors = authorDetails.map((author) => author.name);
@@ -90,17 +90,18 @@ export async function generateMetadata(props: {
     keywords: post.tags?.length ? post.tags : undefined,
     authors: authors.map((name) => ({ name })),
     // `canonicalUrl` frontmatter wins when the post was first published
-    // elsewhere; otherwise the locale-prefixed URL is canonical.
-    alternates: buildAlternates(locale, `/${post.path}`, post.canonicalUrl),
+    // elsewhere; otherwise the default-locale URL is canonical for every
+    // locale, since the body is only written once.
+    alternates: buildPostAlternates(`/${post.path}`, post.canonicalUrl),
     openGraph: {
       title: post.title,
       description: post.summary,
       siteName: siteMetadata.author,
-      locale: ogLocaleByLocale[locale],
+      locale: ogLocaleByLocale[postContentLocale],
       type: 'article',
       publishedTime: publishedAt,
       modifiedTime: modifiedAt,
-      url: localeUrl(locale, `/${post.path}`),
+      url: localeUrl(postContentLocale, `/${post.path}`),
       images,
       authors: authors.length > 0 ? authors : [siteMetadata.author],
       tags: post.tags,
@@ -186,7 +187,9 @@ export default async function Page(props: {
     })),
   };
 
-  const articleJsonLd = buildBlogPostingJsonLd(locale, {
+  // The article itself only exists in the default locale; the breadcrumb
+  // below is chrome and follows the page locale.
+  const articleJsonLd = buildBlogPostingJsonLd(postContentLocale, {
     title: post.title,
     summary: post.summary,
     tldr: post.tldr,
@@ -207,19 +210,19 @@ export default async function Page(props: {
   ]);
 
   // Opt-in per post via frontmatter; each builder returns null when absent.
-  const faqJsonLd = buildFaqPageJsonLd(locale, {
+  const faqJsonLd = buildFaqPageJsonLd(postContentLocale, {
     path: `/${post.path}`,
     canonicalUrl: post.canonicalUrl,
     faq: post.faq,
   });
-  const howToJsonLd = buildHowToJsonLd(locale, {
+  const howToJsonLd = buildHowToJsonLd(postContentLocale, {
     path: `/${post.path}`,
     canonicalUrl: post.canonicalUrl,
     title: post.title,
     summary: post.summary,
     howto: post.howto,
   });
-  const definedTermJsonLd = buildDefinedTermJsonLd(locale, {
+  const definedTermJsonLd = buildDefinedTermJsonLd(postContentLocale, {
     path: `/${post.path}`,
     canonicalUrl: post.canonicalUrl,
     definedTerm: post.definedTerm,

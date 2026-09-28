@@ -310,7 +310,10 @@
   },
   "footer": {
     "copyright": "All rights reserved",
-    "poweredBy": "Powered by Next.js"
+    "poweredBy": "Powered by Next.js",
+    "about": "About",
+    "privacy": "Privacy",
+    "contact": "Contact"
   },
   "search": {
     "placeholder": "Search posts...",
@@ -468,6 +471,78 @@
     "knowledgeNodeTitle": "{node} · Knowledge",
     "knowledgeNodeDescription": "{node}: {description} {articles} articles and {topics} topics on Cassian Florin's knowledge map.",
     "projectCaseTitle": "{project} · Case study",
-    "projectCaseDescription": "{project}: {summary} Why it exists, how the system works, and the decisions behind it."
+    "projectCaseDescription": "{project}: {summary} Why it exists, how the system works, and the decisions behind it.",
+    "privacyTitle": "Privacy Policy",
+    "privacyDescription": "How cassianflorin.com uses analytics, Google AdSense advertising cookies and local preferences, and how to opt out of personalised ads."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "updated": "Last updated · 2026-09-28",
+    "intro": "This is a personal website. It has no accounts and never asks you for personal information. This page explains what data is collected when you visit, by whom, what it is used for, and how to turn it off.",
+    "sections": [
+      {
+        "heading": "Analytics",
+        "body": [
+          "Traffic is measured with Vercel Web Analytics. It sets no cookies and only records aggregate data such as page path, referrer, country or region, browser and device type, none of which identifies you personally."
+        ],
+        "links": [
+          {
+            "label": "Vercel Web Analytics privacy",
+            "href": "https://vercel.com/docs/analytics/privacy-policy"
+          }
+        ]
+      },
+      {
+        "heading": "Advertising and cookies",
+        "body": [
+          "This site shows ads through Google AdSense. Third-party vendors, including Google, use cookies to serve ads based on your prior visits to this site or other websites.",
+          "Google's use of advertising cookies enables it and its partners to serve ads based on your visits to this site and/or other sites on the Internet.",
+          "You can opt out of personalised advertising in Google Ads Settings, or opt out of third-party vendors' cookies for personalised advertising at aboutads.info."
+        ],
+        "links": [
+          {
+            "label": "Google Ads Settings",
+            "href": "https://adssettings.google.com"
+          },
+          {
+            "label": "aboutads.info choices",
+            "href": "https://www.aboutads.info/choices"
+          },
+          {
+            "label": "How Google uses data from partner sites",
+            "href": "https://policies.google.com/technologies/partner-sites"
+          }
+        ]
+      },
+      {
+        "heading": "Preferences stored locally",
+        "body": [
+          "Your light/dark theme choice is kept in your browser's localStorage, and your language preference in a cookie named NEXT_LOCALE. They only remember how the site should look for you and are never sent to third parties."
+        ],
+        "links": []
+      },
+      {
+        "heading": "External links",
+        "body": [
+          "Articles link to other websites. Once you leave this site, the other site's own policy governs how your data is handled."
+        ],
+        "links": []
+      },
+      {
+        "heading": "Contact",
+        "body": [
+          "If you have any question about this policy or the site, email me."
+        ],
+        "links": [],
+        "email": true
+      },
+      {
+        "heading": "Changes",
+        "body": [
+          "This policy is updated whenever the services used here change, together with the date at the top of the page."
+        ],
+        "links": []
+      }
+    ]
   }
 }
