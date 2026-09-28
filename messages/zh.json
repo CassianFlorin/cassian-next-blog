@@ -473,7 +473,7 @@
     "projectCaseTitle": "{project} · 项目案例",
     "projectCaseDescription": "{project}：{summary}为什么做、系统如何运作，以及背后的设计取舍。",
     "privacyTitle": "隐私政策",
-    "privacyDescription": "cassianflorin.com 如何使用访问统计、Google AdSense 广告 Cookie 与评论数据，以及如何停用个性化广告。"
+    "privacyDescription": "cassianflorin.com 如何使用访问统计、Google AdSense 广告 Cookie 与本地偏好，以及如何停用个性化广告。"
   },
   "privacy": {
     "title": "隐私政策",
@@ -511,18 +511,6 @@
           {
             "label": "Google 如何使用合作网站的数据",
             "href": "https://policies.google.com/technologies/partner-sites"
-          }
-        ]
-      },
-      {
-        "heading": "评论",
-        "body": [
-          "文章评论由 giscus 提供，数据存放在 GitHub Discussions。只有你主动登录 GitHub 并发表评论时才会产生数据，适用 GitHub 的隐私条款。"
-        ],
-        "links": [
-          {
-            "label": "GitHub 隐私声明",
-            "href": "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"
           }
         ]
       },

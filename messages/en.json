@@ -473,7 +473,7 @@
     "projectCaseTitle": "{project} · Case study",
     "projectCaseDescription": "{project}: {summary} Why it exists, how the system works, and the decisions behind it.",
     "privacyTitle": "Privacy Policy",
-    "privacyDescription": "How cassianflorin.com uses analytics, Google AdSense advertising cookies and comment data, and how to opt out of personalised ads."
+    "privacyDescription": "How cassianflorin.com uses analytics, Google AdSense advertising cookies and local preferences, and how to opt out of personalised ads."
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -511,18 +511,6 @@
           {
             "label": "How Google uses data from partner sites",
             "href": "https://policies.google.com/technologies/partner-sites"
-          }
-        ]
-      },
-      {
-        "heading": "Comments",
-        "body": [
-          "Comments are powered by giscus and stored in GitHub Discussions. Data is only created when you sign in to GitHub and post a comment, and GitHub's privacy terms apply."
-        ],
-        "links": [
-          {
-            "label": "GitHub Privacy Statement",
-            "href": "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"
           }
         ]
       },
