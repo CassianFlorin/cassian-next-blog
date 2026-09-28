@@ -310,7 +310,10 @@
   },
   "footer": {
     "copyright": "版权所有",
-    "poweredBy": "由 Next.js 驱动"
+    "poweredBy": "由 Next.js 驱动",
+    "about": "关于",
+    "privacy": "隐私政策",
+    "contact": "联系"
   },
   "search": {
     "placeholder": "搜索文章...",
@@ -468,6 +471,88 @@
     "knowledgeNodeTitle": "{node} · 知识地图",
     "knowledgeNodeDescription": "{node}：{description}Cassian Florin 知识地图中的 {articles} 篇文章与 {topics} 个主题。",
     "projectCaseTitle": "{project} · 项目案例",
-    "projectCaseDescription": "{project}：{summary}为什么做、系统如何运作，以及背后的设计取舍。"
+    "projectCaseDescription": "{project}：{summary}为什么做、系统如何运作，以及背后的设计取舍。",
+    "privacyTitle": "隐私政策",
+    "privacyDescription": "cassianflorin.com 如何使用访问统计、Google AdSense 广告 Cookie 与评论数据，以及如何停用个性化广告。"
+  },
+  "privacy": {
+    "title": "隐私政策",
+    "updated": "最后更新 · 2026-09-28",
+    "intro": "这是一个个人网站，没有账号系统，也不会要求你填写任何个人信息。下面说明你访问本站时，哪些数据会被谁收集、用来做什么，以及你可以怎么关掉它们。",
+    "sections": [
+      {
+        "heading": "访问统计",
+        "body": [
+          "本站用 Vercel Web Analytics 统计访问量。它不使用 Cookie，只记录页面路径、来源网站、国家或地区、浏览器和设备类型这类汇总数据，无法据此识别到具体的人。"
+        ],
+        "links": [
+          {
+            "label": "Vercel Web Analytics 隐私说明",
+            "href": "https://vercel.com/docs/analytics/privacy-policy"
+          }
+        ]
+      },
+      {
+        "heading": "广告与 Cookie",
+        "body": [
+          "本站通过 Google AdSense 展示广告。包括 Google 在内的第三方供应商会使用 Cookie，根据你之前访问本站或其他网站的情况向你投放广告。",
+          "Google 使用广告 Cookie，使它和它的合作伙伴能够根据你对本站和互联网上其他网站的访问情况投放广告。",
+          "你可以在 Google 广告设置中停用个性化广告，也可以在 aboutads.info 停用第三方供应商用于个性化广告的 Cookie。"
+        ],
+        "links": [
+          {
+            "label": "Google 广告设置",
+            "href": "https://adssettings.google.com"
+          },
+          {
+            "label": "aboutads.info 退出选项",
+            "href": "https://www.aboutads.info/choices"
+          },
+          {
+            "label": "Google 如何使用合作网站的数据",
+            "href": "https://policies.google.com/technologies/partner-sites"
+          }
+        ]
+      },
+      {
+        "heading": "评论",
+        "body": [
+          "文章评论由 giscus 提供，数据存放在 GitHub Discussions。只有你主动登录 GitHub 并发表评论时才会产生数据，适用 GitHub 的隐私条款。"
+        ],
+        "links": [
+          {
+            "label": "GitHub 隐私声明",
+            "href": "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"
+          }
+        ]
+      },
+      {
+        "heading": "本地保存的偏好",
+        "body": [
+          "你选择的明暗主题保存在浏览器的 localStorage 里，语言偏好保存在一个名为 NEXT_LOCALE 的 Cookie 里。它们只用来记住你的显示偏好，不会发送给任何第三方。"
+        ],
+        "links": []
+      },
+      {
+        "heading": "外部链接",
+        "body": [
+          "文章里会链接到其他网站。离开本站之后，数据如何处理以对方网站的政策为准。"
+        ],
+        "links": []
+      },
+      {
+        "heading": "联系",
+        "body": ["对本政策或本站内容有任何问题，欢迎发邮件联系我。"],
+        "links": [],
+        "email": true
+      },
+      {
+        "heading": "政策变更",
+        "body": [
+          "本站使用的服务有变化时会更新这份政策，并同步修改页首的更新日期。"
+        ],
+        "links": []
+      }
+    ]
   }
 }
