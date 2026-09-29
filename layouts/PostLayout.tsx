@@ -9,6 +9,8 @@ import Image from '@/components/Image';
 import Link from '@/components/Link';
 import ScrollTopAndComment from '@/components/ScrollTopAndComment';
 import Tldr from '@/components/Tldr';
+import PostLanguageNotice from '@/components/PostLanguageNotice';
+import { htmlLangByLocale, postContentLocale } from '@/lib/seo';
 import TraceList, { type Trace } from '@/components/writing/TraceList';
 import siteMetadata from '@/data/siteMetadata';
 import type { KnowledgeGraphData } from '@/lib/knowledgeGraph';
@@ -184,7 +186,14 @@ export default async function PostLayout({
 
         <div className="mt-14 grid gap-16 md:mt-20 lg:grid-cols-[minmax(0,1fr)_17rem] xl:grid-cols-[minmax(0,1fr)_19rem] xl:gap-24">
           <div className="min-w-0">
-            <div className="prose prose-gray dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-lg max-w-3xl">
+            <PostLanguageNotice path={path} />
+            {/* The body is only written in the default locale; tag it so
+                screen readers and translators don't read it as the page
+                locale on /en. */}
+            <div
+              lang={htmlLangByLocale[postContentLocale]}
+              className="prose prose-gray dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-lg max-w-3xl"
+            >
               <Tldr>{tldr}</Tldr>
               {children}
             </div>

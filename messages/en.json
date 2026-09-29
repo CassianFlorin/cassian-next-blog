@@ -130,7 +130,9 @@
       "citedBy": "Case study cites this",
       "sameTerritory": "Same territory",
       "keepReading": "Keep reading",
-      "inTheMap": "In the knowledge map"
+      "inTheMap": "In the knowledge map",
+      "untranslated": "This article is currently only available in Chinese.",
+      "readOriginal": "Read the original"
     }
   },
   "about": {

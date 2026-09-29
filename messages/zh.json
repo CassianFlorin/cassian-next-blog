@@ -130,7 +130,9 @@
       "citedBy": "案例中引用了本文",
       "sameTerritory": "同领域",
       "keepReading": "继续阅读",
-      "inTheMap": "在知识地图中"
+      "inTheMap": "在知识地图中",
+      "untranslated": "这篇文章目前只有中文版。",
+      "readOriginal": "阅读中文原文"
     }
   },
   "about": {
