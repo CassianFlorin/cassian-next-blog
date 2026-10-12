@@ -6,13 +6,15 @@ tags:
   - 运维
   - 独立开发
 draft: false
-summary: 记录 Cloud Mail 域名邮箱的部署过程，讲清 Cloudflare 收件、D1 与 KV 存储、Resend 发件，以及先收信后建邮箱的历史邮件归属问题。
-tldr: Cloud Mail 可以把域名收件、网页邮箱和 Resend 发件接起来，但 catch-all 收到的未知地址邮件需要单独处理归属，日常发布也要保护已有资源绑定和数据。
+summary: 记录 Cloud Mail 域名邮箱部署、历史邮件认领和私有 R2 切换，说明如何保留 KV 配置、兼容旧文件读取，并验证附件权限、内联图片和下载。
+tldr: Cloud Mail 的正文和归属保存在 D1，附件可以写入私有 R2 并保留 KV 读取回退；切换前要盘点真实文件，附件入口也要检查登录和归属权限。
 ---
 
 工作室网站搭好以后，我接着给它配了一套域名邮箱。最后用的是开源项目 Cloud Mail，网页和 API 放在 Cloudflare Workers，收件交给 Email Routing，发件用 Resend。
 
 2026 年 10 月 8 日做到一半，邮箱工作先暂停了。第二天继续，把登录、外部收件和域名回复跑通，还补了一个原来没有的邮件认领功能。
+
+10 月 12 日，我又把文件存储切到了私有 R2，KV 留着保存设置和登录状态。
 
 这次最值得记下来的问题，是邮件已经收进系统，后来建好的邮箱却看不到它。排查到这里，部署就从配域名、填密钥，变成了处理邮件到底属于谁。
 
@@ -20,7 +22,7 @@ tldr: Cloud Mail 可以把域名收件、网页邮箱和 Resend 发件接起来�
 
 ## 收件、网页和发件分别配置
 
-我用的方案把几件事分开了。
+10 月 9 日首次上线时，我把几件事分开了。
 
 | 部分       | 这次使用的服务                           | 负责的事情                       |
 | ---------- | ---------------------------------------- | -------------------------------- |
@@ -115,11 +117,14 @@ pnpm install --frozen-lockfile
 # 这是本次 fork 新增的认领测试，需要支持 node:sqlite 的 Node。
 pnpm run test:claim
 
+# 后续 R2 改动增加的存储与附件权限测试。
+pnpm run test:storage
+
 # 显式指定个人配置，使用已经确认的资源绑定。
 pnpm exec wrangler deploy --config wrangler.personal.toml
 ```
 
-`test:claim` 是这次修改增加的脚本，上游版本未必有它。前端产物的位置来自这版发布环境配置，换一个版本也要重新核对。
+`test:claim` 和 `test:storage` 都是这次 fork 增加的脚本，上游版本未必有它们。前端产物的位置来自这版发布环境配置，换一个版本也要重新核对。
 
 数据库已经初始化，普通更新发布不重放初始化 SQL，更不执行清空操作。代码推到 GitHub 后，这次仍然执行了 Wrangler 发布，再检查线上 Worker 和网页资源，才把改动记为已经部署。
 
@@ -135,8 +140,74 @@ pnpm exec wrangler deploy --config wrangler.personal.toml
 
 公开注册保持关闭，转发、AI 提取和自动删除也没有启用。后续需要处理的，是附件与 D1 的备份、保留策略，以及是否真的需要客户端接入。至于规划中的联系和售后地址，要先创建并验证，再替换网站上的联系方式。
 
+## 10 月 12 日更新，把文件存储切到私有 R2
+
+第一次上线先用了 KV 回退。这次决定把附件和上传的背景文件交给 R2，邮件正文、归属仍留在 D1。KV 继续保存配置、登录状态和缓存。
+
+### 先盘点，结果没有旧文件可搬
+
+动手前，我查了 D1 的附件记录，也列了 KV 的 key。结果附件记录为 `0`，背景还是默认图片，KV 里只有设置和登录状态，没有附件或上传背景。
+
+因此这次没有发生历史文件复制，也没有删除业务 KV 数据。完成的是文件存储切换和兼容处理。已有邮件正文原本就在 D1，不需要跟着移动。
+
+有旧文件的实例需要另外走复制和校验。对象 key 要保留，MIME 类型、下载文件名等 HTTP 元数据也要带过去，确认目标文件的字节一致、访问正常以后，再清理对应的 KV 文件副本。设置和缓存不在这个清理范围里。
+
+### 桶保持私有，Worker 使用绑定访问
+
+我先在 Cloudflare 后台完成 R2 订阅开通，再创建 Standard 存储桶。`r2.dev` 公共访问保持关闭，也没有给桶连接公开域名。
+
+下面的桶名是示例，在 `mail-worker` 目录执行。这组命令用于首次创建和检查桶，不需要每次发布都重跑创建。
+
+```sh
+# 创建文件存储桶，再分别检查两种公开访问入口。
+pnpm exec wrangler r2 bucket create example-mail-files --config wrangler.personal.toml
+pnpm exec wrangler r2 bucket dev-url get example-mail-files --config wrangler.personal.toml
+pnpm exec wrangler r2 bucket domain list example-mail-files --config wrangler.personal.toml
+```
+
+个人发布配置里增加 R2 绑定，原来的 D1、KV 和 Secrets 保留。
+
+```toml
+# 仅增加文件存储绑定，保留已有数据库与 KV 配置。
+[[r2_buckets]]
+binding = "r2"
+bucket_name = "example-mail-files"
+```
+
+应用通过 `env.r2` 访问文件，这次没有新建 S3 密钥，也没有把桶地址作为公开下载入口。
+
+### 附件链接也要经过权限检查
+
+检查读取流程时，又找到两处要一起调整的地方。旧附件地址会直接读 KV，背景文件也固定从 KV 读取。只加 R2 绑定，会让写入和这些旧入口的读取分开。
+
+我把读取统一到存储服务里，先查 R2，文件不存在时再读 KV。R2 请求本身报错时会保留错误，不把服务故障当成文件不存在。
+
+附件入口同时增加登录和归属检查。普通用户只能读取自己有附件记录的文件，管理员和有全部邮件查看权限的账号按既有权限访问。知道一个对象 key，不足以获得下载权限。
+
+浏览器原来的图片和下载链接不会自动携带登录请求头，我把它们改成先用带认证头的请求取文件，再生成本地 Blob URL。内联图片和附件预览使用这个地址，下载也从同一份文件内容开始，登录 token 不放进 URL。
+
+线上已有的对象地址配置指向网页 Worker 自身。邮件里的图片既可能是相对 key，也可能展开成完整的网站地址，两种写法都要转成认证读取，否则只测相对路径，旧邮件里的图片仍可能打不开。
+
+登录背景单独处理。只有当前配置的背景允许匿名读取，让登录页可以显示它；邮件附件不共用这条规则。
+
+### 响应头和验证工具还出了一次小问题
+
+R2 读取返回对象及其元数据，原来的 KV 回退返回 `Response`。统一读取以后，两种结果都需要保留内容类型和下载文件名。私有附件另外设置 `Cache-Control: private, no-store`，避免作为公共文件缓存。
+
+真实 R2 验证中还遇到过一次 500。原因是验证工具通过远程绑定代理调用对象的方法，无法把本地 `Headers` 实例序列化过去。我改成读取对象的 HTTP 元数据，在当前运行环境里组装响应头，再跑了一遍验证。这是当时验证环境的边界，没有把它归因成 R2 存储故障。
+
+### 验证之后再发布
+
+存储和权限增加了 10 项回归测试，覆盖 R2 优先读取、KV 回退、文件删除和越权访问。原来的 10 项邮件认领测试也重新通过。
+
+网页验证用了本地测试邮箱，检查内联图片、附件预览和下载。下载文件逐字节比对，邮件原有的正文样式也保留了。真实 R2 桶则通过远程绑定验证读写和元数据，认证身份及 D1、KV 都使用本地测试数据，没有为了验证存储改动生产邮件或发送测试邮件。
+
+发布后，线上网页返回 200，新附件 API 和旧附件入口的匿名请求都返回 401。再次检查桶的公开访问仍然关闭，KV 设置和原登录状态也还在。临时验证对象清理完，桶里没有留下测试文件。
+
 ## 参考资料
 
 - [Cloud Mail 上游项目](https://github.com/maillab/cloud-mail)
 - [Cloudflare Email Workers 文档](https://developers.cloudflare.com/email-routing/email-workers/)
 - [Resend 域名配置文档](https://resend.com/docs/dashboard/domains/introduction)
+- [Cloudflare R2 的 Worker 绑定](https://developers.cloudflare.com/r2/api/workers/workers-api-usage/)
+- [Cloudflare R2 的公开访问配置](https://developers.cloudflare.com/r2/buckets/public-buckets/)
