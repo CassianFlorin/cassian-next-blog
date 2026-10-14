@@ -16,7 +16,8 @@
     "update-lastmod": "node scripts/update-lastmod.mjs",
     "init-translations": "node scripts/init-translations.mjs",
     "generate-obsidian-graph": "node scripts/generate-obsidian-graph.mjs",
-    "check-seo": "node scripts/check-seo.mjs"
+    "check-seo": "node scripts/check-seo.mjs",
+    "translate-messages": "node scripts/translate-messages.mjs"
   },
   "dependencies": {
     "@headlessui/react": "2.2.0",
