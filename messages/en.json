@@ -21,8 +21,16 @@
     "title": "Cassian Florin",
     "description": "I build AI engineering tools, developer workflows, and knowledge systems for serious software work.",
     "hero": {
-      "lines": ["Building things.", "Mapping ideas.", "Leaving traces."],
-      "areas": ["AI Engineering", "Developer Tools", "Knowledge Systems"],
+      "lines": [
+        "Building things.",
+        "Mapping ideas.",
+        "Leaving traces."
+      ],
+      "areas": [
+        "AI Engineering",
+        "Developer Tools",
+        "Knowledge Systems"
+      ],
       "explore": "Explore",
       "summary": "A personal system for building tools, thinking clearly, and leaving traces."
     },
@@ -55,15 +63,26 @@
       "areas": {
         "building": {
           "label": "Building",
-          "items": ["AI Agents", "Developer Tools"]
+          "items": [
+            "AI Agents",
+            "Developer Tools"
+          ]
         },
         "thinking": {
           "label": "Thinking",
-          "items": ["System Design", "Engineering", "Architecture"]
+          "items": [
+            "System Design",
+            "Engineering",
+            "Architecture"
+          ]
         },
         "remembering": {
           "label": "Remembering",
-          "items": ["Obsidian", "Knowledge", "Personal Systems"]
+          "items": [
+            "Obsidian",
+            "Knowledge",
+            "Personal Systems"
+          ]
         }
       }
     },
@@ -196,13 +215,13 @@
     },
     "caseStudy": {
       "chapters": {
-        "why": "",
-        "problem": "",
-        "system": "",
-        "implementation": "",
-        "decisions": "",
-        "result": "",
-        "related": ""
+        "why": "Why",
+        "problem": "Question",
+        "system": "System",
+        "implementation": "Implementation",
+        "decisions": "Decision-Making",
+        "result": "Results",
+        "related": "Relationship"
       },
       "contents": "Contents",
       "projectLabel": "Project",
@@ -338,17 +357,17 @@
     "自动化": "Automation",
     "新功能": "New Features",
     "解决方案": "Solution",
-    "SDKMAN": "SDKMAN",
-    "Java": "Java",
-    "工具类": "Utility Classes",
-    "验证": "Validation",
-    "IntelliJ IDEA": "IntelliJ IDEA",
-    "开发工具": "Development Tools",
-    "技术分享": "Tech Sharing",
     "AI": "AI",
     "Cursor": "Cursor",
     "Manus": "Manus",
+    "开发工具": "Development Tools",
     "效率提升": "Efficiency Improvement",
+    "Java": "Java",
+    "IntelliJ IDEA": "IntelliJ IDEA",
+    "技术分享": "Tech Sharing",
+    "工具类": "Utility Classes",
+    "验证": "Validation",
+    "SDKMAN": "SDKMAN",
     "随笔记录": "Reflection Notes",
     "反思": "Reflection",
     "工作": "Work",
