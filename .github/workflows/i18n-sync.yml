@@ -1,0 +1,88 @@
+name: i18n Auto Sync (DeepL)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'messages/zh.json'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'messages/zh.json'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '是否强制全量翻译（即便 en 已有值）'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-translations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run DeepL Translation
+        env:
+          DEEPL_AUTH_KEY: ${{ secrets.DEEPL_AUTH_KEY }}
+        run: |
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            node scripts/translate-messages.mjs --force
+          else
+            node scripts/translate-messages.mjs
+          fi
+
+      - name: Check for changes
+        id: git_status
+        run: |
+          if [ -n "$(git status --porcelain messages/en.json)" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # 场景 1：如果是 Pull Request 触发，直接将翻译提交回当前 PR 分支
+      - name: Commit to PR branch
+        if: github.event_name == 'pull_request' && steps.git_status.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add messages/en.json
+          git commit -m "chore(i18n): 自动同步英文 UI 词条 (DeepL)"
+          git push
+
+      # 场景 2：如果是 push 或手动触发，创建独立分支并提交新 PR
+      - name: Create Pull Request
+        if: github.event_name != 'pull_request' && steps.git_status.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(i18n): 自动同步英文 UI 词条 (DeepL)'
+          title: 'chore(i18n): 自动同步英文 UI 词条 (DeepL)'
+          body: |
+            🤖 这是一个由 GitHub Actions 自动触发并生成的 PR。
+
+            - **触发原因**：检测到 `messages/zh.json` 中有新增或未翻译的词条。
+            - **翻译引擎**：DeepL Free API。
+            - **更新文件**：`messages/en.json`。
+
+            请核对翻译内容，确认无误后点击 Merge 合并到 `main` 分支，这将自动触发 Vercel 生产环境部署。
+          branch: i18n/auto-sync-en
+          delete-branch: true
+          base: main
