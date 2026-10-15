@@ -8,7 +8,11 @@ import {
   coreContent,
   allCoreContent,
 } from 'pliny/utils/contentlayer';
-import { allBlogs, allAuthors } from 'contentlayer/generated';
+import {
+  allBlogs,
+  allBlogTranslations,
+  allAuthors,
+} from 'contentlayer/generated';
 import type { Authors, Blog } from 'contentlayer/generated';
 import PostSimple from '@/layouts/PostSimple';
 import PostLayout from '@/layouts/PostLayout';
@@ -54,6 +58,7 @@ export async function generateMetadata(props: {
 }): Promise<Metadata | undefined> {
   const params = await props.params;
   const slug = decodeURI(params.slug.join('/'));
+  const locale = resolveLocale(params.locale);
   const post = allBlogs.find((p) => p.slug === slug);
   const authorList = post?.authors || ['default'];
   const authorDetails = authorList.map((author) => {
@@ -63,6 +68,15 @@ export async function generateMetadata(props: {
   if (!post) {
     return;
   }
+
+  const translation =
+    locale !== postContentLocale
+      ? allBlogTranslations.find((t) => t.slug === slug && t.locale === locale)
+      : null;
+
+  const title = translation?.title || post.title;
+  const description = translation?.summary || post.summary;
+  const effectiveLocale = translation ? locale : postContentLocale;
 
   const publishedAt = new Date(post.date).toISOString();
   const modifiedAt = new Date(post.lastmod || post.date).toISOString();
@@ -79,13 +93,13 @@ export async function generateMetadata(props: {
           url: `${SITE_URL}/og/${encodeURI(post.slug)}.png`,
           width: 1200,
           height: 630,
-          alt: post.title,
+          alt: title,
         },
       ];
 
   return {
-    title: post.title,
-    description: post.summary,
+    title,
+    description,
     // Override the sitewide keyword list with this post's own tags.
     keywords: post.tags?.length ? post.tags : undefined,
     authors: authors.map((name) => ({ name })),
@@ -94,22 +108,22 @@ export async function generateMetadata(props: {
     // locale, since the body is only written once.
     alternates: buildPostAlternates(`/${post.path}`, post.canonicalUrl),
     openGraph: {
-      title: post.title,
-      description: post.summary,
+      title,
+      description,
       siteName: siteMetadata.author,
-      locale: ogLocaleByLocale[postContentLocale],
+      locale: ogLocaleByLocale[effectiveLocale],
       type: 'article',
       publishedTime: publishedAt,
       modifiedTime: modifiedAt,
-      url: localeUrl(postContentLocale, `/${post.path}`),
+      url: localeUrl(effectiveLocale, `/${post.path}`),
       images,
       authors: authors.length > 0 ? authors : [siteMetadata.author],
       tags: post.tags,
     },
     twitter: {
       card: 'summary_large_image',
-      title: post.title,
-      description: post.summary,
+      title,
+      description,
       images,
     },
   };
@@ -138,12 +152,29 @@ export default async function Page(props: {
   const prev = sortedCoreContents[postIndex + 1];
   const next = sortedCoreContents[postIndex - 1];
   const post = allBlogs.find((p) => p.slug === slug) as Blog;
+  const translation =
+    locale !== postContentLocale
+      ? allBlogTranslations.find((t) => t.slug === slug && t.locale === locale)
+      : null;
+
   const authorList = post?.authors || ['default'];
   const authorDetails = authorList.map((author) => {
     const authorResults = allAuthors.find((p) => p.slug === author);
     return coreContent(authorResults as Authors);
   });
   const mainContent = coreContent(post);
+  const displayContent = translation
+    ? {
+        ...mainContent,
+        title: translation.title,
+        summary: translation.summary,
+        tldr: translation.tldr || post.tldr,
+      }
+    : mainContent;
+
+  const displayBody = translation ? translation.body : post.body;
+  const displayToc = translation ? translation.toc : post.toc;
+  const isTranslated = !!translation;
   const localKnowledgeGraph = buildLocalKnowledgeGraph(allBlogs, slug);
 
   // Article → territories, projects and nearby writing, from the same model
@@ -187,46 +218,58 @@ export default async function Page(props: {
     })),
   };
 
-  // The article itself only exists in the default locale; the breadcrumb
-  // below is chrome and follows the page locale.
-  const articleJsonLd = buildBlogPostingJsonLd(postContentLocale, {
-    title: post.title,
-    summary: post.summary,
-    tldr: post.tldr,
-    date: post.date,
-    lastmod: post.lastmod,
-    tags: post.tags,
-    images: post.images,
-    path: `/${post.path}`,
-    canonicalUrl: post.canonicalUrl,
-    authors: authorDetails.map((author) => ({ name: author.name })),
-    readingTimeWords: post.readingTime?.words,
-  });
+  // The article itself only exists in the default locale unless translated;
+  // the breadcrumb below is chrome and follows the page locale.
+  const articleJsonLd = buildBlogPostingJsonLd(
+    isTranslated ? locale : postContentLocale,
+    {
+      title: displayContent.title,
+      summary: displayContent.summary,
+      tldr: displayContent.tldr,
+      date: post.date,
+      lastmod: post.lastmod,
+      tags: post.tags,
+      images: post.images,
+      path: `/${post.path}`,
+      canonicalUrl: post.canonicalUrl,
+      authors: authorDetails.map((author) => ({ name: author.name })),
+      readingTimeWords: (translation || post).readingTime?.words,
+    },
+  );
 
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(locale, [
     { name: t('breadcrumbHome'), path: '/' },
     { name: t('breadcrumbBlog'), path: '/blog' },
-    { name: post.title },
+    { name: displayContent.title },
   ]);
 
   // Opt-in per post via frontmatter; each builder returns null when absent.
-  const faqJsonLd = buildFaqPageJsonLd(postContentLocale, {
-    path: `/${post.path}`,
-    canonicalUrl: post.canonicalUrl,
-    faq: post.faq,
-  });
-  const howToJsonLd = buildHowToJsonLd(postContentLocale, {
-    path: `/${post.path}`,
-    canonicalUrl: post.canonicalUrl,
-    title: post.title,
-    summary: post.summary,
-    howto: post.howto,
-  });
-  const definedTermJsonLd = buildDefinedTermJsonLd(postContentLocale, {
-    path: `/${post.path}`,
-    canonicalUrl: post.canonicalUrl,
-    definedTerm: post.definedTerm,
-  });
+  const faqJsonLd = buildFaqPageJsonLd(
+    isTranslated ? locale : postContentLocale,
+    {
+      path: `/${post.path}`,
+      canonicalUrl: post.canonicalUrl,
+      faq: translation?.faq || post.faq,
+    },
+  );
+  const howToJsonLd = buildHowToJsonLd(
+    isTranslated ? locale : postContentLocale,
+    {
+      path: `/${post.path}`,
+      canonicalUrl: post.canonicalUrl,
+      title: displayContent.title,
+      summary: displayContent.summary,
+      howto: translation?.howto || post.howto,
+    },
+  );
+  const definedTermJsonLd = buildDefinedTermJsonLd(
+    isTranslated ? locale : postContentLocale,
+    {
+      path: `/${post.path}`,
+      canonicalUrl: post.canonicalUrl,
+      definedTerm: translation?.definedTerm || post.definedTerm,
+    },
+  );
 
   const Layout = layouts[post.layout || defaultLayout];
 
@@ -238,17 +281,18 @@ export default async function Page(props: {
       {howToJsonLd && <JsonLd data={howToJsonLd} />}
       {definedTermJsonLd && <JsonLd data={definedTermJsonLd} />}
       <Layout
-        content={mainContent}
+        content={displayContent}
         authorDetails={authorDetails}
         next={next}
         prev={prev}
         knowledgeGraph={localKnowledgeGraph}
         relations={relations}
+        isTranslated={isTranslated}
       >
         <MDXLayoutRenderer
-          code={post.body.code}
+          code={displayBody.code}
           components={components}
-          toc={post.toc}
+          toc={displayToc}
         />
       </Layout>
     </>
