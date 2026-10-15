@@ -171,6 +171,8 @@ export const BlogTranslation = defineDocumentType(() => ({
     draft: { type: 'boolean' },
     summary: { type: 'string' },
     tldr: { type: 'string' },
+    sourceHash: { type: 'string' },
+    translatedAt: { type: 'string' },
     faq: { type: 'json' },
     howto: { type: 'json' },
     definedTerm: { type: 'json' },

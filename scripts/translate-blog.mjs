@@ -263,12 +263,32 @@ function restoreMarkdown(text, placeholders) {
 }
 
 /**
+ * 对待发送给 DeepL 的文本进行 XML 合规化转义
+ * 避免文本中的孤立 & 或 < 破坏 DeepL 的 tag_handling: xml 解析器
+ */
+function escapeXmlForDeepL(text) {
+  let s = text.replace(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;)/g, '&amp;');
+  s = s.replace(/<(?!keep\b|\/keep>)/gi, '&lt;');
+  return s;
+}
+
+function unescapeXmlFromDeepL(text) {
+  return text
+    .replaceAll('&amp;', '&')
+    .replaceAll('&lt;', '<')
+    .replaceAll('&gt;', '>')
+    .replaceAll('&quot;', '"')
+    .replaceAll('&apos;', "'");
+}
+
+/**
  * 调用 DeepL API 翻译单批文本
  */
 async function translateTexts(texts) {
   if (texts.length === 0) return [];
 
   const endpoint = getDeepLEndpoint(authKey);
+  const preparedTexts = texts.map((t) => escapeXmlForDeepL(t));
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -279,7 +299,7 @@ async function translateTexts(texts) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: texts,
+          text: preparedTexts,
           source_lang: 'ZH',
           target_lang: 'EN-US',
           tag_handling: 'xml',
@@ -295,7 +315,7 @@ async function translateTexts(texts) {
       }
 
       const data = await response.json();
-      return data.translations.map((item) => item.text);
+      return data.translations.map((item) => unescapeXmlFromDeepL(item.text));
     } catch (err) {
       console.warn(
         `⚠️  翻译批次失败 (第 ${attempt}/${MAX_RETRIES} 次重试): ${err.message}`,
@@ -478,14 +498,23 @@ async function main() {
   toExecute.forEach((t) => console.log(`  - ${t}`));
 
   let totalChars = 0;
+  let successCount = 0;
 
   for (const file of toExecute) {
-    const res = await translatePost(file);
-    totalChars += res.charEstimate || 0;
+    try {
+      const res = await translatePost(file);
+      totalChars += res.charEstimate || 0;
+      successCount++;
+    } catch (err) {
+      console.error(
+        `❌ 翻译文章 ${file} 失败，跳过该篇继续处理后续:`,
+        err.message,
+      );
+    }
   }
 
   console.log(
-    `\n🎉 翻译流程结束！共处理 ${toExecute.length} 篇文章 (约 ${totalChars.toLocaleString()} 字符)`,
+    `\n🎉 翻译流程结束！共成功处理 ${successCount}/${toExecute.length} 篇文章 (约 ${totalChars.toLocaleString()} 字符)`,
   );
 }
 
