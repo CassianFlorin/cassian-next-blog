@@ -6,18 +6,25 @@ on:
       - main
     paths:
       - 'messages/zh.json'
+      - 'data/blog/**'
   pull_request:
     branches:
       - main
     paths:
       - 'messages/zh.json'
+      - 'data/blog/**'
   workflow_dispatch:
     inputs:
       force:
-        description: '是否强制全量翻译（即便 en 已有值）'
+        description: '是否强制全量翻译（即便已有翻译）'
         required: false
         default: false
         type: boolean
+      limit:
+        description: '单次最多翻译文章篇数（默认全量增量）'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
@@ -38,7 +45,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Run DeepL Translation
+      # 1. 自动同步 UI 词条 (messages/zh.json -> messages/en.json)
+      - name: Translate UI Messages
         env:
           DEEPL_AUTH_KEY: ${{ secrets.DEEPL_AUTH_KEY }}
         run: |
@@ -48,10 +56,24 @@ jobs:
             node scripts/translate-messages.mjs
           fi
 
+      # 2. 自动同步博客文章正文 (data/blog/*.mdx -> data/blog-i18n/en/*.mdx)
+      - name: Translate Blog Posts
+        env:
+          DEEPL_AUTH_KEY: ${{ secrets.DEEPL_AUTH_KEY }}
+        run: |
+          ARGS=""
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          if [ -n "${{ github.event.inputs.limit }}" ]; then
+            ARGS="$ARGS --limit ${{ github.event.inputs.limit }}"
+          fi
+          node scripts/translate-blog.mjs $ARGS
+
       - name: Check for changes
         id: git_status
         run: |
-          if [ -n "$(git status --porcelain messages/en.json)" ]; then
+          if [ -n "$(git status --porcelain messages/en.json data/blog-i18n)" ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
@@ -63,8 +85,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add messages/en.json
-          git commit -m "chore(i18n): 自动同步英文 UI 词条 (DeepL)"
+          git add messages/en.json data/blog-i18n
+          git commit -m "chore(i18n): 自动同步英文 UI 词条与博客正文 (DeepL)"
           git push
 
       # 场景 2：如果是 push 或手动触发，创建独立分支并提交新 PR
@@ -73,14 +95,16 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore(i18n): 自动同步英文 UI 词条 (DeepL)'
-          title: 'chore(i18n): 自动同步英文 UI 词条 (DeepL)'
+          commit-message: 'chore(i18n): 自动同步英文 UI 词条与博客正文 (DeepL)'
+          title: 'chore(i18n): 自动同步英文 UI 词条与博客正文 (DeepL)'
           body: |
             🤖 这是一个由 GitHub Actions 自动触发并生成的 PR。
 
-            - **触发原因**：检测到 `messages/zh.json` 中有新增或未翻译的词条。
+            - **触发原因**：检测到中文词条（`messages/zh.json`）或博客文章（`data/blog/*.mdx`）有新增/更新。
             - **翻译引擎**：DeepL Free API。
-            - **更新文件**：`messages/en.json`。
+            - **更新目录**：
+              - `messages/en.json`
+              - `data/blog-i18n/en/*.mdx`
 
             请核对翻译内容，确认无误后点击 Merge 合并到 `main` 分支，这将自动触发 Vercel 生产环境部署。
           branch: i18n/auto-sync-en

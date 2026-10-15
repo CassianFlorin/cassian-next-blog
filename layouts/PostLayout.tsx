@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { slug as slugify } from 'github-slugger';
 import { CoreContent } from 'pliny/utils/contentlayer';
 import type { Blog, Authors } from 'contentlayer/generated';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import ArticleKnowledgeGraph from '@/components/ArticleKnowledgeGraph';
 import Comments from '@/components/Comments';
 import Image from '@/components/Image';
@@ -10,7 +10,7 @@ import Link from '@/components/Link';
 import ScrollTopAndComment from '@/components/ScrollTopAndComment';
 import Tldr from '@/components/Tldr';
 import PostLanguageNotice from '@/components/PostLanguageNotice';
-import { htmlLangByLocale, postContentLocale } from '@/lib/seo';
+import { htmlLangByLocale, postContentLocale, resolveLocale } from '@/lib/seo';
 import TraceList, { type Trace } from '@/components/writing/TraceList';
 import siteMetadata from '@/data/siteMetadata';
 import type { KnowledgeGraphData } from '@/lib/knowledgeGraph';
@@ -43,6 +43,7 @@ interface LayoutProps {
   prev?: { path: string; title: string };
   knowledgeGraph?: KnowledgeGraphData;
   relations?: ArticleRelations;
+  isTranslated?: boolean;
   children: ReactNode;
 }
 
@@ -58,8 +59,10 @@ export default async function PostLayout({
   prev,
   knowledgeGraph,
   relations,
+  isTranslated = false,
   children,
 }: LayoutProps) {
+  const locale = resolveLocale(await getLocale());
   const { filePath, path, slug, date, lastmod, title, summary, tags, tldr } =
     content;
   const t = await getTranslations('blog');
@@ -186,12 +189,14 @@ export default async function PostLayout({
 
         <div className="mt-14 grid gap-16 md:mt-20 lg:grid-cols-[minmax(0,1fr)_17rem] xl:grid-cols-[minmax(0,1fr)_19rem] xl:gap-24">
           <div className="min-w-0">
-            <PostLanguageNotice path={path} />
-            {/* The body is only written in the default locale; tag it so
-                screen readers and translators don't read it as the page
-                locale on /en. */}
+            {!isTranslated && <PostLanguageNotice path={path} />}
+            {/* The body is only written in the default locale unless a translation is present */}
             <div
-              lang={htmlLangByLocale[postContentLocale]}
+              lang={
+                isTranslated
+                  ? htmlLangByLocale[locale]
+                  : htmlLangByLocale[postContentLocale]
+              }
               className="prose prose-gray dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-lg max-w-3xl"
             >
               <Tldr>{tldr}</Tldr>

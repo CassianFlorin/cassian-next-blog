@@ -132,6 +132,57 @@ export const Blog = defineDocumentType(() => ({
   computedFields,
 }));
 
+const translationComputedFields: ComputedFields = {
+  readingTime: { type: 'json', resolve: (doc) => readingTime(doc.body.raw) },
+  slug: {
+    type: 'string',
+    resolve: (doc) => {
+      const parts = doc._raw.flattenedPath.split('/');
+      return parts.slice(2).join('/');
+    },
+  },
+  locale: {
+    type: 'string',
+    resolve: (doc) => {
+      const parts = doc._raw.flattenedPath.split('/');
+      return parts[1] || 'en';
+    },
+  },
+  path: {
+    type: 'string',
+    resolve: (doc) => doc._raw.flattenedPath,
+  },
+  filePath: {
+    type: 'string',
+    resolve: (doc) => doc._raw.sourceFilePath,
+  },
+  toc: { type: 'json', resolve: (doc) => extractTocHeadings(doc.body.raw) },
+};
+
+export const BlogTranslation = defineDocumentType(() => ({
+  name: 'BlogTranslation',
+  filePathPattern: 'blog-i18n/**/*.mdx',
+  contentType: 'mdx',
+  fields: {
+    title: { type: 'string', required: true },
+    date: { type: 'date', required: true },
+    tags: { type: 'list', of: { type: 'string' }, default: [] },
+    lastmod: { type: 'date' },
+    draft: { type: 'boolean' },
+    summary: { type: 'string' },
+    tldr: { type: 'string' },
+    faq: { type: 'json' },
+    howto: { type: 'json' },
+    definedTerm: { type: 'json' },
+    images: { type: 'json' },
+    authors: { type: 'list', of: { type: 'string' } },
+    layout: { type: 'string' },
+    bibliography: { type: 'string' },
+    canonicalUrl: { type: 'string' },
+  },
+  computedFields: translationComputedFields,
+}));
+
 export const Authors = defineDocumentType(() => ({
   name: 'Authors',
   filePathPattern: 'authors/**/*.mdx',
@@ -174,7 +225,7 @@ export const Secret = defineDocumentType(() => ({
 
 export default makeSource({
   contentDirPath: 'data',
-  documentTypes: [Blog, Authors, Secret],
+  documentTypes: [Blog, BlogTranslation, Authors, Secret],
   mdx: {
     cwd: process.cwd(),
     remarkPlugins: [
