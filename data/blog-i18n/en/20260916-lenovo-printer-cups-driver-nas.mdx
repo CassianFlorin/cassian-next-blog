@@ -1,6 +1,7 @@
 ---
 title: Installing the CUPS Driver for the Lenovo M1688W Pro on a Feiniu NAS
 date: '2026-09-16 21:00:00'
+lastmod: '2026-09-28'
 tags:
   - Linux
   - CUPS
@@ -20,28 +21,22 @@ summary: >-
   names on the official website, only one includes support for the W Pro.
 tldr: >-
   CUPS requires two things: a PPD and a raster filter. PPDs are cross-platform,
-  but filters must match the OS and architecture; therefore, it’s not possible
-  to transfer a PPD from macOS to Linux.Of the three similar packages on
-  Lenovo’s official website, only the one for Kylin V10 contains the PPD for
-  Windows Pro; the DEB package includes only three files related to printing,
-  totaling 121 KB.
-sourceHash: 9ccf8f33f0082ffe611e9c23da12d683f1036a3abdfa36249db22d067fb83bba
-translatedAt: '2026-10-15T07:39:36.074Z'
+  but filters must match the OS and architecture; therefore, moving a PPD from
+  macOS to Linux won't work.Of the three similar packages on Lenovo’s official
+  website, only the one for Kylin V10 contains the PPD for Windows Pro; the DEB
+  package includes only three files related to printing, totaling 121 KB.
+sourceHash: 87bd0392578e5f5a9af7fa3c4aff17c71816ab5e5811b0e1104309a706045b1f
+translatedAt: '2026-10-15T09:25:22.927Z'
 ---
-
 <div className="not-prose">
   <div className="mb-8 rounded-lg bg-gradient-to-r from-sky-700 to-indigo-900 p-8 text-white shadow-lg">
-    <h1 className="mb-4 text-4xl font-bold">
-      🖨️ Setting up a NAS print queue for my home printer
-    </h1>
-    <div className="text-xl opacity-90">
-      A PPD file, an 112 KB binary file, and three driver packages with very
-      similar names
-    </div>
+    <h1 className="mb-4 text-4xl font-bold">🖨️ Setting up a NAS print queue for the home printer</h1>
+    <div className="text-xl opacity-90">A PPD file, an 112 KB binary file, and three driver packages with very similar names</div>
   </div>
+
 </div>
 
-The Lenovo M1688W Pro at home is a wireless model, so whoever wants to print has to connect to it from their phone each time—and even then, it doesn’t always recognize the device.A few days ago, I wanted to solve this once and for all by setting it up as a permanent print queue on my Feiniu NAS. I figured it would take about ten minutes—just find a PPD file and upload it, and I’d be done. In reality, it took me an entire evening, and almost all the hurdles I ran into were related to the model name.
+The Lenovo M1688W Pro at home is a wireless model—whoever wants to print has to connect to it from their phone each time, and even then, it doesn’t always recognize the device.A few days ago, I wanted to solve this once and for all by setting it up as a permanent print queue on my Feiniu NAS. I figured it would take about ten minutes—just find a PPD file and upload it, and I’d be done. In reality, it took me an entire evening, and almost all the hurdles I ran into were related to the model name.
 
 ## 📄 PPD just handles the description; another program does the actual work
 
@@ -59,7 +54,7 @@ After unzipping the file, I took a quick look at the contents and got stuck on t
 *cupsFilter: "application/vnd.cups-raster 50 rastertolenovo"
 ```
 
-What this means is that the PPD is responsible only for describing capabilities, while the task of converting the page into a byte stream that the printer can recognize is handled by an external program called `rastertolenovo`. The PPD is a text file that can be read on any machine. The same cannot necessarily be said for that program.
+What this means is that the PPD is responsible only for describing capabilities, while the task of converting the page into a byte stream that the printer can recognize is handled by an external program called `rastertolenovo`. The PPD is text-based and can be read on any machine. The same cannot necessarily be said for that program.
 
 ```bash
 file /usr/libexec/cups/filter/rastertolenovo
@@ -69,11 +64,10 @@ file /usr/libexec/cups/filter/rastertolenovo
 Mach-O. When copied to Debian, it’s just a bunch of unrecognizable bytes. It wasn’t until then that I realized that having just the PPD was like moving only the instruction manual—the machine that actually does the work was still right where it was.
 
 <Callout emoji="🔑">
-  <strong>
-    PPDs are cross-platform, but raster filters must match the OS architecture.
-  </strong>
-  If you take a PPD from another system and transfer it to CUPS on Linux, the
-  job will get stuck in the queue with a "Filter failed" error.
+
+  &lt;strong&gt;PPDs are cross-platform, but raster filters must be for the same architecture as the OS. &lt;/strong&gt;
+  If you take a PPD from another system and transfer it to CUPS on Linux, the job will get stuck in the queue with a "Filter failed" error.
+
 </Callout>
 
 ## 📦 Of the three packages on the official website, only one includes W Pro
@@ -82,11 +76,11 @@ Lenovo's Linux driver page is on the [Lenovo Graphics Official Website](https://
 
 The comparison results are a bit counterintuitive.
 
-| Driver Pack                              | Includes M1688W Pro | Format      | Model list ends at |
-| ---------------------------------------- | ------------------- | ----------- | ------------------ |
-| G Series and GM Series Kirin V10 Drivers | ✅                  | zip / 115MB | `M1688W Pro`       |
-| G Series, GM Series, UOS                 | ❌                  | zip / 164MB | `M1688DW Pro`      |
-| lenovo-100-m1520-m1688-series-linux      | ❌                  | 7z / 78MB   | `M1688W` (No Pro)  |
+| Driver Pack                              | Includes M1688W Pro | Format        | Model list ends at       |
+| ----------------------------------- | ------------- | ----------- | ------------------ |
+| G Series and GM Series Kirin V10 Drivers              | ✅            | zip / 115MB | `M1688W Pro`       |
+| G Series, GM Series, UOS                      | ❌            | zip / 164MB | `M1688DW Pro`      |
+| lenovo-100-m1520-m1688-series-linux | ❌            | 7z / 78MB   | `M1688W` (No Pro) |
 
 The one with the most similar name is called `lenovo-100-m1520-m1688-series-linux`. The model list includes `M1688W` and `M1688DW`, neither of which has “Pro” in the name. The third one, which includes `M1688W Pro`, is titled “G Series and GM Series Kirin V10 Drivers”—the name doesn’t even contain a single “1.” The absence of “Pro” means it’s a different set of PPDs; I only realized this after unpacking the package and checking the files—I’ll explain more on that later.
 
@@ -97,7 +91,7 @@ curl -L -o lenovo-kylin.zip \
   "https://lenovo-upload.oss-cn-beijing.aliyuncs.com/drivers/G262DN_Series_drivers_Lin_20240109140629.zip"
 ```
 
-When extracted, there are four .deb files, organized by architecture.
+Unzipped, there are four .deb files, organized by architecture.
 
 ```text
 lenovo-printer-driver_1.51-230329_amd64.deb
@@ -108,9 +102,9 @@ lenovo-printer-driver_1.51-230329_mips64el.deb
 
 Loongson and MIPS64EL are also included, since this package was originally developed for Kylin and Tongxin. Feiniu runs on x86; use the AMD64 version, which is 30.4 MB.
 
-## 🔧 After unpacking the .deb file, only 121 KB is usable
+## 🔧 After unpacking the .deb file, only 121 KB is actually usable
 
-`ar x` Strip away the deb wrapper, `tar tJf data.tar.xz` list everything, and the first thing you're looking for will appear.
+`ar x` Strip away the deb shell, `tar tJf data.tar.xz` list everything, and the first thing you're looking for will appear.
 
 ```bash
 ar x lenovo-printer-driver_1.51-230329_amd64.deb
@@ -123,7 +117,7 @@ tar tJf data.tar.xz | grep -iE '1688|filter'
 
 Now let's take a look at what's actually inside this package. It's 30.4 MB, which expands to 102 MB; 31 MB of that is crammed into `/opt/lenovo/vop`—a complete set of Qt5 libraries intended for graphical user interfaces on desktop systems. Since there's no X on the NAS, this part is completely unnecessary.
 
-Only three files are used in the print chain.
+Only three files are used in the print pipeline.
 
 ```text
 /usr/share/cups/model/lenovo/lenovom1688wpro.ppd   8.7 KB
@@ -148,7 +142,7 @@ libcupsimage.so.2  libcups.so.2  libpthread.so.0  libm.so.6  libc.so.6
 
 They're all system libraries. Once CUPS is installed, they're all there—not a single vendor-specific dependency. This outcome is much better than I expected. `libcupsimage2` On Debian, if it's not installed alongside CUPS, it really does report that the libraries can't be found—`apt install libcupsimage2`.
 
-There was one other thing I’d been worried about beforehand. This NAS runs a Celeron J1900, which doesn’t support AVX2. When I installed mihomo previously, the standard amd64 version crashed on startup, so I had to switch to the “compatible” version. This time, I made a point of checking the compilation targets.
+There was one other thing I’d been worried about beforehand. This NAS runs a Celeron J1900, which doesn’t support AVX2. When I installed mihomo previously, the standard amd64 version crashed on startup, so I had to switch to the “compatible” version. This time, I made a point of checking the compilation target.
 
 ```text
 ELF 64-bit LSB executable, x86-64, for GNU/Linux 2.6.32, stripped
@@ -161,10 +155,10 @@ Compiled in 2023, targeting version 2.6.32, with x86-64 as the baseline. The old
 In Feiniu's settings, there's an option called "Upload Driver." Just drag and drop the amd64 .deb file right into it. Once the driver is uploaded, "`Lenovo M1688W Pro`" appears in the driver list. I added it to the queue, printed a test page, and the paper came out.
 
 <Callout emoji="⚠️">
-  The CUPS-built-in 631 web interface also supports uploads, but it only accepts
-  a single <code>.ppd</code> file; deb files cannot be uploaded. The Feiniu
-  interface accepts driver packages. The two interfaces look similar, but they
-  require different files.
+
+  The CUPS-built-in 631 web interface also supports uploads, but it only accepts a single <code>.ppd</code> file; deb
+  files cannot be uploaded. The Feiniu interface accepts driver packages. The two interfaces look similar, but they require different files.
+
 </Callout>
 
 If you want to skip those 31 MB of unnecessary Qt libraries, just package the three files in their original paths; they'll still work when extracted to the root directory.
@@ -185,7 +179,7 @@ Here’s a side note. The maintainer listed in the .deb file is `Githon Technolo
 
 ## 🧭 Looking Back
 
-Domestic printer drivers are less closed-source than I expected. When you unpack the DEB package, you find an 8.7 KB text PPD file and an 112 KB converter; the dependencies are clean, and the paths are neatly organized under `/usr/lib/cups/filter` and `/usr/share/cups/model`—it’s entirely in line with the standard CUPS setup.
+The level of closed-source code in domestic printer drivers is lower than I expected. When you unpack the DEB package, you find an 8.7 KB text-based PPD file and an 112 KB converter; the dependencies are clean, and the paths are neatly organized under `/usr/lib/cups/filter` and `/usr/share/cups/model`—it’s entirely in line with the standard CUPS setup.
 
 The hard part was finding them. The names of the three packages were very similar, the model list wasn't visible until I expanded it, and the download links were hidden in the properties. I spent almost the entire night on this instead of actually installing them.
 
@@ -196,7 +190,7 @@ sudo cupsctl --share-printers --remote-any
 sudo lpadmin -p M1688WPro -o printer-is-shared=true
 ```
 
-CUPS broadcasts via IPP Everywhere, so Mac's "Add Printer" feature can detect it directly. Select the default AirPrint driver, and let the NAS handle the rasterization. For troubleshooting, see `/var/log/cups/error_log`.
+CUPS broadcasts via IPP Everywhere, so Mac's "Add Printer" feature can detect it directly. Select the default AirPrint driver, and leave the rasterization to be handled by the NAS. For troubleshooting, see `/var/log/cups/error_log`.
 
 If your printer supports AirPrint natively, you can actually skip this entire article. All it takes is a single command—no need to mess with PPDs or filters.
 
@@ -204,7 +198,7 @@ If your printer supports AirPrint natively, you can actually skip this entire ar
 lpadmin -p 打印机名 -E -v ipp://打印机IP/ipp/print -m everywhere
 ```
 
-You must use the manufacturer's filter only when the printer is connected to the NAS via USB and you need the NAS to act as a network printer.
+You only need to use the manufacturer's filter if the printer is connected to the NAS via USB and you want the NAS to act as a network printer.
 
 ---
 
