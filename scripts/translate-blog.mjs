@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * 博客文章正文自动翻译脚本 (DeepL Free API)
+ * 博客文章正文自动翻译脚本 (DeepL Free API) - 纯原生无外部依赖
  *
  * 功能：
  * 1. 扫描 data/blog/*.mdx，对比 data/blog-i18n/en/{slug}.mdx 的内容 Hash。
@@ -20,7 +20,6 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import matter from 'gray-matter';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -91,6 +90,101 @@ function getUsageEndpoint(key = '') {
 
 function sha256(content) {
   return crypto.createHash('sha256').update(content).digest('hex');
+}
+
+/**
+ * 纯原生解析 MDX 文件 Frontmatter 与 Body
+ */
+function parseMdx(content) {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!match) {
+    return { data: {}, content, rawFrontmatter: '' };
+  }
+  const rawFrontmatter = match[1];
+  const body = match[2];
+
+  const extractField = (key) => {
+    // 匹配 key: '...' 或 key: "..." 或 key: >-\n  ... 或 key: ...
+    const blockRegex = new RegExp(
+      `^${key}:\\s*>-\\s*\\n((?:[ \\t]+.*(?:\\r?\\n|$))+)`,
+      'm',
+    );
+    const blockMatch = rawFrontmatter.match(blockRegex);
+    if (blockMatch) {
+      return blockMatch[1].replace(/^[ \t]+/gm, '').trim();
+    }
+
+    const lineRegex = new RegExp(
+      `^${key}:\\s*(?:['"]([\\s\\S]*?)['"]|(.*))$`,
+      'm',
+    );
+    const lineMatch = rawFrontmatter.match(lineRegex);
+    if (!lineMatch) return '';
+    return (lineMatch[1] ?? lineMatch[2] ?? '').trim();
+  };
+
+  return {
+    data: {
+      title: extractField('title'),
+      summary: extractField('summary'),
+      tldr: extractField('tldr'),
+    },
+    content: body,
+    rawFrontmatter,
+  };
+}
+
+/**
+ * 构造翻译后的 MDX 内容
+ */
+function buildTranslatedMdx(
+  rawFrontmatter,
+  restoredBody,
+  { title, summary, tldr, sourceHash },
+) {
+  let newFm = rawFrontmatter;
+
+  if (title) {
+    newFm = newFm.replace(/^title:.*$/m, `title: ${JSON.stringify(title)}`);
+  }
+  if (summary) {
+    newFm = newFm.replace(
+      /^summary:.*$/m,
+      `summary: ${JSON.stringify(summary)}`,
+    );
+  }
+  if (tldr) {
+    // 如果原有 tldr 是多行 >-，或者单行，统一替换为合规字符串
+    if (/^tldr:\s*>-/m.test(newFm)) {
+      newFm = newFm.replace(
+        /^tldr:\s*>-\s*\n(?:[ \t]+.*(?:\r?\n|$))+/m,
+        `tldr: ${JSON.stringify(tldr)}\n`,
+      );
+    } else if (/^tldr:.*$/m.test(newFm)) {
+      newFm = newFm.replace(/^tldr:.*$/m, `tldr: ${JSON.stringify(tldr)}`);
+    } else {
+      newFm += `\ntldr: ${JSON.stringify(tldr)}`;
+    }
+  }
+
+  // 清除现有的 sourceHash 与 translatedAt
+  newFm = newFm
+    .replace(/^sourceHash:.*$\r?\n?/m, '')
+    .replace(/^translatedAt:.*$\r?\n?/m, '');
+
+  newFm =
+    newFm.trimEnd() +
+    `\nsourceHash: '${sourceHash}'\ntranslatedAt: '${new Date().toISOString()}'\n`;
+
+  return `---\n${newFm}---\n\n${restoredBody.trim()}\n`;
+}
+
+/**
+ * 从目标文件快速读取已有的 sourceHash
+ */
+function getSourceHash(targetRaw) {
+  const m = targetRaw.match(/^sourceHash:\s*['"]?([^'"\r\n]+)['"]?/m);
+  return m ? m[1].trim() : null;
 }
 
 /**
@@ -218,7 +312,7 @@ async function translateTexts(texts) {
 async function translatePost(file) {
   const filePath = path.join(BLOG_DIR, file);
   const rawContent = fs.readFileSync(filePath, 'utf-8');
-  const parsed = matter(rawContent);
+  const parsed = parseMdx(rawContent);
   const slug = file.replace(/\.mdx$/, '');
 
   console.log(`\n📄 正在处理文章: ${file}`);
@@ -226,7 +320,6 @@ async function translatePost(file) {
   const { protectedText, placeholders } = protectMarkdown(parsed.content);
 
   // 准备需要翻译的段落
-  // 按照双换行拆分成逻辑段落以提高 DeepL 翻译质量
   const paragraphs = protectedText.split(/\n\n+/);
   const toTranslateTexts = [];
   const paraIndices = [];
@@ -259,7 +352,7 @@ async function translatePost(file) {
     return { slug, charEstimate, skipped: false };
   }
 
-  // 分批发送给 DeepL（每次最多 30 个段落）
+  // 分批发送给 DeepL（每次最多 25 个段落）
   const translatedAll = [];
   const BATCH_SIZE = 25;
 
@@ -287,17 +380,14 @@ async function translatePost(file) {
   const translatedProtectedBody = translatedParagraphs.join('\n\n');
   const restoredBody = restoreMarkdown(translatedProtectedBody, placeholders);
 
-  // 构造英文 Frontmatter
-  const enData = {
-    ...parsed.data,
+  // 构造并保存目标 MDX
+  const outputMdx = buildTranslatedMdx(parsed.rawFrontmatter, restoredBody, {
     title: enTitle,
     summary: enSummary,
     tldr: enTldr,
     sourceHash: sha256(rawContent),
-    translatedAt: new Date().toISOString(),
-  };
+  });
 
-  const outputMdx = matter.stringify(restoredBody, enData);
   const targetFile = path.join(I18N_BLOG_DIR, `${slug}.mdx`);
 
   fs.mkdirSync(I18N_BLOG_DIR, { recursive: true });
@@ -362,8 +452,8 @@ async function main() {
     if (!needsTranslation && fs.existsSync(targetFile)) {
       try {
         const targetRaw = fs.readFileSync(targetFile, 'utf-8');
-        const targetParsed = matter(targetRaw);
-        if (targetParsed.data.sourceHash !== currentHash) {
+        const existingHash = getSourceHash(targetRaw);
+        if (existingHash !== currentHash) {
           needsTranslation = true;
         }
       } catch {
