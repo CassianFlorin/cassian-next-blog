@@ -119,13 +119,18 @@ function protectMarkdown(content) {
   // 3. 保护行内代码 `...`
   protectedText = protectedText.replace(/`[^`\n]+`/g, (match) => store(match));
 
-  // 4. 保护自定义 JSX 组件标签，如 <Callout ...>, </Callout>, <StepProgress ... />, <Tldr>
+  // 4. 保护 MDX 中的 {' '} 空格表达式
+  protectedText = protectedText.replace(/\{\s*['"]\s*['"]\s*\}/g, (match) =>
+    store(match),
+  );
+
+  // 5. 保护自定义 JSX 组件标签，如 <Callout ...>, </Callout>, <StepProgress ... />, <Tldr>
   protectedText = protectedText.replace(
     /<\/?([A-Z][a-zA-Z0-9]*)[^>]*>/g,
     (match) => store(match),
   );
 
-  // 5. 保护 HTML 标签与注释
+  // 6. 保护 HTML 标签与注释
   protectedText = protectedText.replace(/<!--[\s\S]*?-->/g, (match) =>
     store(match),
   );
@@ -134,7 +139,7 @@ function protectMarkdown(content) {
     (match) => store(match),
   );
 
-  // 6. 保护 Markdown 链接中的 URL 路径 [text](url) -> 仅翻译 text，保持 url 占位
+  // 7. 保护 Markdown 链接中的 URL 路径 [text](url) -> 仅翻译 text，保持 url 占位
   protectedText = protectedText.replace(
     /(\[[^\]]+\])\(([^)\s]+)\)/g,
     (match, text, url) => {
@@ -144,6 +149,16 @@ function protectMarkdown(content) {
   );
 
   return { protectedText, placeholders };
+}
+
+/**
+ * 将单独成行的 HTML/JSX 标签前后插入空行，使它们在按段落切分时作为独立段落被过滤，绝不送 DeepL
+ */
+function separateBlockTags(text) {
+  return text.replace(
+    /^([ \t]*<\/?(?:div|span|details|summary|table|thead|tbody|tr|th|td|pre|code|h[1-6]|[A-Z][a-zA-Z0-9]*)[^>]*>[ \t]*)$/gm,
+    '\n\n$1\n\n',
+  );
 }
 
 /**
@@ -233,7 +248,8 @@ async function translatePost(file) {
 
   console.log(`\n📄 正在处理文章: ${file}`);
 
-  const { protectedText, placeholders } = protectMarkdown(parsed.content);
+  const separatedContent = separateBlockTags(parsed.content);
+  const { protectedText, placeholders } = protectMarkdown(separatedContent);
 
   // 准备需要翻译的段落（仅对包含中文字符的段落调用翻译！）
   const paragraphs = protectedText.split(/\n\n+/);
@@ -311,15 +327,29 @@ async function translatePost(file) {
   const translatedProtectedBody = translatedParagraphs.join('\n\n');
   let restoredBody = restoreMarkdown(translatedProtectedBody, placeholders);
 
-  // MDX 后处理安全清洗：折叠跨行的行内标签，避免 MDX 误判为未闭合段落
+  // MDX 后处理安全清洗：
+  // 1. 折叠跨行的行内标签，避免 MDX 误判为未闭合段落
   restoredBody = restoredBody.replace(
     /<(div|p|h[1-6]|span|summary|th|td|strong|em)([^>]*)>\s*\n\s*([^<\n]+?)\s*<\/\1>/g,
     '<$1$2>$3</$1>',
   );
+  // 2. 清理 div 内部多余空行，防止打断段落导致未闭合错误
+  restoredBody = restoredBody.replace(
+    /(<div[^>]*>)([\s\S]*?)(<\/div>)/g,
+    (match, open, inner, close) => {
+      if (!inner.includes('\n#') && !inner.includes('\n##')) {
+        return `${open}${inner.replace(/\n\s*\n+/g, '\n')}${close}`;
+      }
+      return match;
+    },
+  );
+  // 3. 修复被重复复制的多余闭合标签
   restoredBody = restoredBody.replace(
     /<\/div>\s*<\/div>\s*\n\s*<\/div>\s*\n\s*<\/div>/g,
     '</div>\n  </div>\n</div>',
   );
+  // 4. 清理连续 3 个及以上的换行
+  restoredBody = restoredBody.replace(/\n{3,}/g, '\n\n');
 
   // 构造英文 Frontmatter 对象，由 gray-matter 安全序列化，彻底杜绝 YAML 缩进格式错误
   const enData = {
