@@ -348,7 +348,16 @@ async function translatePost(file) {
     /<\/div>\s*<\/div>\s*\n\s*<\/div>\s*\n\s*<\/div>/g,
     '</div>\n  </div>\n</div>',
   );
-  // 4. 清理连续 3 个及以上的换行
+  // 4. 清理连续闭合标签或开始标签之间的多余空行，防止在 MDX 中打断容器
+  restoredBody = restoredBody.replace(
+    /(<\/[a-zA-Z0-9]+>)[ \t]*\n\s*\n+([ \t]*<\/[a-zA-Z0-9]+>)/g,
+    '$1\n$2',
+  );
+  restoredBody = restoredBody.replace(
+    /(<[a-zA-Z0-9]+[^>]*>)[ \t]*\n\s*\n+([ \t]*<[a-zA-Z0-9]+[^>]*>)/g,
+    '$1\n$2',
+  );
+  // 5. 清理连续 3 个及以上的换行
   restoredBody = restoredBody.replace(/\n{3,}/g, '\n\n');
 
   // 构造英文 Frontmatter 对象，由 gray-matter 安全序列化，彻底杜绝 YAML 缩进格式错误
