@@ -343,11 +343,7 @@ async function translatePost(file) {
       return match;
     },
   );
-  // 3. 修复被重复复制的多余闭合标签
-  restoredBody = restoredBody.replace(
-    /<\/div>\s*<\/div>\s*\n\s*<\/div>\s*\n\s*<\/div>/g,
-    '</div>\n  </div>\n</div>',
-  );
+
   // 4. 清理连续闭合标签或开始标签之间的多余空行，防止在 MDX 中打断容器
   restoredBody = restoredBody.replace(
     /(<\/[a-zA-Z0-9]+>)[ \t]*\n\s*\n+([ \t]*<\/[a-zA-Z0-9]+>)/g,
