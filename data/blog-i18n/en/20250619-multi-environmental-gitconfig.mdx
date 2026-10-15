@@ -1,0 +1,169 @@
+---
+title: Git Config Setup for Multiple Environments
+date: '2025-06-19 15:00:00'
+lastmod: '2026-08-04'
+tags:
+  - Git
+  - 开发习惯
+  - Open Source
+  - GitHub
+summary: >-
+  At my new job, I need to submit work under my real name, but I use a pseudonym
+  for my open-source projects. This article documents how to achieve
+  compatibility between multiple identities using Git’s `includeIf`
+
+  configuration mechanism, without affecting my usual settings.
+tldr: >-
+  Git's `includeIf` feature can automatically switch the commit author based on
+  the repository path: Split the `user.name` and `user.email` settings for work
+  and open-source projects into separate configuration files, then include them
+  in `~/.gitconfig` using `includeIf "gitdir:path/"`. This way, the settings
+  take effect automatically when you enter the corresponding directory,
+  eliminating the need to change them manually each time.
+draft: false
+howto:
+  name: 用 includeIf 按目录自动切换 Git 身份
+  description: 把公司和开源的提交身份拆到不同的 Git 配置文件，再按仓库路径条件加载，进到对应 目录就自动生效。
+  steps:
+    - name: 创建额外的 Git 配置文件
+      text: 在用户主目录下新建一份配置文件，例如 ~/.gitconfig_work，里面只写这个身份的 user.name 和 user.email。
+    - name: 在主配置里条件引入
+      text: >-
+        编辑 ~/.gitconfig，加上 includeIf "gitdir:/path/to/dir/" 段落，指向刚创建的
+        那份配置文件。includeIf 会检测路径前缀是否匹配。
+    - name: 验证是否生效
+      text: 在对应目录下初始化一个仓库，运行 git config user.name，确认显示的是该目录 对应的身份。
+sourceHash: 39b92ce7bde4d14073ed22069e934321a947c2beeaa1ad6fce20b7c843a18662
+translatedAt: '2026-10-15T07:37:57.062Z'
+---
+
+# Git Config for Multiple Environments
+
+## 🧭 Background Information
+
+When we use Git in various development scenarios, we often encounter conflicts involving identity information:
+
+<Callout emoji="👥">
+  At work, you’re required to use your real Chinese name when submitting code,
+  but in open-source projects, you might want to use a pseudonym, nickname, or
+  the email address associated with your GitHub account as your author
+  information.
+</Callout>
+
+Manually switching between `user.name` and `user.email` every time is not only a hassle but also prone to errors. Is there a way to automatically switch the Git configuration?
+
+The answer is — yes, use `includeIf`!
+
+---
+
+## ❓ Why is it important to distinguish between Git identities?
+
+Here's how I use it:
+
+- **Company Project Submissions**: Use your Chinese name + company email address
+- **Open-Source Project Submissions**: Use your alias `Cassian Florin` + GitHub email address
+
+If you don't need multiple identities, the `--global` configuration is actually all you need:
+
+```bash
+git config --global user.email "公司邮箱"
+git config --global user.name "中文名"
+
+git config --global pull.rebase true
+```
+
+---
+
+## 🧬 A More Flexible Multi-Identity Configuration Solution (Recommended)
+
+### ✍️ Description of My Development Environment
+
+- macOS 15.4.1 (M1 Pro)
+- JetBrains Toolbox suite (CLion, WebStorm, DataGrip)
+- Git is installed system-wide
+- The article directory structure uses `~/dev/` as the root directory
+
+---
+
+### 📁 Create an additional Git configuration file
+
+1. Open the terminal and navigate to the user's home directory:
+
+```bash
+cd ~
+ls -a
+```
+
+2. Create a new Git configuration file:
+
+```bash
+vim .gitconfig_qnvip
+```
+
+Sample content:
+
+```ini
+[user]
+    name = Cassian Florin
+    email = your-open-source-email@example.com
+```
+
+You can also use `touch .gitconfig_qnvip` to create an empty file first and then edit it.
+
+---
+
+### 🔁 Modify the main file `.gitconfig` to implement conditional switching
+
+Edit `~/.gitconfig` and add the following configuration:
+
+```ini
+[user]
+    name = 中文名
+    email = 公司邮箱
+
+[core]
+    autocrlf = input
+
+[pull]
+    rebase = true
+
+[includeIf "gitdir:/Users/huapai/dev/open/"]
+    path = /Users/huapai/.gitconfig_qnvip
+```
+
+<Callout emoji="🧠" type="info">
+  `includeIf` checks whether the path prefix matches. If you enter any
+  repository under `/Users/huapai/dev/open/` , Git will automatically load the
+  specified configuration file. Of course, the reverse is also true—you can use
+  open-source projects as your default configuration. For your company, use
+</Callout>
+under the optional directory.
+
+---
+
+## 🧪 Live Demo
+
+Initialize a new project in the `~/dev/open/` directory:
+
+```bash
+mkdir ~/dev/open/test-project
+cd ~/dev/open/test-project
+git init
+```
+
+View the currently active Git configuration:
+
+```bash
+git config user.name
+git config user.email
+```
+
+If "`Cassian Florin`" and your open-source email address are displayed, it means `includeIf` is now active!
+
+---
+
+## ✅ Summary & Recommendations
+
+- Developers with a single identity can simply use the global configuration.
+- For company, open-source, or multiple roles, we recommend using `includeIf` to manage multiple identities.
+- Later on, you can also write automation scripts, switch identities with a single click, and use it in conjunction with Git hooks, among other things.

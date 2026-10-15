@@ -1,0 +1,1052 @@
+---
+title: >-
+  A Detailed Look at the ValidatorUtils Utility Class: Validation Functions for
+  ID Cards, Cell Phone Numbers, Bank Cards, and More
+date: '2025-07-01 16:00:00'
+lastmod: '2026-08-04'
+tags:
+  - Java
+  - 工具类
+  - 验证
+  - 开发习惯
+  - Tools
+  - Tips
+draft: false
+summary: >-
+  This section provides a detailed overview of the features and usage of the
+  ValidatorUtils utility class, including common validation functions such as ID
+  number validation, mobile phone number validation, and bank card validation,
+  along with a variety of usage examples.
+tldr: >-
+  ValidatorUtils is a Java validation utility class that handles ID cards
+  (conversion from 15 digits to 18 digits, data extraction), mobile phone
+  numbers (carrier identification), bank cards (type identification), email
+  addresses, password strength, URLs, and IP addresses. Regular expression
+  validation incurs a performance overhead; in high-concurrency scenarios,
+  you’ll need to implement your own caching.
+sourceHash: 2deb5e2ff5fd3e4b1b66a2d826ebeb9dba35cef6ec7fb159a9c714458d50454f
+translatedAt: '2026-10-15T07:37:59.561Z'
+---
+
+# A Detailed Explanation of the ValidatorUtils Utility Class
+
+In day-to-day development, data validation is a critical step. Whether it’s user registration, data entry, or data import, it’s necessary to validate data in various formats. This article will provide a detailed overview of the features and usage of the `ValidatorUtils` utility class.
+
+## 🎯 Overview of Utility Classes
+
+`ValidatorUtils` is a powerful Java validation utility class that provides the following main features:
+
+- **ID Number Verification**: Supports verification of 15-digit and 18-digit Chinese ID numbers
+- **Mobile Number Validation**: Validation of mainland China mobile number formats and carrier identification
+- **Bank Card Validation**: Validation of bank card number formats and type identification
+- **Other Validations**: Email addresses, password strength, URLs, IP addresses, etc.
+
+## 📋 ID Number Verification
+
+### Basic Verification
+
+```java
+// 验证 18 位身份证号码
+String idCard18 = "110101199001011234";
+boolean isValid = ValidatorUtil.isValidIdCard(idCard18);
+System.out.println("身份证是否有效: " + isValid); // true
+
+// 验证 15 位身份证号码
+String idCard15 = "110101900101123";
+boolean isValid15 = ValidatorUtil.isValidIdCard(idCard15);
+System.out.println("15位身份证是否有效: " + isValid15); // true
+```
+
+### Extracting ID Card Information
+
+```java
+String idCard = "110101199001011234";
+
+// 获取出生日期
+String birthDate = ValidatorUtil.getIdCardBirthDate(idCard);
+System.out.println("出生日期: " + birthDate); // 1990-01-01
+
+// 获取性别
+String gender = ValidatorUtil.getIdCardGender(idCard);
+System.out.println("性别: " + gender); // 男
+
+// 获取省份信息
+String province = ValidatorUtil.getIdCardProvince(idCard);
+System.out.println("省份: " + province); // 北京
+```
+
+### 15-bit to 18-bit
+
+```java
+String idCard15 = "110101900101123";
+String idCard18 = ValidatorUtil.convert15To18(idCard15);
+System.out.println("转换后的18位身份证: " + idCard18);
+```
+
+## 📱 Phone Number Verification
+
+### Basic Verification
+
+```java
+// 验证手机号格式
+String mobile = "13812345678";
+boolean isValid = ValidatorUtil.isValidMobile(mobile);
+System.out.println("手机号是否有效: " + isValid); // true
+
+// 验证无效手机号
+String invalidMobile = "12345678901";
+boolean isInvalid = ValidatorUtil.isValidMobile(invalidMobile);
+System.out.println("无效手机号: " + isInvalid); // false
+```
+
+### Carrier Identification
+
+```java
+String mobile = "13812345678";
+String operator = ValidatorUtil.getMobileOperator(mobile);
+System.out.println("运营商: " + operator); // 中国移动
+
+// 不同运营商的手机号
+String[] mobiles = {
+    "13812345678", // 中国移动
+    "18612345678", // 中国联通
+    "18912345678"  // 中国电信
+};
+
+for (String phone : mobiles) {
+    String op = ValidatorUtil.getMobileOperator(phone);
+    System.out.println(phone + " -> " + op);
+}
+```
+
+### Formatting Features
+
+```java
+String mobile = "13812345678";
+
+// 格式化显示
+String formatted = ValidatorUtil.formatMobile(mobile);
+System.out.println("格式化: " + formatted); // 138 1234 5678
+
+// 隐藏中间数字
+String masked = ValidatorUtil.maskMobile(mobile);
+System.out.println("隐藏后: " + masked); // 138****5678
+```
+
+## 💳 Bank Card Verification
+
+### Basic Verification
+
+```java
+// 验证银行卡号
+String bankCard = "6222021234567890123";
+boolean isValid = ValidatorUtil.isValidBankCard(bankCard);
+System.out.println("银行卡是否有效: " + isValid); // true
+
+// 验证信用卡
+String creditCard = "6222021234567890123";
+boolean isCredit = ValidatorUtil.isCreditCard(creditCard);
+System.out.println("是否为信用卡: " + isCredit);
+
+// 验证借记卡
+boolean isDebit = ValidatorUtil.isDebitCard(creditCard);
+System.out.println("是否为借记卡: " + isDebit);
+```
+
+### Bank Card Type Recognition
+
+```java
+String bankCard = "6222021234567890123";
+String cardType = ValidatorUtil.getBankCardType(bankCard);
+System.out.println("银行卡类型: " + cardType); // 工商银行借记卡
+```
+
+### Formatting Features
+
+```java
+String bankCard = "6222021234567890123";
+
+// 格式化显示
+String formatted = ValidatorUtil.formatBankCard(bankCard);
+System.out.println("格式化: " + formatted); // 6222 0212 3456 7890 123
+
+// 隐藏中间数字
+String masked = ValidatorUtil.maskBankCard(bankCard);
+System.out.println("隐藏后: " + masked); // 6222 **** **** 0123
+```
+
+## 📧 Other Verification Features
+
+### Email Verification
+
+```java
+String email = "test@example.com";
+boolean isValid = ValidatorUtil.isValidEmail(email);
+System.out.println("邮箱是否有效: " + isValid); // true
+
+String invalidEmail = "invalid-email";
+boolean isInvalid = ValidatorUtil.isValidEmail(invalidEmail);
+System.out.println("无效邮箱: " + isInvalid); // false
+```
+
+### Password Strength Validation
+
+```java
+// 强密码示例
+String strongPassword = "MyP@ssw0rd";
+boolean isStrong = ValidatorUtil.isStrongPassword(strongPassword);
+System.out.println("密码强度: " + isStrong); // true
+
+// 弱密码示例
+String weakPassword = "123456";
+boolean isWeak = ValidatorUtil.isStrongPassword(weakPassword);
+System.out.println("弱密码: " + isWeak); // false
+```
+
+### URL and IP Address Validation
+
+```java
+// URL 验证
+String url = "https://www.example.com";
+boolean isValidUrl = ValidatorUtil.isValidUrl(url);
+System.out.println("URL 是否有效: " + isValidUrl); // true
+
+// IP 地址验证
+String ip = "192.168.1.1";
+boolean isValidIp = ValidatorUtil.isValidIpAddress(ip);
+System.out.println("IP 地址是否有效: " + isValidIp); // true
+```
+
+### Other Format Validation
+
+```java
+// 纯数字验证
+String numeric = "12345";
+boolean isNumeric = ValidatorUtil.isNumeric(numeric);
+System.out.println("是否为纯数字: " + isNumeric); // true
+
+// 邮政编码验证
+String postcode = "100000";
+boolean isValidPostcode = ValidatorUtil.isValidPostcode(postcode);
+System.out.println("邮政编码是否有效: " + isValidPostcode); // true
+
+// 车牌号验证
+String plateNumber = "京A12345";
+boolean isValidPlate = ValidatorUtil.isValidPlateNumber(plateNumber);
+System.out.println("车牌号是否有效: " + isValidPlate); // true
+```
+
+## 🔧 Real-World Applications
+
+### User Registration Verification
+
+```java
+public class UserRegistrationValidator {
+
+    public ValidationResult validateUserInfo(String idCard, String mobile, String email) {
+        ValidationResult result = new ValidationResult();
+
+        // 验证身份证
+        if (!ValidatorUtil.isValidIdCard(idCard)) {
+            result.addError("身份证号码格式不正确");
+        }
+
+        // 验证手机号
+        if (!ValidatorUtil.isValidMobile(mobile)) {
+            result.addError("手机号格式不正确");
+        }
+
+        // 验证邮箱
+        if (!ValidatorUtil.isValidEmail(email)) {
+            result.addError("邮箱格式不正确");
+        }
+
+        return result;
+    }
+}
+```
+
+### Data Import Validation
+
+```java
+public class DataImportValidator {
+
+    public boolean validateBankCardData(String bankCardNo, String cardHolder) {
+        // 验证银行卡号
+        if (!ValidatorUtil.isValidBankCard(bankCardNo)) {
+            return false;
+        }
+
+        // 获取银行卡类型
+        String cardType = ValidatorUtil.getBankCardType(bankCardNo);
+        System.out.println("持卡人: " + cardHolder + ", 卡类型: " + cardType);
+
+        return true;
+    }
+}
+```
+
+### Redaction of Sensitive Information
+
+```java
+public class DataMaskingService {
+
+    public String maskSensitiveData(String data, String type) {
+        switch (type) {
+            case "mobile":
+                return ValidatorUtil.maskMobile(data);
+            case "bankCard":
+                return ValidatorUtil.maskBankCard(data);
+            case "idCard":
+                // 身份证脱敏：显示前6位和后4位
+                if (ValidatorUtil.isValidIdCard(data)) {
+                    return data.substring(0, 6) + "********" + data.substring(data.length() - 4);
+                }
+                return data;
+            default:
+                return data;
+        }
+    }
+}
+```
+
+## ⚠️ Important Notes
+
+1. **Performance Considerations**: Regular expression validation incurs some performance overhead; caching strategies should be considered in high-concurrency scenarios.
+2. **Data Updates**: Information such as mobile phone number ranges and bank card prefixes is updated periodically and requires timely maintenance.
+3. **Internationalization**: The current utility is primarily designed for Mainland China; support for other regions requires expansion.
+4. **Security**: A successful validation does not guarantee that the data is authentic or valid; critical business operations still require additional verification measures.
+
+## 📚 Summary
+
+`ValidatorUtils` The utility class provides comprehensive data validation functionality that covers common validation needs in everyday development. By using these validation methods appropriately, you can:
+
+- Improve data quality
+- Reduce system errors
+- Enhance the user experience
+- Lower maintenance costs
+
+We recommend selecting the appropriate validation method based on specific requirements in actual projects and re-encapsulating it in conjunction with business logic.
+
+---
+
+<Callout emoji="💡">
+  Note: The code examples in this article can be used directly in your project;
+  we recommend adjusting and optimizing them according to your specific needs.
+</Callout>
+
+## 📄 Complete Code Guide
+
+Below is the complete source code for the `ValidatorUtils` utility class, for your reference and use:
+
+```java
+package com.qnvip.referral.common.util;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
+
+/**
+ * 通用校验工具类 支持中国身份证号码验证和手机号验证
+ *
+ * @author 黄子豪
+ * @Email huangzihao@qnvip.com
+ * @Date 2025/6/26 16:44
+ */
+public class ValidatorUtil {
+
+    // 身份证号码长度常量
+    private static final int ID_CARD_LENGTH_15 = 15;
+    private static final int ID_CARD_LENGTH_18 = 18;
+
+    // 18位身份证校验码权重
+    private static final int[] WEIGHT_FACTORS = {7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2};
+
+    // 18位身份证校验码对应表
+    private static final char[] CHECK_CODES = {'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'};
+
+    // 省份代码映射表
+    private static final Map<String, String> PROVINCE_CODES = new HashMap<>();
+
+    // 中国大陆手机号正则表达式
+    private static final Pattern MOBILE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
+
+    // 中国大陆手机号运营商号段
+    private static final String[] MOBILE_OPERATORS = {
+        // 中国移动
+        "134", "135", "136", "137", "138", "139", "147", "148", "150", "151", "152", "157", "158", "159", "172", "178",
+        "182", "183", "184", "187", "188", "195", "198",
+        // 中国联通
+        "130", "131", "132", "145", "146", "155", "156", "166", "167", "171", "175", "176", "185", "186",
+        // 中国电信
+        "133", "149", "153", "173", "174", "177", "180", "181", "189", "191", "193", "199",
+        // 虚拟运营商
+        "170", "171", "172", "173", "174", "175", "176", "177", "178", "179"};
+
+    // 银行卡相关常量
+    private static final Pattern BANK_CARD_PATTERN = Pattern.compile("^[0-9]{13,19}$");
+
+    // 银行卡类型前缀映射
+    private static final Map<String, String> BANK_CARD_PREFIXES = new HashMap<>();
+
+    static {
+        // 初始化省份代码
+        PROVINCE_CODES.put("11", "北京");
+        PROVINCE_CODES.put("12", "天津");
+        PROVINCE_CODES.put("13", "河北");
+        PROVINCE_CODES.put("14", "山西");
+        PROVINCE_CODES.put("15", "内蒙古");
+        PROVINCE_CODES.put("21", "辽宁");
+        PROVINCE_CODES.put("22", "吉林");
+        PROVINCE_CODES.put("23", "黑龙江");
+        PROVINCE_CODES.put("31", "上海");
+        PROVINCE_CODES.put("32", "江苏");
+        PROVINCE_CODES.put("33", "浙江");
+        PROVINCE_CODES.put("34", "安徽");
+        PROVINCE_CODES.put("35", "福建");
+        PROVINCE_CODES.put("36", "江西");
+        PROVINCE_CODES.put("37", "山东");
+        PROVINCE_CODES.put("41", "河南");
+        PROVINCE_CODES.put("42", "湖北");
+        PROVINCE_CODES.put("43", "湖南");
+        PROVINCE_CODES.put("44", "广东");
+        PROVINCE_CODES.put("45", "广西");
+        PROVINCE_CODES.put("46", "海南");
+        PROVINCE_CODES.put("50", "重庆");
+        PROVINCE_CODES.put("51", "四川");
+        PROVINCE_CODES.put("52", "贵州");
+        PROVINCE_CODES.put("53", "云南");
+        PROVINCE_CODES.put("54", "西藏");
+        PROVINCE_CODES.put("61", "陕西");
+        PROVINCE_CODES.put("62", "甘肃");
+        PROVINCE_CODES.put("63", "青海");
+        PROVINCE_CODES.put("64", "宁夏");
+        PROVINCE_CODES.put("65", "新疆");
+        PROVINCE_CODES.put("71", "台湾");
+        PROVINCE_CODES.put("81", "香港");
+        PROVINCE_CODES.put("82", "澳门");
+        PROVINCE_CODES.put("91", "国外");
+
+        // 初始化银行卡类型前缀
+        // 借记卡
+        BANK_CARD_PREFIXES.put("62", "银联借记卡");
+        BANK_CARD_PREFIXES.put("60", "银联借记卡");
+
+        // 信用卡
+        BANK_CARD_PREFIXES.put("4", "Visa信用卡");
+        BANK_CARD_PREFIXES.put("5", "MasterCard信用卡");
+        BANK_CARD_PREFIXES.put("34", "American Express信用卡");
+        BANK_CARD_PREFIXES.put("37", "American Express信用卡");
+        BANK_CARD_PREFIXES.put("6", "Discover信用卡");
+
+        // 中国主要银行借记卡前缀（工商银行）
+        BANK_CARD_PREFIXES.put("622202", "工商银行借记卡");
+        BANK_CARD_PREFIXES.put("622203", "工商银行借记卡");
+        BANK_CARD_PREFIXES.put("622208", "工商银行借记卡");
+        // ... 更多银行卡前缀（完整列表在源码中）
+
+        // 农业银行
+        BANK_CARD_PREFIXES.put("621660", "农业银行借记卡");
+        BANK_CARD_PREFIXES.put("621661", "农业银行借记卡");
+        // ... 更多农业银行前缀
+
+        // 中国银行
+        BANK_CARD_PREFIXES.put("621785", "中国银行借记卡");
+        BANK_CARD_PREFIXES.put("621786", "中国银行借记卡");
+        // ... 更多中国银行前缀
+
+        // 交通银行
+        BANK_CARD_PREFIXES.put("621559", "交通银行借记卡");
+        BANK_CARD_PREFIXES.put("621560", "交通银行借记卡");
+        // ... 更多交通银行前缀
+
+        // 建设银行
+        BANK_CARD_PREFIXES.put("621700", "建设银行借记卡");
+        BANK_CARD_PREFIXES.put("622280", "建设银行借记卡");
+        BANK_CARD_PREFIXES.put("622700", "建设银行借记卡");
+        // ... 更多建设银行前缀
+    }
+
+    /**
+     * 检查所提供的身份编号是否有效。 支持15位和18位中国身份证号码验证
+     *
+     * @param identityNo 要验证的身份号码
+     * @return 如果身份号码有效则为 true，否则为 false
+     */
+    public static boolean isValidIdCard(String identityNo) {
+        if (StringUtils.isEmpty(identityNo)) {
+            return false;
+        }
+
+        // 去除空格
+        identityNo = identityNo.trim();
+
+        // 检查长度
+        int length = identityNo.length();
+        if (length != ID_CARD_LENGTH_15 && length != ID_CARD_LENGTH_18) {
+            return false;
+        }
+
+        // 检查格式（只能包含数字和X）
+        if (!identityNo.matches("^[0-9]{15}$|^[0-9]{17}[0-9Xx]$")) {
+            return false;
+        }
+
+        // 检查省份代码
+        String provinceCode = identityNo.substring(0, 2);
+        if (!PROVINCE_CODES.containsKey(provinceCode)) {
+            return false;
+        }
+
+        // 根据长度进行不同的验证
+        if (length == ID_CARD_LENGTH_15) {
+            return validate15DigitIdCard(identityNo);
+        } else {
+            return validate18DigitIdCard(identityNo);
+        }
+    }
+
+    /**
+     * 验证15位身份证号码
+     *
+     * @param identityNo 15位身份证号码
+     * @return 是否有效
+     */
+    private static boolean validate15DigitIdCard(String identityNo) {
+        // 检查出生日期
+        String birthDate = "19" + identityNo.substring(6, 12);
+        return isValidBirthDate(birthDate);
+    }
+
+    /**
+     * 验证18位身份证号码
+     *
+     * @param identityNo 18位身份证号码
+     * @return 是否有效
+     */
+    private static boolean validate18DigitIdCard(String identityNo) {
+        // 检查出生日期
+        String birthDate = identityNo.substring(6, 14);
+        if (!isValidBirthDate(birthDate)) {
+            return false;
+        }
+
+        // 检查校验码
+        return validateCheckCode(identityNo);
+    }
+
+    /**
+     * 验证出生日期是否有效
+     *
+     * @param birthDate 出生日期字符串 (格式：yyyyMMdd)
+     * @return 是否有效
+     */
+    private static boolean isValidBirthDate(String birthDate) {
+        if (birthDate.length() != 8) {
+            return false;
+        }
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+            sdf.setLenient(false);
+            Date date = sdf.parse(birthDate);
+
+            // 检查日期是否在合理范围内（1900年至今）
+            Date minDate = sdf.parse("19000101");
+            Date maxDate = new Date();
+
+            return !date.before(minDate) && !date.after(maxDate);
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 验证18位身份证的校验码
+     *
+     * @param identityNo 18位身份证号码
+     * @return 校验码是否正确
+     */
+    private static boolean validateCheckCode(String identityNo) {
+        // 获取前17位
+        String first17 = identityNo.substring(0, 17);
+
+        // 计算校验码
+        int sum = 0;
+        for (int i = 0; i < 17; i++) {
+            sum += (first17.charAt(i) - '0') * WEIGHT_FACTORS[i];
+        }
+
+        // 计算校验码
+        char expectedCheckCode = CHECK_CODES[sum % 11];
+
+        // 获取实际校验码
+        char actualCheckCode = Character.toUpperCase(identityNo.charAt(17));
+
+        return expectedCheckCode == actualCheckCode;
+    }
+
+    /**
+     * 将15位身份证号码转换为18位
+     *
+     * @param idCard15 15位身份证号码
+     * @return 18位身份证号码，如果转换失败返回null
+     */
+    public static String convert15To18(String idCard15) {
+        if (!isValidIdCard(idCard15) || idCard15.length() != ID_CARD_LENGTH_15) {
+            return null;
+        }
+
+        StringBuilder idCard18 = new StringBuilder();
+        idCard18.append(idCard15.substring(0, 6));
+        idCard18.append("19");
+        idCard18.append(idCard15.substring(6));
+
+        // 计算校验码
+        String first17 = idCard18.toString();
+        int sum = 0;
+        for (int i = 0; i < 17; i++) {
+            sum += (first17.charAt(i) - '0') * WEIGHT_FACTORS[i];
+        }
+
+        char checkCode = CHECK_CODES[sum % 11];
+        idCard18.append(checkCode);
+
+        return idCard18.toString();
+    }
+
+    /**
+     * 获取身份证号码中的出生日期
+     *
+     * @param identityNo 身份证号码
+     * @return 出生日期字符串 (格式：yyyy-MM-dd)，如果解析失败返回null
+     */
+    public static String getIdCardBirthDate(String identityNo) {
+        if (!isValidIdCard(identityNo)) {
+            return null;
+        }
+
+        String birthDate;
+        if (identityNo.length() == ID_CARD_LENGTH_15) {
+            birthDate = "19" + identityNo.substring(6, 12);
+        } else {
+            birthDate = identityNo.substring(6, 14);
+        }
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+            Date date = sdf.parse(birthDate);
+            SimpleDateFormat outputSdf = new SimpleDateFormat("yyyy-MM-dd");
+            return outputSdf.format(date);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 获取身份证号码中的性别
+     *
+     * @param identityNo 身份证号码
+     * @return 性别字符串 ("男" 或 "女")，如果解析失败返回null
+     */
+    public static String getIdCardGender(String identityNo) {
+        if (!isValidIdCard(identityNo)) {
+            return null;
+        }
+
+        int genderDigit;
+        if (identityNo.length() == ID_CARD_LENGTH_15) {
+            genderDigit = identityNo.charAt(14) - '0';
+        } else {
+            genderDigit = identityNo.charAt(16) - '0';
+        }
+
+        return genderDigit % 2 == 1 ? "男" : "女";
+    }
+
+    /**
+     * 获取身份证号码中的省份信息
+     *
+     * @param identityNo 身份证号码
+     * @return 省份名称，如果解析失败返回null
+     */
+    public static String getIdCardProvince(String identityNo) {
+        if (!isValidIdCard(identityNo)) {
+            return null;
+        }
+
+        String provinceCode = identityNo.substring(0, 2);
+        return PROVINCE_CODES.get(provinceCode);
+    }
+
+    /**
+     * 验证中国大陆手机号是否有效
+     *
+     * @param mobile 手机号
+     * @return 如果手机号有效则为 true，否则为 false
+     */
+    public static boolean isValidMobile(String mobile) {
+        if (StringUtils.isEmpty(mobile)) {
+            return false;
+        }
+
+        mobile = mobile.trim();
+
+        if (!MOBILE_PATTERN.matcher(mobile).matches()) {
+            return false;
+        }
+
+        String prefix = mobile.substring(0, 3);
+        for (String operator : MOBILE_OPERATORS) {
+            if (operator.equals(prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * 获取手机号运营商信息
+     *
+     * @param mobile 手机号
+     * @return 运营商名称，如果无法识别返回null
+     */
+    public static String getMobileOperator(String mobile) {
+        if (!isValidMobile(mobile)) {
+            return null;
+        }
+
+        String prefix = mobile.substring(0, 3);
+
+        if (prefix.matches("134|135|136|137|138|139|147|148|150|151|152|157|158|159|172|178|182|183|184|187|188|195|198")) {
+            return "中国移动";
+        }
+
+        if (prefix.matches("130|131|132|145|146|155|156|166|167|171|175|176|185|186")) {
+            return "中国联通";
+        }
+
+        if (prefix.matches("133|149|153|173|174|177|180|181|189|191|193|199")) {
+            return "中国电信";
+        }
+
+        if (prefix.matches("170|171|172|173|174|175|176|177|178|179")) {
+            return "虚拟运营商";
+        }
+
+        return null;
+    }
+
+    /**
+     * 格式化手机号（添加空格分隔）
+     *
+     * @param mobile 手机号
+     * @return 格式化后的手机号，如果输入无效返回null
+     */
+    public static String formatMobile(String mobile) {
+        if (!isValidMobile(mobile)) {
+            return null;
+        }
+
+        return mobile.substring(0, 3) + " " + mobile.substring(3, 7) + " " + mobile.substring(7);
+    }
+
+    /**
+     * 隐藏手机号中间4位数字
+     *
+     * @param mobile 手机号
+     * @return 隐藏后的手机号，如果输入无效返回null
+     */
+    public static String maskMobile(String mobile) {
+        if (!isValidMobile(mobile)) {
+            return null;
+        }
+
+        return mobile.substring(0, 3) + "****" + mobile.substring(7);
+    }
+
+    /**
+     * 验证银行卡号是否有效 使用Luhn算法（模10算法）验证银行卡号
+     *
+     * @param bankCardNo 银行卡号
+     * @return 如果银行卡号有效则为 true，否则为 false
+     */
+    public static boolean isValidBankCard(String bankCardNo) {
+        if (StringUtils.isEmpty(bankCardNo)) {
+            return false;
+        }
+
+        bankCardNo = bankCardNo.replaceAll("[\\s-]", "");
+
+        if (!BANK_CARD_PATTERN.matcher(bankCardNo).matches()) {
+            return false;
+        }
+
+        return validateLuhnAlgorithm(bankCardNo);
+    }
+
+    /**
+     * 使用Luhn算法验证银行卡号
+     */
+    private static boolean validateLuhnAlgorithm(String cardNumber) {
+        int sum = 0;
+        boolean alternate = false;
+
+        for (int i = cardNumber.length() - 1; i >= 0; i--) {
+            int n = Integer.parseInt(cardNumber.substring(i, i + 1));
+
+            if (alternate) {
+                n *= 2;
+                if (n > 9) {
+                    n = (n % 10) + 1;
+                }
+            }
+
+            sum += n;
+            alternate = !alternate;
+        }
+
+        return (sum % 10 == 0);
+    }
+
+    /**
+     * 获取银行卡类型
+     *
+     * @param bankCardNo 银行卡号
+     * @return 银行卡类型，如果无法识别返回null
+     */
+    public static String getBankCardType(String bankCardNo) {
+        if (!isValidBankCard(bankCardNo)) {
+            return null;
+        }
+
+        bankCardNo = bankCardNo.replaceAll("[\\s-]", "");
+
+        for (int i = 6; i >= 1; i--) {
+            if (bankCardNo.length() >= i) {
+                String prefix = bankCardNo.substring(0, i);
+                String cardType = BANK_CARD_PREFIXES.get(prefix);
+                if (cardType != null) {
+                    return cardType;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 格式化银行卡号（添加空格分隔）
+     *
+     * @param bankCardNo 银行卡号
+     * @return 格式化后的银行卡号，如果输入无效返回null
+     */
+    public static String formatBankCard(String bankCardNo) {
+        if (!isValidBankCard(bankCardNo)) {
+            return null;
+        }
+
+        bankCardNo = bankCardNo.replaceAll("[\\s-]", "");
+        int length = bankCardNo.length();
+
+        if (length == 16) {
+            return bankCardNo.substring(0, 4) + " " + bankCardNo.substring(4, 8) + " " +
+                   bankCardNo.substring(8, 12) + " " + bankCardNo.substring(12);
+        } else if (length == 19) {
+            return bankCardNo.substring(0, 4) + " " + bankCardNo.substring(4, 8) + " " +
+                   bankCardNo.substring(8, 12) + " " + bankCardNo.substring(12, 16) + " " +
+                   bankCardNo.substring(16);
+        }
+
+        return bankCardNo;
+    }
+
+    /**
+     * 隐藏银行卡号中间部分数字
+     *
+     * @param bankCardNo 银行卡号
+     * @return 隐藏后的银行卡号，如果输入无效返回null
+     */
+    public static String maskBankCard(String bankCardNo) {
+        if (!isValidBankCard(bankCardNo)) {
+            return null;
+        }
+
+        bankCardNo = bankCardNo.replaceAll("[\\s-]", "");
+        int length = bankCardNo.length();
+
+        if (length <= 8) {
+            return bankCardNo.substring(0, 2) + "****" + bankCardNo.substring(length - 2);
+        } else {
+            return bankCardNo.substring(0, 4) + " **** **** " + bankCardNo.substring(length - 4);
+        }
+    }
+
+    /**
+     * 验证是否为信用卡
+     *
+     * @param bankCardNo 银行卡号
+     * @return 如果是信用卡则为 true，否则为 false
+     */
+    public static boolean isCreditCard(String bankCardNo) {
+        String cardType = getBankCardType(bankCardNo);
+        if (cardType == null) {
+            return false;
+        }
+        return cardType.contains("信用卡");
+    }
+
+    /**
+     * 验证是否为借记卡
+     *
+     * @param bankCardNo 银行卡号
+     * @return 如果是借记卡则为 true，否则为 false
+     */
+    public static boolean isDebitCard(String bankCardNo) {
+        String cardType = getBankCardType(bankCardNo);
+        if (cardType == null) {
+            return false;
+        }
+        return cardType.contains("借记卡");
+    }
+
+    /**
+     * 验证邮箱格式是否有效
+     *
+     * @param email 邮箱地址
+     * @return 如果邮箱格式有效则为 true，否则为 false
+     */
+    public static boolean isValidEmail(String email) {
+        if (StringUtils.isEmpty(email)) {
+            return false;
+        }
+
+        String emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+        return Pattern.matches(emailPattern, email.trim());
+    }
+
+    /**
+     * 验证密码强度 要求：至少8位，包含大小写字母、数字和特殊字符
+     *
+     * @param password 密码
+     * @return 如果密码强度符合要求则为 true，否则为 false
+     */
+    public static boolean isStrongPassword(String password) {
+        if (StringUtils.isEmpty(password) || password.length() < 8) {
+            return false;
+        }
+
+        boolean hasUpperCase = password.matches(".*[A-Z].*");
+        boolean hasLowerCase = password.matches(".*[a-z].*");
+        boolean hasDigit = password.matches(".*\\d.*");
+        boolean hasSpecialChar = password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*");
+
+        return hasUpperCase && hasLowerCase && hasDigit && hasSpecialChar;
+    }
+
+    /**
+     * 验证URL格式是否有效
+     *
+     * @param url URL地址
+     * @return 如果URL格式有效则为 true，否则为 false
+     */
+    public static boolean isValidUrl(String url) {
+        if (StringUtils.isEmpty(url)) {
+            return false;
+        }
+
+        try {
+            new java.net.URL(url.trim());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * 验证IP地址格式是否有效
+     *
+     * @param ip IP地址
+     * @return 如果IP地址格式有效则为 true，否则为 false
+     */
+    public static boolean isValidIpAddress(String ip) {
+        if (StringUtils.isEmpty(ip)) {
+            return false;
+        }
+
+        String ipPattern = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+        return Pattern.matches(ipPattern, ip.trim());
+    }
+
+    /**
+     * 验证是否为纯数字字符串
+     *
+     * @param str 待验证的字符串
+     * @return 如果为纯数字则为 true，否则为 false
+     */
+    public static boolean isNumeric(String str) {
+        if (StringUtils.isEmpty(str)) {
+            return false;
+        }
+
+        return str.trim().matches("^\\d+$");
+    }
+
+    /**
+     * 验证是否为有效的中国邮政编码
+     *
+     * @param postcode 邮政编码
+     * @return 如果邮政编码有效则为 true，否则为 false
+     */
+    public static boolean isValidPostcode(String postcode) {
+        if (StringUtils.isEmpty(postcode)) {
+            return false;
+        }
+
+        return postcode.trim().matches("^[1-9]\\d{5}$");
+    }
+
+    /**
+     * 验证是否为有效的中国车牌号
+     *
+     * @param plateNumber 车牌号
+     * @return 如果车牌号有效则为 true，否则为 false
+     */
+    public static boolean isValidPlateNumber(String plateNumber) {
+        if (StringUtils.isEmpty(plateNumber)) {
+            return false;
+        }
+
+        // 普通车牌号
+        String normalPattern = "^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-Z][A-Z0-9]{5}$";
+
+        // 新能源车牌号
+        String newEnergyPattern = "^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-Z][A-Z0-9]{6}$";
+
+        return plateNumber.trim().matches(normalPattern) || plateNumber.trim().matches(newEnergyPattern);
+    }
+}
+```
+
+<Callout emoji="📝">
+  **Code Notes**: - The complete source code includes mappings for all bank card
+  prefixes (to save space, some bank card prefixes have been omitted with
+  comments in the code above) - When using this code, please ensure that all
+  necessary dependencies (Apache Commons Lang 3) are included. - It is
+  recommended to adjust certain validation rules based on actual business
+  requirements.
+</Callout>
+
+---
+
+## 🔗 Related Resources
+
+- [Detailed Explanation of the ID Number Verification Algorithm](https://zh.wikipedia.org/wiki/中华人民共和国居民身份证)
+- [Mobile Phone Number Range Lookup](https://www.ip138.com/mobile.asp)
+- [Bank Card Number Verification Algorithm](https://zh.wikipedia.org/wiki/Luhn算法)

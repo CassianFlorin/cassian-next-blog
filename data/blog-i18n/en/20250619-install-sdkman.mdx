@@ -1,0 +1,359 @@
+---
+title: SDKMAN Installation Guide
+date: '2025-06-19 21:59:00'
+lastmod: '2026-09-16'
+tags:
+  - SDKMAN
+  - 开发习惯
+  - 解决方案
+  - GitHub
+  - Tools
+  - Guide
+  - Tips
+  - Java
+summary: >-
+  This document uses SDKMAN to manage Java versions and ensure that all
+  developers use the same Java environment. The following is a guide to
+  installing and configuring SDKMAN on different operating systems.
+tldr: >-
+  SDKMAN is a command-line tool for managing multiple versions of SDKs, such as
+  Java. On macOS and Linux, it can be installed with a single `curl` command; on
+  Windows, you’ll need Git Bash or WSL first. Once installed, use `sdk install
+  java` to install a version. Place a `.sdkmanrc` file in your project
+  directory, and it will automatically switch versions when you enter that
+  directory.
+draft: false
+definedTerm:
+  name: SDKMAN
+  description: >-
+    一个用于管理多个软件开发工具包版本的命令行工具，最常用于在不同项目之间切换 JDK 版本，同时也支持 Kotlin、Scala、Gradle、Maven
+    等。
+  sameAs:
+    - 'https://sdkman.io'
+howto:
+  name: 安装并配置 SDKMAN
+  description: 在 macOS、Linux 或 Windows 上安装 SDKMAN，并让项目进入目录时自动切换 Java 版本。
+  steps:
+    - name: 安装 SDKMAN
+      text: >-
+        macOS 和 Linux 直接在终端执行官方 curl 安装命令；Windows 需要先有 Git Bash 或 WSL
+        环境。安装完成后重新加载 shell 配置。
+    - name: 安装项目所需的 Java 版本
+      text: >-
+        用 sdk list java 查看可用版本，再用 sdk install java 安装项目需要的那一个， 用 sdk current
+        java 验证当前生效的版本。
+    - name: 配置项目自动切换
+      text: 在项目根目录创建 .sdkmanrc 并写入所需版本，之后进入该目录时 SDKMAN 会自动 切换到对应的 Java 版本。
+sourceHash: 471d855681924d99a7ee208113827fb185f98abb481883319b7ef4a61deb922f
+translatedAt: '2026-10-15T07:37:55.313Z'
+---
+
+# SDKMAN Installation and Configuration Guide
+
+## 🧠 What is SDKMAN?
+
+SDKMAN is a tool for managing multiple versions of software development kits, particularly different versions of Java. It allows you to easily switch between different JDK versions across projects.
+
+<Callout emoji="💡">
+  SDKMAN supports not only Java, but also Kotlin, Scala, Gradle, Maven, and many
+  other development tools.
+</Callout>
+
+## 🎯 Why do you need SDKMAN?
+
+During the development process, we often need to work on multiple projects, each of which may use a different version of Java. SDKMAN helps us by:
+
+- 🔄 **Easily switch between Java versions**
+- 🛠️ **Standardize the team's development environment**
+- 🚀 **Simplify tool installation and management**
+- 🔧 **Resolve version conflicts in Git Hooks**
+
+<Callout emoji="📖">
+  If you're experiencing issues with Git hooks and a multi-JDK environment, you
+  can refer to our other article: [Git Hooks and Multi-JDK Environment
+  Issues](/blog/20250619-git-hooks-and-multi-java-env )
+</Callout>
+
+## ⚙️ Install SDKMAN
+
+### 🍎 macOS and Linux
+
+<StepProgress
+  steps={[
+    {
+      title: '打开终端',
+      status: 'completed',
+      description: '打开系统终端或 iTerm2',
+    },
+    {
+      title: '运行安装命令',
+      status: 'completed',
+      description: '执行 curl 命令下载并安装 SDKMAN',
+    },
+    {
+      title: '完成安装',
+      status: 'completed',
+      description: '按照屏幕提示完成安装过程',
+    },
+    {
+      title: '重新加载配置',
+      status: 'current',
+      description: '重新加载 shell 配置文件',
+    },
+  ]}
+/>
+
+1. **Open the Terminal**
+2. **Run the installation command**:
+
+```bash
+curl -s "https://get.sdkman.io" | bash
+```
+
+3. **Follow the on-screen instructions to complete the installation**
+4. **Reload the shell configuration**:
+
+```bash
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+```
+
+### 🪟 Windows
+
+#### Using Git Bash or MSYS2
+
+<StepProgress
+  steps={[
+    {
+      title: '打开 Git Bash',
+      status: 'completed',
+      description: '打开 Git Bash 或 MSYS2 终端',
+    },
+    {
+      title: '运行安装命令',
+      status: 'completed',
+      description: '执行 curl 命令下载并安装 SDKMAN',
+    },
+    {
+      title: '完成安装',
+      status: 'completed',
+      description: '按照屏幕提示完成安装过程',
+    },
+    {
+      title: '重新加载配置',
+      status: 'current',
+      description: '重新加载 shell 配置文件',
+    },
+  ]}
+/>
+
+1. **Open Git Bash or the MSYS2 terminal**
+2. **Run the installation command**:
+
+```bash
+curl -s "https://get.sdkman.io" | bash
+```
+
+3. **Follow the on-screen instructions to complete the installation**
+4. **Reload the shell configuration**:
+
+```bash
+source "$USERPROFILE/.sdkman/bin/sdkman-init.sh"
+```
+
+#### Using Windows PowerShell (Alternative)
+
+If you are not using Git Bash or MSYS2, you may want to consider using the following tools to install a specific version of Java:
+
+- [Scoop](https://scoop.sh/) - Windows package manager
+- [Chocolatey](https://chocolatey.org/) - Windows package manager
+
+<Callout emoji="⚠️">
+  Windows users are advised to use Git Bash or MSYS2 for the best SDKMAN
+  experience.
+</Callout>
+
+## 📦 Install the Java version required for the project
+
+This project uses Java 8. After installing SDKMAN, run the following command to install the required Java version:
+
+```bash
+sdk install java 8.0.452-amzn
+```
+
+### View Available Java Versions
+
+```bash
+sdk list java
+```
+
+### View Installed Versions
+
+```bash
+sdk list java | grep installed
+```
+
+### Common SDKMAN Commands
+
+| Command                        | Description                              |
+| ------------------------------ | ---------------------------------------- |
+| `sdk list java`                | View all available Java versions         |
+| `sdk install java <version>`   | Install a specific Java version          |
+| `sdk use java <version>`       | Temporarily switch to a specific version |
+| `sdk default java <version>`   | Set the default Java version             |
+| `sdk current java`             | View the currently used Java version     |
+| `sdk uninstall java <version>` | Uninstall a specific Java version        |
+
+## ✅ Verify the installation
+
+Once the installation is complete, you can run the following command to verify that SDKMAN is working properly:
+
+```bash
+sdk version
+```
+
+Verify that the Java version is correct:
+
+```bash
+java -version
+```
+
+The expected output should look something like this:
+
+```bash
+openjdk version "1.8.0_452"
+OpenJDK Runtime Environment (build 1.8.0_452-b08)
+OpenJDK 64-Bit Server VM (build 25.452-b08, mixed mode)
+```
+
+## 🔄 Automatic Java Version Switching for Projects
+
+This project includes a file named `.sdkmanrc`, which automatically switches to the correct Java version when you enter the project directory. To enable this feature, run:
+
+```bash
+sdk env
+```
+
+### Example Project Configuration File
+
+Create a file named `.sdkmanrc` in the project's root directory:
+
+```plaintext
+# This file is used by SDKMAN to automatically switch to the correct Java version
+# when entering this project directory
+#
+# 注意：
+# 1. 此文件需要 SDKMAN 支持才能生效
+# 2. 如果您没有安装 SDKMAN，请参考本文档进行安装
+# 3. Windows 用户需要在 Git Bash 或类似的 Unix-like 环境中使用 SDKMAN
+# 4. 如果您使用的是 IDE（如 IntelliJ IDEA），请确保在项目设置中也配置了正确的 JDK
+
+java=8.0.452-amzn
+```
+
+## 🔧 Troubleshooting
+
+### Issues with Java Versions in Git Hooks
+
+If you encounter issues related to the Java version while running Git commands, please make sure that:
+
+1. ✅ SDKMAN has been installed correctly
+2. ✅ The Java version required by the project has been installed
+3. ✅ SDKMAN has been loaded into your shell configuration file (such as `.bashrc`, `.zshrc`, or `.bash_profile` for Git Bash)
+
+<Callout emoji="💡">
+  If you have not installed SDKMAN, Git hooks will use the system's default Java
+  version. Please ensure that your system's Java version is compatible with your
+  project.
+</Callout>
+
+### Windows-Specific Issues
+
+On Windows, if you're using Git in CMD or PowerShell, you may need to manually set the `JAVA_HOME` environment variable to point to the correct Java version.
+
+#### Set the JAVA_HOME environment variable
+
+```powershell
+# PowerShell 示例
+$env:JAVA_HOME = "C:\Users\YourUsername\.sdkman\candidates\java\8.0.452-amzn"
+```
+
+#### Set Environment Variables Permanently
+
+```powershell
+# 设置系统环境变量（需要管理员权限）
+[Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\Users\YourUsername\.sdkman\candidates\java\8.0.452-amzn", "User")
+```
+
+### Troubleshooting Common Issues
+
+<ErrorDisplay
+  title="SDKMAN 命令未找到"
+  error="sdk: command not found"
+  code="127"
+  path="/usr/bin:/bin:/usr/sbin:/sbin"
+  details={[
+    'SDKMAN 未正确安装',
+    'shell 配置文件未重新加载',
+    '需要重启终端或重新加载配置',
+  ]}
+/>
+
+**Solution**: Make sure you have reloaded the shell configuration or restarted the terminal
+
+<ErrorDisplay
+  title="Java 版本未自动切换"
+  error="Java version not switched automatically"
+  code="0"
+  path="Project directory"
+  details={[
+    '.sdkmanrc 文件不存在或格式错误',
+    'SDKMAN 未正确加载',
+    '需要运行 sdk env 命令',
+  ]}
+/>
+
+**Solution**: Run the `sdk env` command, or check whether the `.sdkmanrc` file exists
+
+<ErrorDisplay
+  title="Windows Git hooks 失败"
+  error="Git hooks failed on Windows"
+  code="1"
+  path="CMD/PowerShell environment"
+  details={[
+    '在 CMD 或 PowerShell 中运行 Git',
+    '环境变量配置不正确',
+    '建议使用 Git Bash',
+  ]}
+/>
+
+**Solution**: Use Git Bash instead of CMD or PowerShell
+
+## 📚 Related Resources
+
+### Official Documentation
+
+- [SDKMAN Official Documentation](https://sdkman.io/usage)
+- [SDKMAN Command Reference](https://sdkman.io/usage#command-reference)
+- [SDKMAN Installation Guide](https://sdkman.io/install)
+
+### Related Blog Posts
+
+- [Git Hooks and Multi-JDK Environment Issues](/blog/20250619-git-hooks-and-multi-java-env) - Resolving Java version conflicts in Git Hooks
+- [Git Hooks and Node Environment Issues](/blog/20250619-git-hooks-and-node-env) - Resolving Node.js environment issues in Git Hooks
+- [Git Configuration Management for Multiple Environments](/blog/20250619-multi-environmental-gitconfig) - Managing Git Configurations Across Multiple Environments
+
+### Recommended Tools
+
+- [Scoop](https://scoop.sh/) - Windows package manager
+- [Chocolatey](https://chocolatey.org/) - Windows package manager
+- [Husky](https://typicode.github.io/husky/) - Git hooks tool
+- [NVM](https://github.com/nvm-sh/nvm) - Node.js version manager
+
+---
+
+<Callout emoji="🎉">
+Congratulations! You have now successfully installed and configured SDKMAN. This will help you better manage Java versions and ensure consistency across your projects.
+
+If you encounter any issues during the installation process, feel free to refer to our other related articles or check the official documentation.
+
+</Callout>

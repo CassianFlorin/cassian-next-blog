@@ -1,0 +1,104 @@
+---
+title: 'Cloud Mail Follow-up: R2 Attachment Verification and Resend Key Rotation'
+date: '2026-10-13'
+tags:
+  - Open Source
+  - 运维
+  - 独立开发
+draft: false
+summary: >-
+  Use actual receipt confirmations to verify that Cloud Mail attachments are
+  written to the private R2 storage, check the preview, download, and anonymous
+  access functions, and then document the "Resend" key rotation and the sending
+  verification for both old and new credentials.
+tldr: >-
+  The two test attachments passed the SHA-256 checksum verification in Remote
+  R2; they can be previewed and downloaded after logging in, while anonymous
+  access returns a 401 error. The new key has been synchronized to D1 and KV,
+  and its functionality has been verified through both sending emails via the
+  application and actual delivery confirmation.
+sourceHash: 33336c9e46cc355dbaf3efe30eba73ff06b67a14fdc20819f25aed11d85623e2
+translatedAt: '2026-10-15T07:39:43.069Z'
+---
+
+The previous post, [Cloud Mail Deployment Log](/blog/20261012-cloud-mail-deployment), covered the switch to a private R2 bucket. We reviewed the old data that day and found that D1 had no records of attachments, and the KV system had no records of attachments or upload history, so there were no historical files to copy. Once the bucket was created, it remained empty, which was consistent with the situation at the time.
+
+But this still leaves one question unanswered. Once the production email account actually receives an email with an attachment, will the file be saved to R2? Will it be accessible after logging in via the web? And if someone obtains the attachment’s URL, will they be able to view it?
+
+On October 13, 2026, I completed this round of verification. During the process, I also discovered that the old Resend transmission key had appeared in the error output of a local tool, so I took the opportunity to rotate the keys as well.This post is a continuation of the previous one. I will not disclose any real email addresses, business domains, resource identifiers, or object paths, nor will I post any credentials or raw logs.
+
+## First, send an email that actually has an attachment
+
+In the previous round of testing, we used a remote R2 binding and also tested the local attachment page. This time, we’ll have an email actually sent via Resend and then enter Cloud Mail through the production environment’s inbox workflow.
+
+The email contains two specially generated test files: a PNG file that is 31,695 bytes in size and measures 800 × 480, and a TXT file that is 136 bytes in size. The content does not include any personal information.
+
+After receiving the email, the app displayed the corresponding inbox entry and two attachment entries. Next, I downloaded these two objects directly from the remote R2 server and calculated the full SHA-256 hash for each, comparing them to the original files as they were before being sent. Both sets matched.
+
+I checked KV again, and neither of the two attachment keys existed there either. Only by cross-referencing with the files read from the remote R2 could I confirm that this new set of attachments had been written to R2; the read operation was successful, and there was no fallback to KV.
+
+Once again, no old attachments were migrated. The new test email and the two attachments were retained in the system for future review.
+
+## The bucket overview still shows zero, but the files can already be read
+
+During the verification process, the bucket's summary still shows `0` objects and `0 B`. If you look only at this line, it's easy to continue suspecting that the data wasn't written.
+
+The Wrangler bucket overview used at the time displayed storage analysis statistics but did not list the current objects individually. In a separate remote object read operation I performed, I obtained two complete files, and their hashes matched those of the originals.
+
+These two types of results need to be recorded separately. The file exists, and there is evidence of direct reading and byte verification; the summary figure was not refreshed at that time. I did not measure how long it took to update, nor did I wait for the count to become non-zero before ending the verification.
+
+In the future, when I encounter a similar situation, I’ll first check whether the expected object can be read and whether the content matches, and then review the overview statistics. If the object fails to load, I’ll continue to investigate the write process and resource binding; I won’t assume that the data has been successfully saved just because there’s a potential delay in the statistics.
+
+## In addition to private buckets, you should also check the application's read entry points
+
+Public access to the bucket `r2.dev` is disabled, and no public custom domain is bound to the bucket. The application reads files via a Worker, and the browser uses the email service's own attachment interface.
+
+In this test, we evaluated both the new attachment API and the attachment paths compatible with older emails. Standard HTTP requests covered both sets of files, and the results are as follows.
+
+| Test Item                                            | New Attachment API                          | Old Attachment Path                         |
+| ---------------------------------------------------- | ------------------------------------------- | ------------------------------------------- |
+| Reading PNG and TXT files with a valid login session | HTTP 200, content matches the original file | HTTP 200, content matches the original file |
+| Anonymous access to PNG and TXT                      | HTTP 401                                    | HTTP 401                                    |
+| Private attachment caching policy                    | `private, no-store`                         | `private, no-store`                         |
+
+Next, open the test email in the production environment. The PNG preview decoded successfully and displayed the same dimensions as the original image; both attachments were downloaded using the download buttons on the page, the filenames matched expectations, and the SHA-256 hashes of the downloaded files matched those of the originals. No uncaught exceptions occurred in the browser.
+
+Preview and download requests with session authentication headers, then use the returned content to generate a Blob URL. The login token was not included in the URL of the attachment request. Another clean browser without a login session accessed both entry points for the PNG and received a 401 error in both cases.
+
+This round reused an existing valid administrator session. It verified attachment operations while logged in; it did not involve re-entering the password to go through the login process again, nor did it test cross-account access using another regular account in the production environment. The ownership permissions regression test documented in the previous post and the production verification described here each have their own scope.
+
+## If the old transmission key appears in the error output, replace it.
+
+During the initial local sending test, the tool treated the entire contents of a credential description file as request header values. Before the request was even sent, an error occurred during parameter processing, and the old sending key appeared in the tool’s output along with the error message.
+
+Correcting the read logic will only prevent further output. Old credentials that have already been generated still need to be revoked.
+
+This time, I deleted the old key in the Resend backend, recreated the sending key, and replaced the original private credentials file. Only then did I sync the new values to the application. Therefore, the actual sequence was that the old key was deleted first, and the Cloud Mail configuration was updated afterward.
+
+For instances that continuously handle email sending tasks, I will schedule the process so that a new key is created first, followed by verification and configuration switching, and then the old key is revoked. This minimizes interruptions in email delivery during the switchover. This log entry is still written in the order in which events actually occurred; I cannot rewrite a successful verification that occurred later to make it appear as if it had been verified earlier.
+
+Subsequent scripts only extract and pass new credentials within the process; they do not print their contents, nor do they treat the entire documentation file directly as a token. The new keys are not written to chat or tool logs.
+
+## Once the configuration is saved, you'll need to verify that it's being used for sending emails in production.
+
+In this version of Cloud Mail, the "Resend token" is stored in the app settings, D1 stores the configuration, and KV caches the configuration. Only the JWT signing key is stored in Worker Secrets. When rotating the sending key, you need to update the app settings and their cache.
+
+Before switching over, I first sent a test email using the new credentials to verify that it was received by the valid email address. Then, I saved the new token through the standard administrator settings interface, and the configuration service updated D1 and refreshed the KV.
+
+Finally, during the private verification process, the values in D1, KV, and the original local credentials file were compared, and they matched in all three locations. The credentials for other domains remained unchanged, and the unrelated "Resend key" was not modified either. The Cloud Mail source code was not modified this time, and there was no need to redeploy the Worker.
+
+Simply seeing that the settings were saved successfully does not guarantee that the new values will be used for subsequent emails. If the application continues to read from the old cache, the "saved" prompt on the page won't detect the problem for it. Therefore, in this round, we'll send an email again through Cloud Mail's normal sending interface to verify that it actually reaches the sending service.
+
+## How to Get a Test Email to the "Resend" Folder
+
+Cloud Mail has an internal delivery mechanism. If all recipients belong to the local domain configured in the application, the email may be delivered directly within the system. In such cases of successful delivery, the "Resend" key cannot be retrieved.
+
+This test included external recipients; we used Resend’s official test address and simultaneously sent the email to our own real email address. We then checked the email provider’s identifier saved by the app, Resend’s delivery status, and the actual email received in our inbox.
+
+The result was that the application’s normal sending interface did indeed go through the “Resend” process, the service provider’s status was `delivered`, and the actual email address received the message sent by the application. At that point, the old key had already been revoked, but the new key was still able to complete this email sending process.
+
+The verification of old credentials also checks for the ability to send data. Attempting to call the send API directly with an old key returns an HTTP 401 error; the old key is no longer listed in the service provider’s key list.
+
+Since keys with only send permissions may not be able to call the management API in the first place, a 401 error from the management API is not sufficient proof that the revocation was successful. The evidence retained in this instance is that the send request from the old key was rejected, while the new key successfully sent the message through the application and the recipient actually received it.
+
+After verification was complete, the permissions on the original private credential file were restricted to `0600`, and the temporary new key copy and old key backup generated during the rotation process were also deleted. The test emails were retained. This article only documents the results; it does not include complete fingerprints, request headers, account identifiers, or screenshots of email addresses.

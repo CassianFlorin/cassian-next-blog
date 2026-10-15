@@ -1,0 +1,156 @@
+---
+title: Be a desktop pet that doesn't nag you
+date: '2026-09-11 20:00:00'
+tags:
+  - 产品设计
+  - 桌面宠物
+  - macOS
+  - Roam
+  - 独立开发
+draft: false
+images:
+  - /static/images/roam/roam-still.png
+summary: >-
+  Roam is a Mac desktop pet I’m working on.I’ve set one rule for it: the pet
+  only reflects its environment and events that have already occurred; it
+  doesn’t judge you or ask you to do anything. Following this rule, I’ve removed
+  daily check-ins, feeding, unlocking, and system notifications, and I’ve
+  changed how visit duration and Do Not Disturb work.
+tldr: >-
+  When deciding whether to include a companionship-based feature, ask yourself
+  if it might make people feel even a hint of guilt or a sense of obligation. If
+  it does, don’t include it.As a result, we removed daily check-ins, virtual
+  pet-raising, progress bars, and system notifications. Users can still leave
+  messages when their friend is away, but there are no unread counts or badge
+  indicators. Progress is tracked only by what has happened, not by how much is
+  left to achieve. Since it’s rare for both people to be sitting at their
+  computers at the same time, we prioritize features that don’t require
+  simultaneous online presence.
+sourceHash: c23c213da532dcbe7e45d0f05cc6f8fc5c78ee6021c8ad3ef32db34880bb9ec1
+translatedAt: '2026-10-15T07:39:31.592Z'
+---
+
+<div className="not-prose">
+  <div className="mb-8 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-800 p-8 text-white shadow-lg">
+    <h1 className="mb-4 text-4xl font-bold">
+      🐾 Be a desktop pet that doesn’t nag you
+    </h1>
+    <div className="text-xl opacity-90">
+      Rules I set for Roam, my Mac desktop pet, and the things I cut, changed,
+      or added to it
+    </div>
+  </div>
+</div>
+
+I was originally planning to create an unlock system for the desktop pets. The more friends a pet has, the more accessories it can wear—it’s a pretty common design, and it’s not hard to implement.
+
+This pet is called Roam, a little Mac app I’ve been working on lately. It’s a computer-generated slime that appears on the screen—no artwork was used—and usually wanders around the desktop. When it gets sleepy, it takes a nap, and you can drag or click on it. Once you add a friend, it can pop over to their desktop for a visit, stay for a while, and then come back.
+
+![Roam's two slime pets; a friend's orange pet comes over for a visit; the owner taps their own teal pet, and it bounces once and grows a tuft of hair](/static/images/roam/roam-visit.gif)
+
+_The GIF was rendered off-screen using Roam's own rendering code; the animations were scripted and not recorded from a screen._
+
+I didn't end up unlocking it. On September 8, I set a rule for Roam: as soon as I used it to take a measurement, I couldn't unlock it.
+
+<Callout emoji="📏">
+  <strong>
+    Your pet’s behavior reflects its environment and what has happened; it does
+    not reflect how well you’re doing, nor does it require you to do anything.
+  </strong>
+</Callout>
+
+When it comes to a specific feature, I ask myself just one question: Does it make people feel even a hint of guilt, or as if they owe it something? If it does, I don’t do it.
+
+## ✂️ Measure it with a ruler
+
+The unlock card is right here. “Made 4 friends” is just a status update, but if you change it to “Make 1 more friend to unlock an accessory,” it becomes a task. The number stays the same, but the second sentence adds a blank space waiting to be filled. I kept the “accumulation” part, but removed the “unlock,” the progress bar, and “how many more to go.”
+
+I cut out a few other things that same day. I didn’t hesitate much about the Tomato Timer or the focus tracker—desktop pets start bossing you around, and that’s annoying for everyone.The “Tetris-style” feeding wasn’t working either—when the pet got hungry, it waited for you to feed it, which turned the dynamic on its head; it felt like the pet was begging you for food. Coming back from a week-long business trip to find the pet nearly starving to death—that’s not what companionship is about.
+
+The daily check-in feature is the one I’ve thought about the most. Every day when I turn on my computer, the pet reminds me how many days I’ve been there—which is actually quite gentle. If I skip a day, a message pops up on the screen saying, “You haven’t taken your pet out to play for 7 days,” and when I turn on the computer, I suddenly feel like there’s one more thing I haven’t done.Out of all these apps, I find this one the most insidious, because it feels the most like a companion.
+
+## 🔁 Rework on Notifications and Visit Durations
+
+The system notifications were removed during a later revision. In the original permissions settings, there was a level called `notify` that allowed system notifications to pop up. The reason for this was very practical: I wanted to know when a friend stopped by while I wasn’t at my computer. But notifications are designed to grab your attention. I deleted that entire level and replaced it with a pet that carries that message with it the next time it sees you.If you see it, you’ll know who stopped by; if you don’t, there won’t be a little red dot waiting for you in the corner.
+
+The duration of visits has also been adjusted once. Previously, the visitor would request 30 seconds, after which they would automatically leave. Now, the default is still 30 seconds, but the host can right-click on the guest and select “Stay a Little Longer” to add 30 seconds at a time, up to a maximum of 5 minutes, or click “Please Leave.”The host retains control over the time limit, and anti-harassment measures remain as strict as ever. However, there’s a huge difference in practical experience between “allowing guests to stay” and “forcing guests to leave when time is up.”
+
+## 🌱 Ingredients added according to the rules
+
+Just cutting things isn't enough—a desktop pet has to have some reason for people to keep it around. On the evening of September 8, I added a few more items following the same rule.
+
+### 👆 The Echo of Being Touched
+
+In the past, visiting was one-way—my pet would take a stroll across your desktop, and you could only watch. Now, when you click on a visiting pet, I’ll see it react on my end, too.
+
+Here, I chose a more roundabout approach. When you click, your local machine only sends a very simple “hit” signal; the actual reaction is calculated by the engine on my computer and then synchronized with the gesture before being sent back to your screen. It would be easier to render the animation directly on your local machine—the visuals would be nearly identical—but in that case, the reaction you see would be generated by your own computer.
+
+### 🌿 You can go even when you're not there
+
+Even if a friend isn't at their computer, a pet can still stop by, leave a small item, and pass on a message. When the friend returns and sees the item hanging on their pet, they can tap it, and the pet will tell them who stopped by.
+
+If you're not careful, this can easily end up in your inbox, so I've added a few restrictions to it.
+
+<Callout emoji="🚫">
+  For each friend, only keep the most recent unread message; new messages
+  replace the old ones. There are no unread counts or superscripts, and no
+  pop-up notifications.
+  <strong>It’s fine if you never read them</strong>.
+</Callout>
+
+I went ahead and updated the "Do Not Disturb" feature. Previously, if the other player had "Do Not Disturb" enabled, the pet would be immediately turned away. Now, whether the other player has "Do Not Disturb" enabled or is in full-screen mode, the pet will drop the item before leaving, so the trip isn't a waste.If the cooldown hasn’t ended, or if the other player hasn’t granted permission at all, the pet won’t leave anything behind. In the former case, the other player is simply unavailable at the moment; in the latter, the pet shouldn’t have gone there in the first place.
+
+The messages are routed through CloudKit and recorded using the online signaling system. I ran a full test using two instances, A and B, under a production signature.
+
+<StepProgress
+  steps={[
+    { title: 'A 留下一片 🌿', status: 'completed', description: 'B 此时不在' },
+    { title: 'B 收到', status: 'completed', description: '东西落到本地' },
+    { title: 'B 重启', status: 'completed', description: '宠物身上还带着它' },
+    { title: '点一下宠物', status: 'completed', description: '它说出是谁来过' },
+    { title: '清掉', status: 'completed', description: '看过就没了，不留记录' },
+  ]}
+/>
+
+### 🧮 I only remember things that have actually happened
+
+This section consists of the remaining parts from the unlocking and disassembly set mentioned at the beginning. The pet keeps track of how many times it has gone out, received visitors, been petted, and petted others. These numbers only affect two very subtle visual details; the frequency of movement changes slightly, and a stray hair grows when it’s been petted. The “About This Pet” page simply lists what has happened.
+
+## 🌙 I usually go with the flow of my computer's status
+
+It goes to sleep early at night. When its battery drops below 20%, it slows down, and occasionally—with a 10% chance—it’ll go out for a long walk. The struct in the code that describes the environment is called `PetEnvironment`, and none of its fields are related to your performance; it doesn’t track focus duration, activity levels, or usage statistics.The day it starts monitoring your performance, it’ll just be back to lecturing you again.
+
+## 🎮 Let's put the two-player mini-game on hold for now
+
+I've considered tag, catch, and tug-of-war. P2P direct connections use UDP, the latency is acceptable, and it's not hard to implement.
+
+I didn't do it because it would take up both people's online time and attention at the same time. Desktop pets are mostly things you glance at out of the corner of your eye; very few people would sit down to play with them. I figure you'd get bored after playing with it twice, but it would still require constant maintenance.
+
+<Callout emoji="⏱️">
+  In a small circle of friends, the time when both people are sitting in front
+  of the computer at the same time is{' '}
+  <strong>only a few tens of minutes a day</strong>.
+</Callout>
+
+Any game mode that requires players to be online at the same time is subject to this limit; the more resource-intensive it is, the more it loses out. That’s why “playable even when offline” ranks ahead of all other synchronous game modes.
+
+## 🧭 Quick Reference for Trade-offs
+
+| Feature                         | Result                                         | Why                                                             |
+| ------------------------------- | ---------------------------------------------- | --------------------------------------------------------------- |
+| Daily Check-ins                 | Cut it out                                     | Missing just one day turns it into an unfinished task           |
+| Pet Care & Raising              | Cut it out                                     | Pets end up begging you for things                              |
+| Pomodoro Timer & Focus Tracking | Remove                                         | People start to resent being micromanaged                       |
+| Unlock-Based Progress           | Remove the unlock mechanism; keep the progress | Records can stay, but tasks must go                             |
+| System Notifications `notify`   | Remove this category                           | Change it so the pet brings that item when it sees you          |
+| Visit Duration                  | Set by the owner                               | Guests can be invited to stay                                   |
+| Do Not Disturb                  | Change from blocking to leaving a message      | “Busy” just means inconvenient at the moment                    |
+| Reaction to Being Touched       | Added                                          | Reactions come from the engine on the other player’s computer   |
+| Can Visit Even When Offline     | Added                                          | Doesn’t require both players to be online at the same time      |
+| Two-Player Mini-Games           | Not implemented for now                        | Takes up both players’ online time and attention simultaneously |
+
+## 📦 If you'd like to give it a try
+
+Roam 0.1.0 has been released. It has been signed with a Developer ID and notarized. Download the ZIP file, unzip it, and drag it into the “Applications” folder to launch it. The source code is in a private repository; you can download it from [CassianFlorin/Roam-app](https://github.com/CassianFlorin/Roam-app).
+
+To go online, both parties need to have the app installed. Click the paw print icon in the menu bar to copy your pairing string and send it to the other person; they can then click “Add Friend” and paste it in.Now you can visit each other’s homes—when you come to mine, I can go to yours, and there will be two on each screen. You can only visit one home at a time, but you can host several at once.
