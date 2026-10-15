@@ -1,5 +1,5 @@
 ---
-title: "Be a desktop pet that doesn't nag you"
+title: Be a desktop pet that doesn't nag you
 date: '2026-09-11 20:00:00'
 tags:
   - 产品设计
@@ -8,23 +8,39 @@ tags:
   - Roam
   - 独立开发
 draft: false
-images: ['/static/images/roam/roam-still.png']
-summary: "Roam is a Mac desktop pet I’m working on.I’ve set one rule for it: the pet only reflects its environment and events that have already occurred; it doesn’t judge you or ask you to do anything. Following this rule, I’ve removed daily check-ins, feeding, unlocking, and system notifications, and I’ve changed how visit duration and Do Not Disturb work."
-  Roam 是我在做的 Mac 桌面宠物。我给它定了一条规矩，宠物只反映环境和已经发生的事，不评价你，也不要求你做任何事。按这条规矩，连续打卡、喂养、解锁和系统通知都砍了，串门时长和免打扰也换了做法。
-tldr: "When deciding whether to include a companionship-based feature, ask yourself if it might make people feel even a hint of guilt or a sense of obligation. If it does, don’t include it.As a result, we removed daily check-ins, virtual pet-raising, progress bars, and system notifications. Users can still leave messages when their friend is away, but there are no unread counts or badge indicators. Progress is tracked only by what has happened, not by how much is left to achieve. Since it’s rare for both people to be sitting at their computers at the same time, we prioritize features that don’t require simultaneous online presence."
-sourceHash: 'c23c213da532dcbe7e45d0f05cc6f8fc5c78ee6021c8ad3ef32db34880bb9ec1'
+images:
+  - /static/images/roam/roam-still.png
+summary: >-
+  Roam is a Mac desktop pet I’m working on.I’ve set one rule for it: the pet
+  only reflects its environment and events that have already occurred; it
+  doesn’t judge you or ask you to do anything. Following this rule, I’ve removed
+  daily check-ins, feeding, unlocking, and system notifications, and I’ve
+  changed how visit duration and Do Not Disturb work.
+tldr: >-
+  When deciding whether to include a companionship-based feature, ask yourself
+  if it might make people feel even a hint of guilt or a sense of obligation. If
+  it does, don’t include it.As a result, we removed daily check-ins, virtual
+  pet-raising, progress bars, and system notifications. Users can still leave
+  messages when their friend is away, but there are no unread counts or badge
+  indicators. Progress is tracked only by what has happened, not by how much is
+  left to achieve. Since it’s rare for both people to be sitting at their
+  computers at the same time, we prioritize features that don’t require
+  simultaneous online presence.
+sourceHash: c23c213da532dcbe7e45d0f05cc6f8fc5c78ee6021c8ad3ef32db34880bb9ec1
 translatedAt: '2026-10-15T07:39:31.592Z'
 ---
 
 <div className="not-prose">
   <div className="mb-8 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-800 p-8 text-white shadow-lg">
-    <h1 className="mb-4 text-4xl font-bold">🐾 Be a desktop pet that doesn’t nag you</h1>
+    <h1 className="mb-4 text-4xl font-bold">
+      🐾 Be a desktop pet that doesn’t nag you
+    </h1>
     <div className="text-xl opacity-90">
-    Rules I set for Roam, my Mac desktop pet, and the things I cut, changed, or added to it
+      Rules I set for Roam, my Mac desktop pet, and the things I cut, changed,
+      or added to it
     </div>
   </div>
 </div>
-    </div>
 
 I was originally planning to create an unlock system for the desktop pets. The more friends a pet has, the more accessories it can wear—it’s a pretty common design, and it’s not hard to implement.
 
@@ -38,7 +54,8 @@ I didn't end up unlocking it. On September 8, I set a rule for Roam: as soon as 
 
 <Callout emoji="📏">
   <strong>
-    Your pet’s behavior reflects its environment and what has happened; it does not reflect how well you’re doing, nor does it require you to do anything.
+    Your pet’s behavior reflects its environment and what has happened; it does
+    not reflect how well you’re doing, nor does it require you to do anything.
   </strong>
 </Callout>
 
@@ -75,7 +92,9 @@ Even if a friend isn't at their computer, a pet can still stop by, leave a small
 If you're not careful, this can easily end up in your inbox, so I've added a few restrictions to it.
 
 <Callout emoji="🚫">
-  For each friend, only keep the most recent unread message; new messages replace the old ones. There are no unread counts or superscripts, and no pop-up notifications.
+  For each friend, only keep the most recent unread message; new messages
+  replace the old ones. There are no unread counts or superscripts, and no
+  pop-up notifications.
   <strong>It’s fine if you never read them</strong>.
 </Callout>
 
@@ -108,25 +127,27 @@ I've considered tag, catch, and tug-of-war. P2P direct connections use UDP, the 
 I didn't do it because it would take up both people's online time and attention at the same time. Desktop pets are mostly things you glance at out of the corner of your eye; very few people would sit down to play with them. I figure you'd get bored after playing with it twice, but it would still require constant maintenance.
 
 <Callout emoji="⏱️">
-  In a small circle of friends, the time when both people are sitting in front of the computer at the same time is <strong>only a few tens of minutes a day</strong>.
+  In a small circle of friends, the time when both people are sitting in front
+  of the computer at the same time is{' '}
+  <strong>only a few tens of minutes a day</strong>.
 </Callout>
 
 Any game mode that requires players to be online at the same time is subject to this limit; the more resource-intensive it is, the more it loses out. That’s why “playable even when offline” ranks ahead of all other synchronous game modes.
 
 ## 🧭 Quick Reference for Trade-offs
 
-| Feature              | Result               | Why                         |
-| ----------------- | ------------------ | ------------------------------ |
-| Daily Check-ins          | Cut it out               | Missing just one day turns it into an unfinished task   |
-| Pet Care & Raising          | Cut it out               | Pets end up begging you for things           |
-| Pomodoro Timer & Focus Tracking | Remove               | People start to resent being micromanaged               |
-| Unlock-Based Progress        | Remove the unlock mechanism; keep the progress | Records can stay, but tasks must go           |
-| System Notifications `notify` | Remove this category         | Change it so the pet brings that item when it sees you     |
-| Visit Duration          | Set by the owner         | Guests can be invited to stay                   |
-| Do Not Disturb            | Change from blocking to leaving a message | “Busy” just means inconvenient at the moment               |
-| Reaction to Being Touched        | Added               | Reactions come from the engine on the other player’s computer       |
-| Can Visit Even When Offline        | Added               | Doesn’t require both players to be online at the same time           |
-| Two-Player Mini-Games        | Not implemented for now             | Takes up both players’ online time and attention simultaneously |
+| Feature                         | Result                                         | Why                                                             |
+| ------------------------------- | ---------------------------------------------- | --------------------------------------------------------------- |
+| Daily Check-ins                 | Cut it out                                     | Missing just one day turns it into an unfinished task           |
+| Pet Care & Raising              | Cut it out                                     | Pets end up begging you for things                              |
+| Pomodoro Timer & Focus Tracking | Remove                                         | People start to resent being micromanaged                       |
+| Unlock-Based Progress           | Remove the unlock mechanism; keep the progress | Records can stay, but tasks must go                             |
+| System Notifications `notify`   | Remove this category                           | Change it so the pet brings that item when it sees you          |
+| Visit Duration                  | Set by the owner                               | Guests can be invited to stay                                   |
+| Do Not Disturb                  | Change from blocking to leaving a message      | “Busy” just means inconvenient at the moment                    |
+| Reaction to Being Touched       | Added                                          | Reactions come from the engine on the other player’s computer   |
+| Can Visit Even When Offline     | Added                                          | Doesn’t require both players to be online at the same time      |
+| Two-Player Mini-Games           | Not implemented for now                        | Takes up both players’ online time and attention simultaneously |
 
 ## 📦 If you'd like to give it a try
 

@@ -1,5 +1,5 @@
 ---
-title: "SDKMAN Installation Guide"
+title: SDKMAN Installation Guide
 date: '2025-06-19 21:59:00'
 lastmod: '2026-09-16'
 tags:
@@ -11,34 +11,40 @@ tags:
   - Guide
   - Tips
   - Java
-summary: "This document uses SDKMAN to manage Java versions and ensure that all developers use the same Java environment. The following is a guide to installing and configuring SDKMAN on different operating systems."
-tldr: "SDKMAN is a command-line tool for managing multiple versions of SDKs, such as Java. On macOS and Linux, it can be installed with a single `curl` command; on Windows, you’ll need Git Bash or WSL first. Once installed, use `sdk install java` to install a version. Place a `.sdkmanrc` file in your project directory, and it will automatically switch versions when you enter that directory."
+summary: >-
+  This document uses SDKMAN to manage Java versions and ensure that all
+  developers use the same Java environment. The following is a guide to
+  installing and configuring SDKMAN on different operating systems.
+tldr: >-
+  SDKMAN is a command-line tool for managing multiple versions of SDKs, such as
+  Java. On macOS and Linux, it can be installed with a single `curl` command; on
+  Windows, you’ll need Git Bash or WSL first. Once installed, use `sdk install
+  java` to install a version. Place a `.sdkmanrc` file in your project
+  directory, and it will automatically switch versions when you enter that
+  directory.
 draft: false
 definedTerm:
   name: SDKMAN
   description: >-
-    一个用于管理多个软件开发工具包版本的命令行工具，最常用于在不同项目之间切换 JDK
-    版本，同时也支持 Kotlin、Scala、Gradle、Maven 等。
+    一个用于管理多个软件开发工具包版本的命令行工具，最常用于在不同项目之间切换 JDK 版本，同时也支持 Kotlin、Scala、Gradle、Maven
+    等。
   sameAs:
-    - https://sdkman.io
+    - 'https://sdkman.io'
 howto:
   name: 安装并配置 SDKMAN
-  description: >-
-    在 macOS、Linux 或 Windows 上安装 SDKMAN，并让项目进入目录时自动切换 Java 版本。
+  description: 在 macOS、Linux 或 Windows 上安装 SDKMAN，并让项目进入目录时自动切换 Java 版本。
   steps:
     - name: 安装 SDKMAN
       text: >-
-        macOS 和 Linux 直接在终端执行官方 curl 安装命令；Windows 需要先有 Git Bash
-        或 WSL 环境。安装完成后重新加载 shell 配置。
+        macOS 和 Linux 直接在终端执行官方 curl 安装命令；Windows 需要先有 Git Bash 或 WSL
+        环境。安装完成后重新加载 shell 配置。
     - name: 安装项目所需的 Java 版本
       text: >-
-        用 sdk list java 查看可用版本，再用 sdk install java 安装项目需要的那一个，
-        用 sdk current java 验证当前生效的版本。
+        用 sdk list java 查看可用版本，再用 sdk install java 安装项目需要的那一个， 用 sdk current
+        java 验证当前生效的版本。
     - name: 配置项目自动切换
-      text: >-
-        在项目根目录创建 .sdkmanrc 并写入所需版本，之后进入该目录时 SDKMAN 会自动
-        切换到对应的 Java 版本。
-sourceHash: '471d855681924d99a7ee208113827fb185f98abb481883319b7ef4a61deb922f'
+      text: 在项目根目录创建 .sdkmanrc 并写入所需版本，之后进入该目录时 SDKMAN 会自动 切换到对应的 Java 版本。
+sourceHash: 471d855681924d99a7ee208113827fb185f98abb481883319b7ef4a61deb922f
 translatedAt: '2026-10-15T07:37:55.313Z'
 ---
 
@@ -49,7 +55,8 @@ translatedAt: '2026-10-15T07:37:55.313Z'
 SDKMAN is a tool for managing multiple versions of software development kits, particularly different versions of Java. It allows you to easily switch between different JDK versions across projects.
 
 <Callout emoji="💡">
-  SDKMAN supports not only Java, but also Kotlin, Scala, Gradle, Maven, and many other development tools.
+  SDKMAN supports not only Java, but also Kotlin, Scala, Gradle, Maven, and many
+  other development tools.
 </Callout>
 
 ## 🎯 Why do you need SDKMAN?
@@ -62,9 +69,9 @@ During the development process, we often need to work on multiple projects, each
 - 🔧 **Resolve version conflicts in Git Hooks**
 
 <Callout emoji="📖">
-  If you're experiencing issues with Git hooks and a multi-JDK environment, you can refer to our other article: [Git
-  Hooks and Multi-JDK Environment Issues](/blog/20250619-git-hooks-and-multi-java-env
-  )
+  If you're experiencing issues with Git hooks and a multi-JDK environment, you
+  can refer to our other article: [Git Hooks and Multi-JDK Environment
+  Issues](/blog/20250619-git-hooks-and-multi-java-env )
 </Callout>
 
 ## ⚙️ Install SDKMAN
@@ -161,7 +168,8 @@ If you are not using Git Bash or MSYS2, you may want to consider using the follo
 - [Chocolatey](https://chocolatey.org/) - Windows package manager
 
 <Callout emoji="⚠️">
-  Windows users are advised to use Git Bash or MSYS2 for the best SDKMAN experience.
+  Windows users are advised to use Git Bash or MSYS2 for the best SDKMAN
+  experience.
 </Callout>
 
 ## 📦 Install the Java version required for the project
@@ -186,14 +194,14 @@ sdk list java | grep installed
 
 ### Common SDKMAN Commands
 
-| Command                           | Description                     |
-| ------------------------------ | ------------------------ |
-| `sdk list java`                | View all available Java versions |
-| `sdk install java <version>`   | Install a specific Java version      |
-| `sdk use java <version>`       | Temporarily switch to a specific version       |
-| `sdk default java <version>`   | Set the default Java version       |
-| `sdk current java`             | View the currently used Java version |
-| `sdk uninstall java <version>` | Uninstall a specific Java version      |
+| Command                        | Description                              |
+| ------------------------------ | ---------------------------------------- |
+| `sdk list java`                | View all available Java versions         |
+| `sdk install java <version>`   | Install a specific Java version          |
+| `sdk use java <version>`       | Temporarily switch to a specific version |
+| `sdk default java <version>`   | Set the default Java version             |
+| `sdk current java`             | View the currently used Java version     |
+| `sdk uninstall java <version>` | Uninstall a specific Java version        |
 
 ## ✅ Verify the installation
 
@@ -253,8 +261,9 @@ If you encounter issues related to the Java version while running Git commands, 
 3. ✅ SDKMAN has been loaded into your shell configuration file (such as `.bashrc`, `.zshrc`, or `.bash_profile` for Git Bash)
 
 <Callout emoji="💡">
-  If you have not installed SDKMAN, Git hooks will use the system's default Java version. Please ensure that your system's
-  Java version is compatible with your project.
+  If you have not installed SDKMAN, Git hooks will use the system's default Java
+  version. Please ensure that your system's Java version is compatible with your
+  project.
 </Callout>
 
 ### Windows-Specific Issues

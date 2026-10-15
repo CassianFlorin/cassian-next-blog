@@ -1,5 +1,7 @@
 ---
-title: "Multilingual Blog SEO Optimization: Every URL in the Sitemap Is Being Redirected"
+title: >-
+  Multilingual Blog SEO Optimization: Every URL in the Sitemap Is Being
+  Redirected
 date: '2026-07-29 18:00:00'
 lastmod: '2026-08-04'
 tags:
@@ -11,26 +13,31 @@ tags:
   - Agent
   - 排错
 draft: false
-summary: "Together with an AI agent, we performed an SEO overhaul on this multilingual Next.js blog. The most critical findings weren’t in the code at all—every URL in the sitemap required a two-step redirect, which could only be detected during live testing."
-tldr: "For sites that use middleware to perform language prefix redirection, the sitemap must output URLs with language prefixes; otherwise, each URL will result in a one-step redirect. This issue is completely invisible in the code and can only be detected by using `curl` to access each URL in the sitemap individually."
+summary: >-
+  Together with an AI agent, we performed an SEO overhaul on this multilingual
+  Next.js blog. The most critical findings weren’t in the code at all—every URL
+  in the sitemap required a two-step redirect, which could only be detected
+  during live testing.
+tldr: >-
+  For sites that use middleware to perform language prefix redirection, the
+  sitemap must output URLs with language prefixes; otherwise, each URL will
+  result in a one-step redirect. This issue is completely invisible in the code
+  and can only be detected by using `curl` to access each URL in the sitemap
+  individually.
 faq:
   - q: 多语言站点的 sitemap 应该输出带语言前缀的 URL 吗
     a: >-
-      应该。只要 middleware 会把不带前缀的路径重定向到 /zh 或 /en，sitemap 里不带
-      前缀的 URL 每一条都是一次 307，爬虫每次抓取都要多跳一次。
+      应该。只要 middleware 会把不带前缀的路径重定向到 /zh 或 /en，sitemap 里不带 前缀的 URL 每一条都是一次
+      307，爬虫每次抓取都要多跳一次。
   - q: 文章还没有翻译时 hreflang 该怎么写
     a: >-
-      仍然为每个语言版本输出完整的 hreflang 集合，并让每个语言版本 self-canonical。
-      canonical 指向别的语言版本会让 hreflang 直接失效。
+      仍然为每个语言版本输出完整的 hreflang 集合，并让每个语言版本 self-canonical。 canonical 指向别的语言版本会让
+      hreflang 直接失效。
   - q: 为什么 Yarn 3 不执行 prebuild 脚本
-    a: >-
-      Yarn 2 以上默认不再自动运行 pre/post 生命周期脚本。要么显式调用，要么把命令
-      合并进 build 脚本本身。
+    a: Yarn 2 以上默认不再自动运行 pre/post 生命周期脚本。要么显式调用，要么把命令 合并进 build 脚本本身。
   - q: 一个页面有多个 h1 会有什么影响
-    a: >-
-      会稀释页面主题。全局组件（导航、Logo、入场动画）里藏的 h1 最容易被忽略，
-      需要数一下渲染后 HTML 里的实际数量。
-sourceHash: '507087bfa7a486e47c89fc7274d31c821486751c41b6fbe6b54a97e5f13d860c'
+    a: 会稀释页面主题。全局组件（导航、Logo、入场动画）里藏的 h1 最容易被忽略， 需要数一下渲染后 HTML 里的实际数量。
+sourceHash: 507087bfa7a486e47c89fc7274d31c821486751c41b6fbe6b54a97e5f13d860c
 translatedAt: '2026-10-15T07:39:21.154Z'
 ---
 
@@ -45,9 +52,11 @@ This round of updates was carried out in conjunction with an AI agent. Looking b
 <Callout emoji="🧭">
   One-sentence conclusion:
   <strong>
-    For sites that use middleware to perform language prefix redirection, the sitemap must output URLs with the prefix.
+    For sites that use middleware to perform language prefix redirection, the
+    sitemap must output URLs with the prefix.
   </strong>
-  Otherwise, every URL involves a one-step redirect, and this is completely invisible in the code.
+  Otherwise, every URL involves a one-step redirect, and this is completely
+  invisible in the code.
 </Callout>
 
 ## Cause: None of the URLs in the sitemap can be accessed
@@ -140,11 +149,11 @@ The correct approach is to have each version use `self-canonical`, and then use 
 
 I ran a script to count the rendered HTML, and found that each article page contains 3 instances of `<h1>`:
 
-| Source                    | Content                                 |
-| ----------------------- | ------------------------------------ |
+| Source                           | Content                              |
+| -------------------------------- | ------------------------------------ |
 | `EntryCurtain` Opening Animation | `Cassian Florin` (**on every page**) |
-| `PageTitle`             | Article Title (the correct one)               |
-| MDX Body                | Written by the author `# 一级标题`                |
+| `PageTitle`                      | Article Title (the correct one)      |
+| MDX Body                         | Written by the author `# 一级标题`   |
 
 The first one is the most outrageous—a decorative brand animation is taking up the H1 tag on every page of the site. Just change it to `div`; keep `aria-label` as is. The visuals and animation will remain completely unchanged.
 
@@ -241,14 +250,14 @@ As long as the key `umamiAnalytics` exists, the script will be injected, **regar
 
 ## Results
 
-| Metric                       | Before Renovation           | After Renovation                                                       |
-| -------------------------- | ---------------- | ------------------------------------------------------------ |
-| Sitemap entries               | 22               | 146                                                          |
-| Do sitemap URLs require redirection? | All require redirection (two hops) | All resolve directly to 200                                                 |
-| hreflang                   | None               | 438 annotations                                                   |
-| `og:locale`                | Fixed `en_US`     | Output by language                                                   |
-| Number per page `<h1>`           | 3                | 1                                                            |
-| Structured data                 | Only `BlogPosting` | Add `Person`, `WebSite`, `BreadcrumbList`, `CollectionPage` |
+| Metric                               | Before Renovation                  | After Renovation                                            |
+| ------------------------------------ | ---------------------------------- | ----------------------------------------------------------- |
+| Sitemap entries                      | 22                                 | 146                                                         |
+| Do sitemap URLs require redirection? | All require redirection (two hops) | All resolve directly to 200                                 |
+| hreflang                             | None                               | 438 annotations                                             |
+| `og:locale`                          | Fixed `en_US`                      | Output by language                                          |
+| Number per page `<h1>`               | 3                                  | 1                                                           |
+| Structured data                      | Only `BlogPosting`                 | Add `Person`, `WebSite`, `BreadcrumbList`, `CollectionPage` |
 
 ## About Doing This Together with the Agent
 

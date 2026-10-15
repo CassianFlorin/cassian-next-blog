@@ -1,5 +1,7 @@
 ---
-title: "Troubleshooting Codex CLI Integration with a Relay Server: A Complete Account of a 401 Error and the Pitfalls I Encountered"
+title: >-
+  Troubleshooting Codex CLI Integration with a Relay Server: A Complete Account
+  of a 401 Error and the Pitfalls I Encountered
 date: '2026-07-27 21:30:00'
 lastmod: '2026-08-04'
 tags:
@@ -10,50 +12,53 @@ tags:
   - AI
   - Tools
 draft: false
-summary: "When connecting the new version of Codex CLI (tested with v0.145.0) to a third-party relay server, the most common error is a continuous stream of 401 responses. This article outlines the correct\nway to write the `config.toml` file, three common pitfalls to avoid, and verification methods—you can use it as a troubleshooting checklist and copy the instructions directly."
-  新版 Codex CLI（实测 v0.145.0）接第三方中转站，最常见的报错是一路 401。本文整理出正确的
-  config.toml 写法、三个必踩的坑和验证方法，可以直接当排错清单照抄。
-tldr: "The key to integrating Codex CLI with a third-party relay server is that `base_url` must be specified within the `[model_providers.xxx]` block and referenced by the top-level `model_provider`; if it is specified directly at the top level, it will be completely ignored by the new version. For authentication, use the top-level `experimental_bearer_token` and do not rely on environment variables."
+summary: >-
+  When connecting the new version of Codex CLI (tested with v0.145.0) to a
+  third-party relay server, the most common error is a continuous stream of 401
+  responses. This article outlines the correct
+
+  way to write the `config.toml` file, three common pitfalls to avoid, and
+  verification methods—you can use it as a troubleshooting checklist and copy
+  the instructions directly.
+tldr: >-
+  The key to integrating Codex CLI with a third-party relay server is that
+  `base_url` must be specified within the `[model_providers.xxx]` block and
+  referenced by the top-level `model_provider`; if it is specified directly at
+  the top level, it will be completely ignored by the new version. For
+  authentication, use the top-level `experimental_bearer_token` and do not rely
+  on environment variables.
 howto:
   name: 给 Codex CLI 配置第三方中转站
   description: >-
-    在 ~/.codex/config.toml 里正确声明 model provider，让 Codex CLI 的请求打到中转站
-    而不是 api.openai.com。
+    在 ~/.codex/config.toml 里正确声明 model provider，让 Codex CLI 的请求打到中转站 而不是
+    api.openai.com。
   steps:
     - name: 写 provider 块
       text: >-
-        在 ~/.codex/config.toml 里新建 [model_providers.xxx] 块，填入 name、base_url
-        和 wire_api。base_url 必须写在块内部。
+        在 ~/.codex/config.toml 里新建 [model_providers.xxx] 块，填入 name、base_url 和
+        wire_api。base_url 必须写在块内部。
     - name: 顶层指向 provider
       text: 设置顶层 model_provider = "xxx"，值必须与 provider 块名完全一致。
     - name: 配置鉴权
-      text: >-
-        用顶层 experimental_bearer_token 填中转站的 key，并检查引号成对且干净，
-        不要依赖环境变量。
+      text: 用顶层 experimental_bearer_token 填中转站的 key，并检查引号成对且干净， 不要依赖环境变量。
     - name: 在受信任目录验证
-      text: >-
-        用 codex exec 跑一条测试请求，看启动信息里的 provider 是不是你的中转站名，
-        能正常返回内容就说明链路打通了。
+      text: 用 codex exec 跑一条测试请求，看启动信息里的 provider 是不是你的中转站名， 能正常返回内容就说明链路打通了。
 faq:
   - q: Codex CLI 报 401 而且请求 url 是 api.openai.com 怎么办
     a: >-
-      base_url 没有写进 provider 块，或者 provider 没生效。检查顶层 model_provider
-      的值与 [model_providers.xxx] 的块名是否完全一致。
+      base_url 没有写进 provider 块，或者 provider 没生效。检查顶层 model_provider 的值与
+      [model_providers.xxx] 的块名是否完全一致。
   - q: 报 401 invalid_api_key、但 url 已经是中转站地址怎么办
-    a: >-
-      key 本身错了或带了多余字符。最常见的是粘贴时结尾多敲了一个引号，重新复制 key
-      并确认引号成对干净。
+    a: key 本身错了或带了多余字符。最常见的是粘贴时结尾多敲了一个引号，重新复制 key 并确认引号成对干净。
   - q: '报 Missing environment variable: OPENAI_API_KEY 怎么解决'
-    a: >-
-      用了 env_key 但环境变量没设。改用顶层 experimental_bearer_token，命令行启动和
-      桌面 App 启动都稳。
+    a: 用了 env_key 但环境变量没设。改用顶层 experimental_bearer_token，命令行启动和 桌面 App 启动都稳。
   - q: 为什么自定义 provider 读不到 auth.json 里的 key
     a: >-
-      auth.json 里的 OPENAI_API_KEY 只给内置 openai provider 用。自定义 provider 写
-      env_key 读的是真正的系统环境变量，所以要改用 experimental_bearer_token。
+      auth.json 里的 OPENAI_API_KEY 只给内置 openai provider 用。自定义 provider 写 env_key
+      读的是真正的系统环境变量，所以要改用 experimental_bearer_token。
   - q: 报 Not inside a trusted directory 怎么办
     a: 加 --skip-git-repo-check，或者在已经信任的目录里运行。
-sourceHash: '7785253673d286db7dd5eb83065d5cd72a6274acfa5652278036c1a86a21af27'
+sourceHash: 7785253673d286db7dd5eb83065d5cd72a6274acfa5652278036c1a86a21af27
 translatedAt: '2026-10-15T07:39:17.116Z'
 ---
 
@@ -66,11 +71,12 @@ This article documents the complete process of integrating the Codex CLI (includ
 <Callout emoji="🧭">
   One-line conclusion:
   <strong>
-    <code>base_url</code> must be written inside the <code>[model_providers.xxx]</code>{' '}
-    block, and then the top-level
+    <code>base_url</code> must be written inside the{' '}
+    <code>[model_providers.xxx]</code> block, and then the top-level
     <code>model_provider</code> to point to
   </strong>
-  . A <code>base_url</code> written directly at the top level will be completely ignored by the new version of the Codex.
+  . A <code>base_url</code> written directly at the top level will be completely
+  ignored by the new version of the Codex.
 </Callout>
 
 ## Conclusion First: The Correct config.toml
@@ -112,10 +118,11 @@ When a connection cannot be established, the most common error message looks lik
 />
 
 <Callout emoji="🔍">
-  The first step in troubleshooting is always to <strong>check the URL in the error message</strong>: If it’s {' '}
-  <code>api.openai.com</code>, the problem is that the provider isn’t active; if the URL
-  is already your relay domain, then the issue lies with the key or <code>wire_api</code>{' '}
-  . This single clue can save you half the trouble.
+  The first step in troubleshooting is always to{' '}
+  <strong>check the URL in the error message</strong>: If it’s{' '}
+  <code>api.openai.com</code>, the problem is that the provider isn’t active; if
+  the URL is already your relay domain, then the issue lies with the key or{' '}
+  <code>wire_api</code> . This single clue can save you half the trouble.
 </Callout>
 
 ## Three Common Pitfalls
@@ -124,10 +131,10 @@ When a connection cannot be established, the most common error message looks lik
 
 This is why the vast majority of people get stuck. The new version of Codex **does not recognize the top-level `base_url`**. If there is no `[model_providers.xxx]` block with `model_provider` pointing to it, it falls back to the built-in OpenAI provider, which is hard-coded to `api.openai.com`.
 
-| Syntax                                          | Result                                                          |
-| --------------------------------------------- | ------------------------------------------------------------- |
-| ❌ `base_url` Written directly at the top level                      | Silently ignored with no error messages; the request is routed to `api.openai.com`, resulting in a 401 error |
-| ✅ `base_url` Written inside the `[model_providers.xxx]` block | Works in conjunction with `model_provider` at the top level; the request is correctly routed to the relay station            |
+| Syntax                                                         | Result                                                                                                            |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| ❌ `base_url` Written directly at the top level                | Silently ignored with no error messages; the request is routed to `api.openai.com`, resulting in a 401 error      |
+| ✅ `base_url` Written inside the `[model_providers.xxx]` block | Works in conjunction with `model_provider` at the top level; the request is correctly routed to the relay station |
 
 Incorrect syntax (explicitly written at the top level; invalid):
 
@@ -141,9 +148,10 @@ wire_api = "responses"
 It’s very easy to make a mistake when copying and pasting a key. For example, `'sk-...4eb5"'` — the extra `"` at the end will be treated as part of the key, corrupting the entire key. As a result, even if the provider is paired, the relay station will report `invalid_api_key`.
 
 <Callout emoji="✂️">
-  Check that the quotation marks are <strong> in pairs and clean </strong>
-  : Single quotes with single quotes, double quotes with double quotes; do not mix them. After pasting the key
-  , move the cursor to the end of the line to confirm there are no extra characters.
+  Check that the quotation marks are <strong> in pairs and clean </strong>:
+  Single quotes with single quotes, double quotes with double quotes; do not mix
+  them. After pasting the key , move the cursor to the end of the line to
+  confirm there are no extra characters.
 </Callout>
 
 ### Pitfall 3: Custom provider doesn't read `auth.json`
@@ -203,16 +211,20 @@ Check the startup message to see if "`provider:`" is the name of your relay stat
 
 Compile a table of common errors and their corresponding causes so you can quickly identify the issue when it arises:
 
-| Error                                           | Cause                                            | Resolution                                                      |
-| ---------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------- |
-| 401 and the URL is `api.openai.com`                 | `base_url` Did not enter the provider block / provider not active   | Check if `model_provider` and `[model_providers.xxx]` match |
-| 401 `invalid_api_key` (URL is a relay server)          | Incorrect key / key contains extra characters                         | Recopy the key and ensure all quotation marks are properly paired                            |
-| `Missing environment variable: OPENAI_API_KEY` | `env_key` is used but environment variables are not set                   | Switch to `experimental_bearer_token`                          |
-| 404 / Incorrect path                                 | `wire_api` is set to `responses`, but the relay server only supports "chat" | Change to `"chat"`; or check if `/v1` is missing or extra in `base_url`      |
-| `Not inside a trusted directory`               | Not in a trusted directory                                  | Add `--skip-git-repo-check` or run it from a trusted directory             |
+| Error                                          | Cause                                                                       | Resolution                                                              |
+| ---------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 401 and the URL is `api.openai.com`            | `base_url` Did not enter the provider block / provider not active           | Check if `model_provider` and `[model_providers.xxx]` match             |
+| 401 `invalid_api_key` (URL is a relay server)  | Incorrect key / key contains extra characters                               | Recopy the key and ensure all quotation marks are properly paired       |
+| `Missing environment variable: OPENAI_API_KEY` | `env_key` is used but environment variables are not set                     | Switch to `experimental_bearer_token`                                   |
+| 404 / Incorrect path                           | `wire_api` is set to `responses`, but the relay server only supports "chat" | Change to `"chat"`; or check if `/v1` is missing or extra in `base_url` |
+| `Not inside a trusted directory`               | Not in a trusted directory                                                  | Add `--skip-git-repo-check` or run it from a trusted directory          |
 
 <Callout emoji="📌">
   Three key tips to wrap things up:
-  <strong>base_url—include it in the request body; don’t put quotes around the key; use bearer_token</strong> for authentication.
-  The vast majority of issues with connecting to relay stations can be traced back to these three points.
+  <strong>
+    base_url—include it in the request body; don’t put quotes around the key;
+    use bearer_token
+  </strong>{' '}
+  for authentication. The vast majority of issues with connecting to relay
+  stations can be traced back to these three points.
 </Callout>

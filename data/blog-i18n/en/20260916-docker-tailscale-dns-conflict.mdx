@@ -1,5 +1,5 @@
 ---
-title: "Troubleshooting the Hijacking of Docker Container DNS by Tailscale"
+title: Troubleshooting the Hijacking of Docker Container DNS by Tailscale
 date: '2026-09-16 10:45:00'
 tags:
   - Docker
@@ -10,20 +10,31 @@ tags:
   - 运维
   - 故障排查
 draft: false
-summary: "All 3x-ui proxies suddenly started returning EOF. The DNS inside the container is configured to point to Tailscale's 100.100.100.100, but MagicDNS is not enabled, and all public domain names are returning a SERVFAIL."
-tldr: "By default, Docker containers inherit the host machine’s DNS settings. When Tailscale is running on the host machine, even if MagicDNS is disabled, the container’s DNS will be pointed to 100.100.100.100, causing public domain name resolution to fail.You can work around this by explicitly specifying the DNS in the Compose file; however, any container that relies on external DNS resolution will be affected."
-sourceHash: 'e99ed5835e4a8996b28f4a8b4ba38815c0736b10504559a816a1036fb8b8f7ed'
+summary: >-
+  All 3x-ui proxies suddenly started returning EOF. The DNS inside the container
+  is configured to point to Tailscale's 100.100.100.100, but MagicDNS is not
+  enabled, and all public domain names are returning a SERVFAIL.
+tldr: >-
+  By default, Docker containers inherit the host machine’s DNS settings. When
+  Tailscale is running on the host machine, even if MagicDNS is disabled, the
+  container’s DNS will be pointed to 100.100.100.100, causing public domain name
+  resolution to fail.You can work around this by explicitly specifying the DNS
+  in the Compose file; however, any container that relies on external DNS
+  resolution will be affected.
+sourceHash: e99ed5835e4a8996b28f4a8b4ba38815c0736b10504559a816a1036fb8b8f7ed
 translatedAt: '2026-10-15T07:39:33.625Z'
 ---
 
 <div className="not-prose">
   <div className="mb-8 rounded-lg bg-gradient-to-r from-slate-700 to-blue-900 p-8 text-white shadow-lg">
-    <h1 className="mb-4 text-4xl font-bold">🔍 Troubleshooting Docker DNS Failures</h1>
+    <h1 className="mb-4 text-4xl font-bold">
+      🔍 Troubleshooting Docker DNS Failures
+    </h1>
     <div className="text-xl opacity-90">
-    Tailscale is hijacking the container's DNS, while MagicDNS isn't actually enabled
+      Tailscale is hijacking the container's DNS, while MagicDNS isn't actually
+      enabled
     </div>
   </div>
-    </div>
 </div>
 
 One morning, all proxy connections using the 3x-ui route were lost, and the client logs looked like this.

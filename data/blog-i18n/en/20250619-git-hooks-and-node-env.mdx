@@ -1,5 +1,5 @@
 ---
-title: "Git Hooks and Node Environment Issues"
+title: Git Hooks and Node Environment Issues
 date: '2025-06-19 23:17:00'
 lastmod: '2026-09-16'
 tags:
@@ -11,25 +11,31 @@ tags:
   - Guide
   - Java
   - JavaScript
-summary: "In enterprise development, you may encounter projects that use Git hooks, including a `git pre-commit` hook. This article discusses the issues I encountered\nwhen using Git hooks."
-  在企业开发中可能会遇到项目中使用了 Git Hooks，其中有一个 git pre-commit 的 hook。本文就来说在要是用 git hooks
-  时我遇到的问题
-tldr: "If a Git hook returns the error \"npx: command not found,\" the root cause is usually that the Node.js installed via Homebrew does not match the PATH specified by the hook. Simply uninstall the Homebrew version of Node.js and switch to managing it with nvm; the same principle applies to SDKMAN for Java and pyenv for Python."
+summary: >-
+  In enterprise development, you may encounter projects that use Git hooks,
+  including a `git pre-commit` hook. This article discusses the issues I
+  encountered
+
+  when using Git hooks.
+tldr: >-
+  If a Git hook returns the error "npx: command not found," the root cause is
+  usually that the Node.js installed via Homebrew does not match the PATH
+  specified by the hook. Simply uninstall the Homebrew version of Node.js and
+  switch to managing it with nvm; the same principle applies to SDKMAN for Java
+  and pyenv for Python.
 draft: false
 faq:
   - q: Git hook 报 npx command not found 怎么解决
     a: >-
-      根因通常是用 Homebrew 安装的 Node 与 git hook 拿到的 PATH 不一致。卸掉 brew 版
-      Node，改用 nvm 安装和管理版本。
+      根因通常是用 Homebrew 安装的 Node 与 git hook 拿到的 PATH 不一致。卸掉 brew 版 Node，改用 nvm
+      安装和管理版本。
   - q: 为什么不推荐用 Homebrew 安装开发语言环境
-    a: >-
-      Homebrew 安装方便，但会导致路径不一致，git hook 这类非交互式 shell 读不到，
-      从而执行失败。
+    a: Homebrew 安装方便，但会导致路径不一致，git hook 这类非交互式 shell 读不到， 从而执行失败。
   - q: 各语言应该用什么版本管理工具
     a: >-
-      Java 用 SDKMAN，Node.js 用 nvm，Python 用 pyenv，并在项目里放 .sdkmanrc、
-      .nvmrc 这类配置文件让团队保持一致。
-sourceHash: 'eea0eed65a8c7a8a96d14e720ec87400b73ba17ff1dee6eb21ab0abfefc6175d'
+      Java 用 SDKMAN，Node.js 用 nvm，Python 用 pyenv，并在项目里放 .sdkmanrc、 .nvmrc
+      这类配置文件让团队保持一致。
+sourceHash: eea0eed65a8c7a8a96d14e720ec87400b73ba17ff1dee6eb21ab0abfefc6175d
 translatedAt: '2026-10-15T07:37:52.395Z'
 ---
 
@@ -40,10 +46,10 @@ translatedAt: '2026-10-15T07:37:52.395Z'
 I had previously resolved the issue described in [Git Hooks and Multi-JDK Environment Issues](/blog/20250619-git-hooks-and-multi-java-env). But today, the hooks in my local Node environment 🪝 aren't being recognized again. It really is a case of one setback after another.
 
 <Callout emoji="📖">
-  If you haven't yet read the solutions to JDK environment issues, we recommend first checking out [Git
-  Hooks and Solutions to Multi-JDK Environment Issues](/blog/20250619-git-hooks-and-multi-java-env
-  )
-  to learn how to use SDKMAN to manage your Java environment.
+  If you haven't yet read the solutions to JDK environment issues, we recommend
+  first checking out [Git Hooks and Solutions to Multi-JDK Environment
+  Issues](/blog/20250619-git-hooks-and-multi-java-env ) to learn how to use
+  SDKMAN to manage your Java environment.
 </Callout>
 
 <ErrorDisplay
@@ -110,11 +116,11 @@ Most Linux and Unix developers use directories such as `/usr/bin` and `/usr/sbin
 > I'll explain how to solve this problem below.
 
 <Callout emoji="💡">
-  This issue is similar to the previously resolved [JDK
-  environment issue](/blog/20250619-git-hooks-and-multi-java-env
-  )
-  — both are caused by PATH configuration problems resulting from environment management tools. The difference is that this time we need to manage
-  the Node.js environment rather than the Java environment.
+  This issue is similar to the previously resolved [JDK environment
+  issue](/blog/20250619-git-hooks-and-multi-java-env ) — both are caused by PATH
+  configuration problems resulting from environment management tools. The
+  difference is that this time we need to manage the Node.js environment rather
+  than the Java environment.
 </Callout>
 
 <StepProgress

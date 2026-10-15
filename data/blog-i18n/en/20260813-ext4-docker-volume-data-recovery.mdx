@@ -1,5 +1,7 @@
 ---
-title: "After Accidentally Deleting a Production Data Volume: A Hands-On Guide to Zero-Loss ext4 Data Recovery"
+title: >-
+  After Accidentally Deleting a Production Data Volume: A Hands-On Guide to
+  Zero-Loss ext4 Data Recovery
 date: '2026-08-13 21:30:00'
 tags:
   - Linux
@@ -11,17 +13,38 @@ tags:
   - 运维
   - 事故复盘
 draft: false
-summary: "A data volume from a running Docker container was accidentally deleted in its entirety, and the password for the encrypted backup was lost along with the directory. After hitting dead ends with both the process handle and filesystem log approaches, we ultimately used photorec to reconstruct the SQLite database from the time of deletion by carving it from ext4 free blocks, achieving a zero-loss recovery.This article provides a comprehensive review of the principles, pitfalls, and candidate identification methods for all four recovery approaches."
-tldr: "After accidentally deleting data, recovery follows the sequence “process FD → file system log → free block scavenging → fallback to old backups,” with costs increasing and the recovery window narrowing.On a heavily used disk, ext4 logs roll over every few hours, but photorec has a very high success rate at recovering small files like SQLite by carving from free blocks based on file headers;By using the application’s monotonic counter and external events as time anchors, you can identify the exact deletion moment from among dozens of historical traces. Also: The password for encrypted backups must have a second copy stored independently of the server; otherwise, the backup is effectively useless."
-sourceHash: '4cb0b371dcdd1a295419b7b6e6e0a663babeebe49707d628a12309cd1a444b7b'
+summary: >-
+  A data volume from a running Docker container was accidentally deleted in its
+  entirety, and the password for the encrypted backup was lost along with the
+  directory. After hitting dead ends with both the process handle and filesystem
+  log approaches, we ultimately used photorec to reconstruct the SQLite database
+  from the time of deletion by carving it from ext4 free blocks, achieving a
+  zero-loss recovery.This article provides a comprehensive review of the
+  principles, pitfalls, and candidate identification methods for all four
+  recovery approaches.
+tldr: >-
+  After accidentally deleting data, recovery follows the sequence “process FD →
+  file system log → free block scavenging → fallback to old backups,” with costs
+  increasing and the recovery window narrowing.On a heavily used disk, ext4 logs
+  roll over every few hours, but photorec has a very high success rate at
+  recovering small files like SQLite by carving from free blocks based on file
+  headers;By using the application’s monotonic counter and external events as
+  time anchors, you can identify the exact deletion moment from among dozens of
+  historical traces. Also: The password for encrypted backups must have a second
+  copy stored independently of the server; otherwise, the backup is effectively
+  useless.
+sourceHash: 4cb0b371dcdd1a295419b7b6e6e0a663babeebe49707d628a12309cd1a444b7b
 translatedAt: '2026-10-15T07:39:29.154Z'
 ---
 
 <div className="not-prose">
   <div className="mb-8 rounded-lg bg-gradient-to-r from-slate-700 to-red-900 p-8 text-white shadow-lg">
-    <h1 className="mb-4 text-4xl font-bold">🛟 After Accidentally Deleting a Production Data Volume </h1>
+    <h1 className="mb-4 text-4xl font-bold">
+      🛟 After Accidentally Deleting a Production Data Volume{' '}
+    </h1>
     <div className="text-xl opacity-90">
-    Backup Can’t Be Restored, Logs Have Rolled Over—How to Reconstruct the Database Byte by Byte from ext4 Free Blocks
+      Backup Can’t Be Restored, Logs Have Rolled Over—How to Reconstruct the
+      Database Byte by Byte from ext4 Free Blocks
     </div>
   </div>
 </div>
@@ -79,13 +102,17 @@ The encrypted backups from the last 5 days are sitting quietly on the cloud stor
 All the backups are here, but the key is gone. The most recent plaintext backup I have right now is from a month ago.
 
 <Callout emoji="⚠️">
-  <strong>Two important lessons to keep in mind: </strong>① Before deleting any "potentially redundant" directories, first {' '}
+  <strong>Two important lessons to keep in mind: </strong>① Before deleting any
+  "potentially redundant" directories, first{' '}
   <code>
-    docker inspect <container> --format '{{json .Mounts}}'
+    docker inspect &lt;container&gt; --format '&#123;&#123;json
+    .Mounts&#125;&#125;'
   </code>
-  —use the actual mount path as a reference, as directory names can be misleading; ② The password for encrypted backups must have
+  —use the actual mount path as a reference, as directory names can be
+  misleading; ② The password for encrypted backups must have
   <strong>a second copy stored separately from this server</strong>
-  (a password manager or off-site file storage works), otherwise the backup is useless.
+  (a password manager or off-site file storage works), otherwise the backup is
+  useless.
 </Callout>
 
 ## 🧊 Golden Rule: Secure the Scene First
@@ -184,8 +211,11 @@ Three chains of evidence intersect, pinpointing the sole candidate that includes
 
 <Callout emoji="🔍">
   Troubleshooting Tip: Don’t make assumptions based on file size or quantity.
-  <strong>Look for monotonic counters and external event anchors in the business data </strong>
-  —Cumulative traffic, the number of rows that only increases, and expiration times that only shift backward are all natural clocks.
+  <strong>
+    Look for monotonic counters and external event anchors in the business data{' '}
+  </strong>
+  —Cumulative traffic, the number of rows that only increases, and expiration
+  times that only shift backward are all natural clocks.
 </Callout>
 
 ## 🚀 Deployment and Validation
@@ -206,11 +236,11 @@ When verifying, don’t just check that “the container is up”: ensure there 
 
 ## 🧭 Quick Reference Chart for Recovery Routes
 
-| Order | Route                      | Time Window            | Applicable Scenarios                        |
-| ---- | ------------------------- | ------------------- | ------------------------------- |
-| 1    | `/proc/<pid>/fd` Process handle | While the process is running        | File has been deleted but the process is still running            |
-| 2    | ext4 log (ext4magic)    | A few minutes to a few hours on a busy disk | Shortly after deletion, when the disk is not busy                |
-| 3    | photorec idle block carving       | Before data blocks are overwritten    | Small files with strong file headers (SQLite, etc.) |
-| 4    | Old backups + manual data recovery         | Always available            | Fallback option when the first three fail            |
+| Order | Route                              | Time Window                                 | Applicable Scenarios                                   |
+| ----- | ---------------------------------- | ------------------------------------------- | ------------------------------------------------------ |
+| 1     | `/proc/<pid>/fd` Process handle    | While the process is running                | File has been deleted but the process is still running |
+| 2     | ext4 log (ext4magic)               | A few minutes to a few hours on a busy disk | Shortly after deletion, when the disk is not busy      |
+| 3     | photorec idle block carving        | Before data blocks are overwritten          | Small files with strong file headers (SQLite, etc.)    |
+| 4     | Old backups + manual data recovery | Always available                            | Fallback option when the first three fail              |
 
 Try them from top to bottom: costs increase, and the time window decreases. May you never have to use the third one—but if you do, remember to secure the scene first.

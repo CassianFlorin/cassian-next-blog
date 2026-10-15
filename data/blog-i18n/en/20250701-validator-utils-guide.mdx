@@ -1,5 +1,7 @@
 ---
-title: "A Detailed Look at the ValidatorUtils Utility Class: Validation Functions for ID Cards, Cell Phone Numbers, Bank Cards, and More"
+title: >-
+  A Detailed Look at the ValidatorUtils Utility Class: Validation Functions for
+  ID Cards, Cell Phone Numbers, Bank Cards, and More
 date: '2025-07-01 16:00:00'
 lastmod: '2026-08-04'
 tags:
@@ -10,9 +12,19 @@ tags:
   - Tools
   - Tips
 draft: false
-summary: "This section provides a detailed overview of the features and usage of the ValidatorUtils utility class, including common validation functions such as ID number validation, mobile phone number validation, and bank card validation, along with a variety of usage examples."
-tldr: "ValidatorUtils is a Java validation utility class that handles ID cards (conversion from 15 digits to 18 digits, data extraction), mobile phone numbers (carrier identification), bank cards (type identification), email addresses, password strength, URLs, and IP addresses. Regular expression validation incurs a performance overhead; in high-concurrency scenarios, you’ll need to implement your own caching."
-sourceHash: '2deb5e2ff5fd3e4b1b66a2d826ebeb9dba35cef6ec7fb159a9c714458d50454f'
+summary: >-
+  This section provides a detailed overview of the features and usage of the
+  ValidatorUtils utility class, including common validation functions such as ID
+  number validation, mobile phone number validation, and bank card validation,
+  along with a variety of usage examples.
+tldr: >-
+  ValidatorUtils is a Java validation utility class that handles ID cards
+  (conversion from 15 digits to 18 digits, data extraction), mobile phone
+  numbers (carrier identification), bank cards (type identification), email
+  addresses, password strength, URLs, and IP addresses. Regular expression
+  validation incurs a performance overhead; in high-concurrency scenarios,
+  you’ll need to implement your own caching.
+sourceHash: 2deb5e2ff5fd3e4b1b66a2d826ebeb9dba35cef6ec7fb159a9c714458d50454f
 translatedAt: '2026-10-15T07:37:59.561Z'
 ---
 
@@ -319,7 +331,8 @@ We recommend selecting the appropriate validation method based on specific requi
 ---
 
 <Callout emoji="💡">
-  Note: The code examples in this article can be used directly in your project; we recommend adjusting and optimizing them according to your specific needs.
+  Note: The code examples in this article can be used directly in your project;
+  we recommend adjusting and optimizing them according to your specific needs.
 </Callout>
 
 ## 📄 Complete Code Guide
@@ -1022,10 +1035,12 @@ public class ValidatorUtil {
 ```
 
 <Callout emoji="📝">
-  **Code Notes**: -
-  The complete source code includes mappings for all bank card prefixes (to save space, some bank card prefixes have been omitted with comments in the code above)
-  - When using this code, please ensure that all necessary dependencies (Apache Commons Lang 3) are included. -
-  It is recommended to adjust certain validation rules based on actual business requirements.
+  **Code Notes**: - The complete source code includes mappings for all bank card
+  prefixes (to save space, some bank card prefixes have been omitted with
+  comments in the code above) - When using this code, please ensure that all
+  necessary dependencies (Apache Commons Lang 3) are included. - It is
+  recommended to adjust certain validation rules based on actual business
+  requirements.
 </Callout>
 
 ---

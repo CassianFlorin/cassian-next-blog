@@ -1,19 +1,27 @@
 ---
-title: "Cloud Mail Follow-up: R2 Attachment Verification and Resend Key Rotation"
+title: 'Cloud Mail Follow-up: R2 Attachment Verification and Resend Key Rotation'
 date: '2026-10-13'
 tags:
   - Open Source
   - 运维
   - 独立开发
 draft: false
-summary: "Use actual receipt confirmations to verify that Cloud Mail attachments are written to the private R2 storage, check the preview, download, and anonymous access functions, and then document the \"Resend\" key rotation and the sending verification for both old and new credentials."
-tldr: "The two test attachments passed the SHA-256 checksum verification in Remote R2; they can be previewed and downloaded after logging in, while anonymous access returns a 401 error. The new key has been synchronized to D1 and KV, and its functionality has been verified through both sending emails via the application and actual delivery confirmation."
-sourceHash: '33336c9e46cc355dbaf3efe30eba73ff06b67a14fdc20819f25aed11d85623e2'
+summary: >-
+  Use actual receipt confirmations to verify that Cloud Mail attachments are
+  written to the private R2 storage, check the preview, download, and anonymous
+  access functions, and then document the "Resend" key rotation and the sending
+  verification for both old and new credentials.
+tldr: >-
+  The two test attachments passed the SHA-256 checksum verification in Remote
+  R2; they can be previewed and downloaded after logging in, while anonymous
+  access returns a 401 error. The new key has been synchronized to D1 and KV,
+  and its functionality has been verified through both sending emails via the
+  application and actual delivery confirmation.
+sourceHash: 33336c9e46cc355dbaf3efe30eba73ff06b67a14fdc20819f25aed11d85623e2
 translatedAt: '2026-10-15T07:39:43.069Z'
 ---
 
-The previous post, [Cloud Mail Deployment Log](/blog/20261012-cloud-mail-deployment
-), covered the switch to a private R2 bucket. We reviewed the old data that day and found that D1 had no records of attachments, and the KV system had no records of attachments or upload history, so there were no historical files to copy. Once the bucket was created, it remained empty, which was consistent with the situation at the time.
+The previous post, [Cloud Mail Deployment Log](/blog/20261012-cloud-mail-deployment), covered the switch to a private R2 bucket. We reviewed the old data that day and found that D1 had no records of attachments, and the KV system had no records of attachments or upload history, so there were no historical files to copy. Once the bucket was created, it remained empty, which was consistent with the situation at the time.
 
 But this still leaves one question unanswered. Once the production email account actually receives an email with an attachment, will the file be saved to R2? Will it be accessible after logging in via the web? And if someone obtains the attachment’s URL, will they be able to view it?
 
@@ -47,11 +55,11 @@ Public access to the bucket `r2.dev` is disabled, and no public custom domain is
 
 In this test, we evaluated both the new attachment API and the attachment paths compatible with older emails. Standard HTTP requests covered both sets of files, and the results are as follows.
 
-| Test Item                    | New Attachment API                 | Old Attachment Path                 |
-| --------------------------- | -------------------------- | -------------------------- |
+| Test Item                                            | New Attachment API                          | Old Attachment Path                         |
+| ---------------------------------------------------- | ------------------------------------------- | ------------------------------------------- |
 | Reading PNG and TXT files with a valid login session | HTTP 200, content matches the original file | HTTP 200, content matches the original file |
-| Anonymous access to PNG and TXT    | HTTP 401                   | HTTP 401                   |
-| Private attachment caching policy    | `private, no-store`        | `private, no-store`        |
+| Anonymous access to PNG and TXT                      | HTTP 401                                    | HTTP 401                                    |
+| Private attachment caching policy                    | `private, no-store`                         | `private, no-store`                         |
 
 Next, open the test email in the production environment. The PNG preview decoded successfully and displayed the same dimensions as the original image; both attachments were downloaded using the download buttons on the page, the filenames matched expectations, and the SHA-256 hashes of the downloaded files matched those of the originals. No uncaught exceptions occurred in the browser.
 

@@ -44,6 +44,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --immutable
 
       # 1. 自动同步 UI 词条 (messages/zh.json -> messages/en.json)
       - name: Translate UI Messages
@@ -69,6 +73,12 @@ jobs:
             ARGS="$ARGS --limit ${{ github.event.inputs.limit }}"
           fi
           node scripts/translate-blog.mjs $ARGS
+
+      # 3. 校验 Contentlayer 构建（确保生成的 MDX 语法无错误）
+      - name: Validate Contentlayer Build
+        run: |
+          node scripts/patch-contentlayer-opentelemetry.mjs
+          npx contentlayer2 build
 
       - name: Check for changes
         id: git_status

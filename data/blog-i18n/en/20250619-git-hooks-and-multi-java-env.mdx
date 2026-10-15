@@ -1,5 +1,5 @@
 ---
-title: "Resolving Issues with Git Hooks in Multi-JDK Environments"
+title: Resolving Issues with Git Hooks in Multi-JDK Environments
 date: '2025-06-19 22:00:00'
 lastmod: '2026-09-16'
 tags:
@@ -11,10 +11,18 @@ tags:
   - Guide
   - Java
   - JavaScript
-summary: "The company uses a Git commit hook to perform pre-commit validation, but the presence of multiple JDKs on the local machine (up to JDK 22) prevents the Maven Spotless plugin from running properly."
-tldr: "When multiple JDKs coexist, Maven Spotless will throw an `InvocationTargetException` due to a higher-version JDK. The solution is to install the required version using SDKMAN, place a `.sdkmanrc` file in the project root directory, and load SDKMAN at the beginning of the pre-commit hook to lock down the Java version used for building."
+summary: >-
+  The company uses a Git commit hook to perform pre-commit validation, but the
+  presence of multiple JDKs on the local machine (up to JDK 22) prevents the
+  Maven Spotless plugin from running properly.
+tldr: >-
+  When multiple JDKs coexist, Maven Spotless will throw an
+  `InvocationTargetException` due to a higher-version JDK. The solution is to
+  install the required version using SDKMAN, place a `.sdkmanrc` file in the
+  project root directory, and load SDKMAN at the beginning of the pre-commit
+  hook to lock down the Java version used for building.
 draft: false
-sourceHash: '5d5cf351f8a984794f42c4dff3cf38eb3592c0d4207946ea71970e0b25526b92'
+sourceHash: 5d5cf351f8a984794f42c4dff3cf38eb3592c0d4207946ea71970e0b25526b92
 translatedAt: '2026-10-15T07:37:50.043Z'
 ---
 
@@ -53,8 +61,9 @@ husky - pre-commit script failed (code 1)
 ## 💼 Solution
 
 <Callout emoji="💡">
-  Since some people may have multiple JDKs installed, just like me, and based on this situation and the information I’ve found, I recommend using
-  SDKMAN to manage Java versions.
+  Since some people may have multiple JDKs installed, just like me, and based on
+  this situation and the information I’ve found, I recommend using SDKMAN to
+  manage Java versions.
 </Callout>
 
 ## ⚙️ Install SDKMAN
@@ -62,7 +71,8 @@ husky - pre-commit script failed (code 1)
 Refer to the [SDKMAN Installation and Configuration Guide](/blog/20250619-install-sdkman), which provides detailed instructions for installation on both Mac and Windows systems.
 
 <Callout emoji="📖">
-  If you haven't installed SDKMAN yet, please read the installation guide before proceeding with the configuration steps in this article.
+  If you haven't installed SDKMAN yet, please read the installation guide before
+  proceeding with the configuration steps in this article.
 </Callout>
 
 ## ⚙️ Install the required JDK
@@ -195,10 +205,12 @@ npx lint-staged --verbose --debug
 ### Script Feature Description
 
 <Callout emoji="🔍">
-  Main features of this script: 1. **Cross-platform detection**: Automatically identifies Windows and Unix-like systems 2.
-  **SDKMAN Integration**: Automatically loads SDKMAN and switches to the Java version specified by the project 3. **Error Handling**:
-  Displays the current Java version information when SDKMAN is unavailable 4. **Other Hooks**: Executes additional Git
-  hooks and code checks
+  Main features of this script: 1. **Cross-platform detection**: Automatically
+  identifies Windows and Unix-like systems 2. **SDKMAN Integration**:
+  Automatically loads SDKMAN and switches to the Java version specified by the
+  project 3. **Error Handling**: Displays the current Java version information
+  when SDKMAN is unavailable 4. **Other Hooks**: Executes additional Git hooks
+  and code checks
 </Callout>
 
 ## ✅ Verify the configuration
@@ -258,6 +270,7 @@ Using java version 8.0.452-amzn in this shell.
 ---
 
 <Callout emoji="🎉">
-  Congratulations! You have now successfully configured SDKMAN to resolve the issue of multiple JDK
-  environments in Git hooks. This will ensure that your team uses a consistent Java environment and avoid version conflicts.
+  Congratulations! You have now successfully configured SDKMAN to resolve the
+  issue of multiple JDK environments in Git hooks. This will ensure that your
+  team uses a consistent Java environment and avoid version conflicts.
 </Callout>

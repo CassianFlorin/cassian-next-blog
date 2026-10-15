@@ -1,5 +1,7 @@
 ---
-title: "When setting up a domain-based email account with Cloud Mail, there are ownership issues even after receiving emails"
+title: >-
+  When setting up a domain-based email account with Cloud Mail, there are
+  ownership issues even after receiving emails
 date: '2026-10-12'
 lastmod: '2026-10-13'
 tags:
@@ -7,9 +9,17 @@ tags:
   - 运维
   - 独立开发
 draft: false
-summary: "Document the deployment of Cloud Mail domain email, the reclamation of historical emails, and the migration to private R2; explain how to preserve KV configurations and ensure compatibility with reading old files; and verify attachment permissions, inline images, and downloads."
-tldr: "The body and ownership of Cloud Mail are stored in D1, while attachments can be written to private R2 with a KV read fallback; before the switchover, conduct an inventory of actual files, and verify login and ownership permissions for attachment access points."
-sourceHash: '90fdc6bf88bebcc6d186a44f0c49d3260cd35d01ea2bf5855920b89e09277037'
+summary: >-
+  Document the deployment of Cloud Mail domain email, the reclamation of
+  historical emails, and the migration to private R2; explain how to preserve KV
+  configurations and ensure compatibility with reading old files; and verify
+  attachment permissions, inline images, and downloads.
+tldr: >-
+  The body and ownership of Cloud Mail are stored in D1, while attachments can
+  be written to private R2 with a KV read fallback; before the switchover,
+  conduct an inventory of actual files, and verify login and ownership
+  permissions for attachment access points.
+sourceHash: 90fdc6bf88bebcc6d186a44f0c49d3260cd35d01ea2bf5855920b89e09277037
 translatedAt: '2026-10-15T07:39:40.666Z'
 ---
 
@@ -29,13 +39,13 @@ The following is based on the actual solution used in this deployment. Domain na
 
 When it first went live on October 9, I kept a few things separate.
 
-| Section       | Services Used in This Project                           | Responsibilities                       |
-| ---------- | ---------------------------------------- | -------------------------------- |
-| Web Pages and APIs | Cloudflare Workers                       | Provides web-based email, login, and email operation APIs |
-| Domain Inbox   | Cloudflare Email Routing and Email Worker | Forward incoming emails to the application for parsing and storage         |
-| Email Data   | D1                                       | Stores the body, metadata, and email ownership       |
-| Attachments       | KV Fallback Solution                              | Stores attachment content                     |
-| Sending and Replies | Resend                                   | Sends emails using a verified domain identity     |
+| Section             | Services Used in This Project             | Responsibilities                                                   |
+| ------------------- | ----------------------------------------- | ------------------------------------------------------------------ |
+| Web Pages and APIs  | Cloudflare Workers                        | Provides web-based email, login, and email operation APIs          |
+| Domain Inbox        | Cloudflare Email Routing and Email Worker | Forward incoming emails to the application for parsing and storage |
+| Email Data          | D1                                        | Stores the body, metadata, and email ownership                     |
+| Attachments         | KV Fallback Solution                      | Stores attachment content                                          |
+| Sending and Replies | Resend                                    | Sends emails using a verified domain identity                      |
 
 There are two addresses here that are easy to confuse. `mail.example.com` is the web portal, and `user@example.com` is the email address. The custom domain for the website handles HTTPS access; whether emails are received depends on the MX records for the root domain and the Email Routing configuration.
 
@@ -57,12 +67,12 @@ After completing the incoming mail configuration, you must also configure "Resen
 
 This time, we retained the root zone MX records for Cloudflare incoming mail and added records required for resends. The list below shows only the purposes; the specific values should be based on what is generated in your account dashboard.
 
-| Record  | Example Name                        | Purpose                      |
-| ----- | ------------------------------- | ------------------------- |
-| TXT   | `resend._domainkey.example.com` | DKIM authentication for resends       |
-| MX    | `send.example.com`              | Sender feedback records required for resends |
-| TXT   | `send.example.com`              | SPF authentication                  |
-| CNAME | `rsend.example.com`             | Additional records required by the backend    |
+| Record | Example Name                    | Purpose                                      |
+| ------ | ------------------------------- | -------------------------------------------- |
+| TXT    | `resend._domainkey.example.com` | DKIM authentication for resends              |
+| MX     | `send.example.com`              | Sender feedback records required for resends |
+| TXT    | `send.example.com`              | SPF authentication                           |
+| CNAME  | `rsend.example.com`             | Additional records required by the backend   |
 
 The MX records for `send.example.com` and the root domain are entries under different names and can be configured according to their respective purposes. When entering DNS settings based on the email service’s backend, be sure to check the hostname carefully and retain the existing root domain incoming mail records.
 

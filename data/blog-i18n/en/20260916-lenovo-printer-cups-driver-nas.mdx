@@ -1,5 +1,5 @@
 ---
-title: "Installing the CUPS Driver for the Lenovo M1688W Pro on a Feiniu NAS"
+title: Installing the CUPS Driver for the Lenovo M1688W Pro on a Feiniu NAS
 date: '2026-09-16 21:00:00'
 tags:
   - Linux
@@ -11,10 +11,21 @@ tags:
   - 驱动
   - 运维
 draft: false
-images: ['/static/images/lenovo-printer/cover.jpg']
-summary: "I set up the Lenovo M1688W Pro to work with CUPS on my Feiniu NAS. PPD files are plain text and can be transferred across platforms, but raster filters must be for the same architecture; of the three driver packages with similar names on the official website, only one includes support for the W Pro."
-tldr: "CUPS requires two things: a PPD and a raster filter. PPDs are cross-platform, but filters must match the OS and architecture; therefore, it’s not possible to transfer a PPD from macOS to Linux.Of the three similar packages on Lenovo’s official website, only the one for Kylin V10 contains the PPD for Windows Pro; the DEB package includes only three files related to printing, totaling 121 KB."
-sourceHash: '9ccf8f33f0082ffe611e9c23da12d683f1036a3abdfa36249db22d067fb83bba'
+images:
+  - /static/images/lenovo-printer/cover.jpg
+summary: >-
+  I set up the Lenovo M1688W Pro to work with CUPS on my Feiniu NAS. PPD files
+  are plain text and can be transferred across platforms, but raster filters
+  must be for the same architecture; of the three driver packages with similar
+  names on the official website, only one includes support for the W Pro.
+tldr: >-
+  CUPS requires two things: a PPD and a raster filter. PPDs are cross-platform,
+  but filters must match the OS and architecture; therefore, it’s not possible
+  to transfer a PPD from macOS to Linux.Of the three similar packages on
+  Lenovo’s official website, only the one for Kylin V10 contains the PPD for
+  Windows Pro; the DEB package includes only three files related to printing,
+  totaling 121 KB.
+sourceHash: 9ccf8f33f0082ffe611e9c23da12d683f1036a3abdfa36249db22d067fb83bba
 translatedAt: '2026-10-15T07:39:36.074Z'
 ---
 
@@ -24,7 +35,8 @@ translatedAt: '2026-10-15T07:39:36.074Z'
       🖨️ Setting up a NAS print queue for my home printer
     </h1>
     <div className="text-xl opacity-90">
-    A PPD file, an 112 KB binary file, and three driver packages with very similar names
+      A PPD file, an 112 KB binary file, and three driver packages with very
+      similar names
     </div>
   </div>
 </div>
@@ -57,8 +69,11 @@ file /usr/libexec/cups/filter/rastertolenovo
 Mach-O. When copied to Debian, it’s just a bunch of unrecognizable bytes. It wasn’t until then that I realized that having just the PPD was like moving only the instruction manual—the machine that actually does the work was still right where it was.
 
 <Callout emoji="🔑">
-  <strong>PPDs are cross-platform, but raster filters must match the OS architecture.</strong>
-  If you take a PPD from another system and transfer it to CUPS on Linux, the job will get stuck in the queue with a "Filter failed" error.
+  <strong>
+    PPDs are cross-platform, but raster filters must match the OS architecture.
+  </strong>
+  If you take a PPD from another system and transfer it to CUPS on Linux, the
+  job will get stuck in the queue with a "Filter failed" error.
 </Callout>
 
 ## 📦 Of the three packages on the official website, only one includes W Pro
@@ -67,11 +82,11 @@ Lenovo's Linux driver page is on the [Lenovo Graphics Official Website](https://
 
 The comparison results are a bit counterintuitive.
 
-| Driver Pack                              | Includes M1688W Pro | Format        | Model list ends at       |
-| ----------------------------------- | ------------- | ----------- | ------------------ |
-| G Series and GM Series Kirin V10 Drivers              | ✅            | zip / 115MB | `M1688W Pro`       |
-| G Series, GM Series, UOS                      | ❌            | zip / 164MB | `M1688DW Pro`      |
-| lenovo-100-m1520-m1688-series-linux | ❌            | 7z / 78MB   | `M1688W` (No Pro) |
+| Driver Pack                              | Includes M1688W Pro | Format      | Model list ends at |
+| ---------------------------------------- | ------------------- | ----------- | ------------------ |
+| G Series and GM Series Kirin V10 Drivers | ✅                  | zip / 115MB | `M1688W Pro`       |
+| G Series, GM Series, UOS                 | ❌                  | zip / 164MB | `M1688DW Pro`      |
+| lenovo-100-m1520-m1688-series-linux      | ❌                  | 7z / 78MB   | `M1688W` (No Pro)  |
 
 The one with the most similar name is called `lenovo-100-m1520-m1688-series-linux`. The model list includes `M1688W` and `M1688DW`, neither of which has “Pro” in the name. The third one, which includes `M1688W Pro`, is titled “G Series and GM Series Kirin V10 Drivers”—the name doesn’t even contain a single “1.” The absence of “Pro” means it’s a different set of PPDs; I only realized this after unpacking the package and checking the files—I’ll explain more on that later.
 
@@ -146,8 +161,10 @@ Compiled in 2023, targeting version 2.6.32, with x86-64 as the baseline. The old
 In Feiniu's settings, there's an option called "Upload Driver." Just drag and drop the amd64 .deb file right into it. Once the driver is uploaded, "`Lenovo M1688W Pro`" appears in the driver list. I added it to the queue, printed a test page, and the paper came out.
 
 <Callout emoji="⚠️">
-  The CUPS-built-in 631 web interface also supports uploads, but it only accepts a single <code>.ppd</code> file; deb
-  files cannot be uploaded. The Feiniu interface accepts driver packages. The two interfaces look similar, but they require different files.
+  The CUPS-built-in 631 web interface also supports uploads, but it only accepts
+  a single <code>.ppd</code> file; deb files cannot be uploaded. The Feiniu
+  interface accepts driver packages. The two interfaces look similar, but they
+  require different files.
 </Callout>
 
 If you want to skip those 31 MB of unnecessary Qt libraries, just package the three files in their original paths; they'll still work when extracted to the root directory.

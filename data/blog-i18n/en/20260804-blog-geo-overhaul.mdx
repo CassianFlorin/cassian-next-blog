@@ -1,5 +1,7 @@
 ---
-title: "GEO Blog Revamp: Making Posts Citable by AI, and Uncovering the \"500\" Online Along the Way"
+title: >-
+  GEO Blog Revamp: Making Posts Citable by AI, and Uncovering the "500" Online
+  Along the Way
 date: '2026-08-04 10:00:00'
 tags:
   - GEO
@@ -8,58 +10,59 @@ tags:
   - AI
   - Agent
   - 排错
-summary: "I made a round of GEO optimizations to my blog: one-sentence summaries, structured data, full-text RSS feeds, llms.txt, and share cards. While I was at it, I discovered that\nthe favicon had been returning a 500 error for a long time, and that the RSS feed was being blocked by code in my own posts."
-  给博客做了一轮 GEO 改造：一句话结论、结构化数据、RSS 全文、llms.txt 和分享卡片。顺带挖出
-  favicon 长期返回 500，以及 RSS 被自己文章里的代码卡住。
-tldr: "GEO’s focus isn’t on keywords, but on ensuring that content can be extracted in full by generative engines: each article should have a self-contained conclusion, Q&A sections and step-by-step instructions should be formatted as structured data, and the full text should be output via RSS. The two truly challenging issues in this round aren’t in the code—they can only be seen on the test bench."
+summary: >-
+  I made a round of GEO optimizations to my blog: one-sentence summaries,
+  structured data, full-text RSS feeds, llms.txt, and share cards. While I was
+  at it, I discovered that
+
+  the favicon had been returning a 500 error for a long time, and that the RSS
+  feed was being blocked by code in my own posts.
+tldr: >-
+  GEO’s focus isn’t on keywords, but on ensuring that content can be extracted
+  in full by generative engines: each article should have a self-contained
+  conclusion, Q&A sections and step-by-step instructions should be formatted as
+  structured data, and the full text should be output via RSS. The two truly
+  challenging issues in this round aren’t in the code—they can only be seen on
+  the test bench.
 draft: false
 faq:
   - q: GEO 和 SEO 有什么区别
     a: >-
-      SEO 竞争的是排名和点击，GEO 竞争的是「被引用」——生成式引擎直接给出答案时，你的站点是否被当作信息源。
-      两者底层重叠很大，GEO 不是替代 SEO 的新赛道，更像零点击时代对同一批工作的重新加权。
+      SEO 竞争的是排名和点击，GEO 竞争的是「被引用」——生成式引擎直接给出答案时，你的站点是否被当作信息源。 两者底层重叠很大，GEO 不是替代
+      SEO 的新赛道，更像零点击时代对同一批工作的重新加权。
   - q: 做 GEO 最有效的手段是什么
     a: >-
       提供具体统计数字、引用权威来源、插入专家原话。2023 年那篇 GEO 论文的实验显示这类改写能把可见性提升三四成，
       而传统的关键词堆砌在生成式引擎里几乎不起作用。
   - q: robots.txt 需要为 AI 爬虫做什么
     a: >-
-      至少要放行 GPTBot、ClaudeBot、PerplexityBot、Google-Extended。很多站点 SEO 做得很好，
-      却顺手把 AI 爬虫全 ban 了，那 GEO 无从谈起。
+      至少要放行 GPTBot、ClaudeBot、PerplexityBot、Google-Extended。很多站点 SEO 做得很好， 却顺手把
+      AI 爬虫全 ban 了，那 GEO 无从谈起。
   - q: llms.txt 值得做吗
-    a: >-
-      成本很低可以顺手加，但目前主流引擎的实际采用率有限，别指望立竿见影。它的形态是一份站点导览：
-      H1、一句话定位，加上按分节组织的链接列表。
+    a: 成本很低可以顺手加，但目前主流引擎的实际采用率有限，别指望立竿见影。它的形态是一份站点导览： H1、一句话定位，加上按分节组织的链接列表。
   - q: 为什么 FAQPage 结构化数据仍然值得做
     a: >-
       Google 从 2023 年起对多数站点不再展示 FAQ 和 HowTo 富媒体结果，所以它不会改变搜索结果的外观。
       它的价值是把问答对直接交给生成式引擎，省掉模型从散文里推断的过程。
 howto:
   name: 给已有博客做 GEO 改造
-  description: >-
-    按投入产出比排序的改造顺序，适用于已经有基本 SEO 底子的技术博客。
+  description: 按投入产出比排序的改造顺序，适用于已经有基本 SEO 底子的技术博客。
   steps:
     - name: 先探线上，而不是读代码
       text: >-
         把 sitemap 里的 URL、robots.txt、favicon 这些路径逐个 curl 一遍，看真实返回码。
         代码里长得正常的东西，线上未必正常。
     - name: 确认 AI 爬虫没被拦
-      text: >-
-        检查 robots.txt 是否放行 GPTBot、ClaudeBot、PerplexityBot、Google-Extended。
+      text: 检查 robots.txt 是否放行 GPTBot、ClaudeBot、PerplexityBot、Google-Extended。
     - name: 每篇加一段自包含结论
-      text: >-
-        一段能脱离上下文独立成立的话，放在正文顶部，同时输出为 schema.org 的 abstract。
-        这是投入产出比最高的一项。
+      text: 一段能脱离上下文独立成立的话，放在正文顶部，同时输出为 schema.org 的 abstract。 这是投入产出比最高的一项。
     - name: 把问答和步骤做成结构化数据
-      text: >-
-        FAQPage、HowTo、DefinedTerm 各取所需，内容直接从文章已有的排错表和正文里提取。
+      text: FAQPage、HowTo、DefinedTerm 各取所需，内容直接从文章已有的排错表和正文里提取。
     - name: RSS 输出全文
-      text: >-
-        用 content:encoded 承载全文，description 保留摘要，两者各司其职。
+      text: '用 content:encoded 承载全文，description 保留摘要，两者各司其职。'
     - name: 把规则写进构建
-      text: >-
-        新增的约定要变成构建期校验，否则半年后自己也记不住。
-sourceHash: 'afc984aefd6cd8bf6427a40a9c46e8c683dcd63f979ca9bb2294c3362b1f946d'
+      text: 新增的约定要变成构建期校验，否则半年后自己也记不住。
+sourceHash: afc984aefd6cd8bf6427a40a9c46e8c683dcd63f979ca9bb2294c3362b1f946d
 translatedAt: '2026-10-15T07:39:26.406Z'
 ---
 
@@ -72,9 +75,11 @@ SEO is about getting content to rank high in search results, while GEO is about 
 This term comes from a 2023 paper (Aggarwal et al., later published in KDD).They conducted experiments to compare which rewriting techniques could improve the “citation rate,” and their conclusions were quite counterintuitive: **Including specific statistics, citing authoritative sources, and inserting direct quotes from experts resulted in a 30–40 percent improvement in performance, whereas traditional keyword stuffing had virtually no effect.**
 
 <Callout emoji="🧭">
-  Let’s start with a reality check: GEO and SEO overlap significantly at the core (authority, original content, citations from other sources).
-  It’s not a new track replacing SEO; rather, it’s a reweighting of the same set of tasks in the era of zero-click search results.
-  Many “GEO services” on the market are simply SEO sold under a different name.
+  Let’s start with a reality check: GEO and SEO overlap significantly at the
+  core (authority, original content, citations from other sources). It’s not a
+  new track replacing SEO; rather, it’s a reweighting of the same set of tasks
+  in the era of zero-click search results. Many “GEO services” on the market are
+  simply SEO sold under a different name.
 </Callout>
 
 This blog [underwent an SEO overhaul in the previous round](/blog/20260729-nextjs-i18n-seo-overhaul), and the foundation is solid. This time, I’m implementing GEO on top of that, and in the process, I uncovered two live issues—what they have in common is that **they look completely normal in the code.**
@@ -125,8 +130,10 @@ if (!isLocale(locale)) {
 ```
 
 <Callout emoji="🔍">
-  I was able to pinpoint this bug only after seeing the actual error message in the dev server logs. Just looking at the code, there’s nothing suspicious about the `[locale]`
-  layout—it simply trusted the parameters provided by the router.
+  I was able to pinpoint this bug only after seeing the actual error message in
+  the dev server logs. Just looking at the code, there’s nothing suspicious
+  about the `[locale]` layout—it simply trusted the parameters provided by the
+  router.
 </Callout>
 
 While I was at it, I copied `favicon.ico` to the root directory of `public/`, and that path now returns a 200 status code.
@@ -151,18 +158,20 @@ Interestingly, that length rule immediately flagged five of my own excessively l
 
 Three new schema.org builders have been added, with frontmatter opt-in:
 
-| Type          | Coverage | Content                                                |
-| ------------- | ---- | --------------------------------------------------- |
-| `FAQPage`     | 7 articles | 27 Q&A sets                                           |
+| Type          | Coverage   | Content                                                                      |
+| ------------- | ---------- | ---------------------------------------------------------------------------- |
+| `FAQPage`     | 7 articles | 27 Q&A sets                                                                  |
 | `HowTo`       | 4 articles | 18 steps; each step in the Traefik article includes verified section anchors |
-| `DefinedTerm` | 3 articles | Obsidian, Harness Engineering, SDKMAN               |
+| `DefinedTerm` | 3 articles | Obsidian, Harness Engineering, SDKMAN                                        |
 
 After deduplicating, there are a total of 9 articles. All answers were extracted from the error correction tables and the main text of the articles; no new content was written.
 
 <Callout emoji="⚠️">
-  It’s important to note: Starting in 2023, Google will no longer display FAQ and How-To
-  rich results for most sites, so **this section will not result in any changes to how your search results appear**.
-  Its value lies in feeding question-answer pairs and step-by-step sequences directly to generative models, eliminating the need for the model to infer information from prose.
+  It’s important to note: Starting in 2023, Google will no longer display FAQ
+  and How-To rich results for most sites, so **this section will not result in
+  any changes to how your search results appear**. Its value lies in feeding
+  question-answer pairs and step-by-step sequences directly to generative
+  models, eliminating the need for the model to infer information from prose.
 </Callout>
 
 All three builders use defensive parsing; when the frontmatter is written incorrectly, they return "`null`" instead of causing the build to fail.
@@ -221,8 +230,10 @@ This is the regular expression used in `check-seo` to calculate the display widt
 U+FFFF is an invalid character in XML 1.0; **neither CDATA nor numeric references can save it**—the specification does not allow it to appear at all.
 
 <Callout emoji="🪤">
-  This was a pitfall the author dug for themselves in that article: it cited code written during that very same round of revisions.
-  If it hadn’t been for the full-text RSS project six months later, it would never have been discovered.
+  This was a pitfall the author dug for themselves in that article: it cited
+  code written during that very same round of revisions. If it hadn’t been for
+  the full-text RSS project six months later, it would never have been
+  discovered.
 </Callout>
 
 Processed into the escape sequence `\uXXXX`: This is both valid XML and, within the context of a code block, remains equivalent and readable JavaScript—a better solution than simply deleting it. This also addresses the C0 control character and the lone proxy entry.
