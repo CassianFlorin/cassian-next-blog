@@ -25,14 +25,17 @@ export async function generateMetadata(props: {
 type TopicLink = { label: string; slug: string; count: number };
 
 /** Every tag, grouped by the knowledge territory it files articles under. */
-export default async function TagsPage() {
+export default async function TagsPage(props: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await props.params;
   const t = await getTranslations('blog');
   const tk = await getTranslations('knowledge');
   const tt = await getTranslations('tags');
   const label = (topic: TopicLink) =>
     tt.has(topic.slug) ? tt(topic.slug) : topic.label;
 
-  const index = getKnowledgeIndex();
+  const index = getKnowledgeIndex(locale);
   const generic = new Map<string, TopicLink>();
   allCoreContent(sortPosts(allBlogs)).forEach((post) =>
     (post.tags || []).forEach((tag) => {

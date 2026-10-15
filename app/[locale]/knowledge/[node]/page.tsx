@@ -31,7 +31,7 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const { locale, node } = await props.params;
   if (!isKnowledgeNodeKey(node)) return {};
-  const summary = getKnowledgeIndex().byKey.get(node);
+  const summary = getKnowledgeIndex(locale).byKey.get(node);
   if (!summary) return {};
 
   const t = await getTranslations({ locale, namespace: 'knowledge' });
@@ -65,7 +65,7 @@ export default async function KnowledgeNodePage(props: { params: Params }) {
   const { locale, node } = await props.params;
   if (!isKnowledgeNodeKey(node)) notFound();
 
-  const index = getKnowledgeIndex();
+  const index = getKnowledgeIndex(locale);
   const summary = index.byKey.get(node);
   const graph = buildLocalGraph(index, node);
   if (!summary || !graph) notFound();

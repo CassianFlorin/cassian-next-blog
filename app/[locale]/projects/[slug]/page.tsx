@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer';
 import { allBlogs } from 'contentlayer/generated';
+import { getLocalizedPosts } from '@/lib/postTranslations';
 import { genPageMetadata } from 'app/seo';
 import JsonLd from '@/components/JsonLd';
 import Link from '@/components/Link';
@@ -127,7 +127,7 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
 
   // Related writing: posts explicitly about the project first, then the most
   // recent articles from the territories the project belongs to.
-  const posts = allCoreContent(sortPosts(allBlogs));
+  const posts = getLocalizedPosts(locale);
   const explicit: Trace[] = (entry.relatedPostSlugs || [])
     .map((postSlug) => posts.find((post) => post.slug === postSlug))
     .filter((post) => post !== undefined)
@@ -139,7 +139,7 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
       tags: post.tags || [],
     }));
 
-  const index = getKnowledgeIndex();
+  const index = getKnowledgeIndex(locale);
   const territories = (project.knowledgeNodes || [])
     .map((key) => index.byKey.get(key))
     .filter((node) => node !== undefined);

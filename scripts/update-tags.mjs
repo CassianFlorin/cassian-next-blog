@@ -57,6 +57,9 @@ const DEFAULT_TRANSLATIONS = {
   math: 'Math',
   ols: 'OLS',
   hello: 'Hello',
+  工具对比: 'Tool Comparison',
+  架构设计: 'Architecture Design',
+  工程方法论: 'Engineering Methodology',
 };
 
 // 英文标签的中文翻译
