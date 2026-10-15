@@ -1,0 +1,118 @@
+---
+title: "Customizing the IntelliJ IDEA File Header"
+date: '2025-09-08 15:30'
+lastmod: '2026-08-04'
+tags:
+  - Java
+  - IntelliJ IDEA
+  - 开发工具
+  - 技术分享
+  - Tips
+summary: "Learn how to customize file headers in IntelliJ IDEA using Groovy\nscripts to dynamically generate file header information for different projects, thereby improving code maintainability and team collaboration efficiency."
+  分享如何在 IntelliJ IDEA 中自定义 File Header，通过 Groovy
+  脚本实现动态生成不同项目的文件头信息，提高代码可维护性和团队协作效率。
+tldr: "IntelliJ's file header templates are configured under Settings → Editor → File and Code Templates → Includes → File Header. By using a Groovy script to determine the package prefix of ${PACKAGE_NAME}, you can automatically generate different file headers for personal and company projects."
+sourceHash: '9abd6de7e8b63164915ecb1450a5deb9bf79cdefee68d38aa238a51e9ac6ae3f'
+translatedAt: '2026-10-15T07:38:00.873Z'
+---
+
+# Customizing IntelliJ IDEA File Headers
+
+## 🎯 Background Information
+
+In the software development process, the **File Header** contains the definitions and original intent of the project and the file. A well-written File Header helps future developers quickly understand the design intent and background information of the code.
+
+### The Purpose of the File Header
+
+The file header, as the first part of a file, typically contains the following basic information:
+
+- **Author Information** - Identifies the creator of the code
+- **Creation Date** - Records the date the file was created
+- **File Description** - Describes the file's functionality and purpose
+- **Copyright Notice** - Protects intellectual property
+- **Version Information** - Track changes to the file
+- **Project or Module Name** - Identify the project to which it belongs
+- **Contact Information** - Facilitate future communication
+
+By standardizing file headers, team members can quickly understand the context in which a file was created and who authored it, thereby improving code maintenance efficiency—especially when working on complex or long-standing projects.
+
+## 📝 File Header Example
+
+The following is an example of a standard Java file header:
+
+```java
+/**
+ * Author: CassianFlorin
+ * Created: 2025-05-20
+ * Description: This class implements the user authentication logic.
+ * Version: 1.0.0
+ * License: MIT License
+ */
+public class AuthService {
+    // Class implementation
+}
+```
+
+## ⚙️ File Header Configuration Steps
+
+### 1. Go to the configuration screen
+
+In IntelliJ IDEA, navigate to the settings using the following path:
+
+```
+File → Settings → Editor → File and Code Templates → Includes → File Header
+```
+
+### 2. Configuration Interface Overview
+
+- **File and Code Templates**: File and code template settings
+- **Includes**: Included template files
+- **File Header**: File header template
+
+## 🚀 Dynamically Generating Headers Using Groovy Scripts
+
+To distinguish between the file headers for personal projects and corporate projects, I used a Groovy script to dynamically generate different header information.
+
+### Configuration Script
+
+```groovy
+#if(${PACKAGE_NAME.startsWith("[公司的包路径]")})
+/**
+ * @Author [公司要求的名称]
+ * @Email [公司邮箱]
+ * @Date ${DATE} ${TIME}
+ */
+#else
+/**
+ * @Author CassianFlorin
+ * @Email flowercard591@gmail.com
+ * @Date ${DATE} ${TIME}
+ */
+#end
+```
+
+### Script Description
+
+- **`${PACKAGE_NAME}`**: Retrieve the package name of the class currently being created
+- **`${DATE}`**: Current date
+- **`${TIME}`**: Current time
+- **Conditional Check**: Determine whether it is a company project or a personal project based on the package prefix
+
+### How It Works
+
+In enterprise-level development, package names typically follow the "reverse domain name" convention (e.g., `com.company.project`). Therefore, different project types can be distinguished by examining the package name prefix, allowing the corresponding file header information to be generated.
+
+## 💡 Suggestions for Expansion
+
+There are many ways to configure this. In addition to simple Groovy scripts, you can also:
+
+- Use more complex conditional logic
+- Integrate project information
+- Add more metadata
+- Customize formatting styles
+
+If you'd like to learn more about configuration options, please feel free to contact us!
+
+---
+
+> **Note**: The specific content and format of the File Header can be adjusted according to team guidelines and project requirements.

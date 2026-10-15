@@ -1,0 +1,277 @@
+---
+title: "Multilingual Blog SEO Optimization: Every URL in the Sitemap Is Being Redirected"
+date: '2026-07-29 18:00:00'
+lastmod: '2026-08-04'
+tags:
+  - SEO
+  - Next.js
+  - i18n
+  - Vercel
+  - AI
+  - Agent
+  - 排错
+draft: false
+summary: "Together with an AI agent, we performed an SEO overhaul on this multilingual Next.js blog. The most critical findings weren’t in the code at all—every URL in the sitemap required a two-step redirect, which could only be detected during live testing."
+tldr: "For sites that use middleware to perform language prefix redirection, the sitemap must output URLs with language prefixes; otherwise, each URL will result in a one-step redirect. This issue is completely invisible in the code and can only be detected by using `curl` to access each URL in the sitemap individually."
+faq:
+  - q: 多语言站点的 sitemap 应该输出带语言前缀的 URL 吗
+    a: >-
+      应该。只要 middleware 会把不带前缀的路径重定向到 /zh 或 /en，sitemap 里不带
+      前缀的 URL 每一条都是一次 307，爬虫每次抓取都要多跳一次。
+  - q: 文章还没有翻译时 hreflang 该怎么写
+    a: >-
+      仍然为每个语言版本输出完整的 hreflang 集合，并让每个语言版本 self-canonical。
+      canonical 指向别的语言版本会让 hreflang 直接失效。
+  - q: 为什么 Yarn 3 不执行 prebuild 脚本
+    a: >-
+      Yarn 2 以上默认不再自动运行 pre/post 生命周期脚本。要么显式调用，要么把命令
+      合并进 build 脚本本身。
+  - q: 一个页面有多个 h1 会有什么影响
+    a: >-
+      会稀释页面主题。全局组件（导航、Logo、入场动画）里藏的 h1 最容易被忽略，
+      需要数一下渲染后 HTML 里的实际数量。
+sourceHash: '507087bfa7a486e47c89fc7274d31c821486751c41b6fbe6b54a97e5f13d860c'
+translatedAt: '2026-10-15T07:39:21.154Z'
+---
+
+# SEO Optimization for Multilingual Blogs
+
+This blog is a multilingual site built with Next.js App Router and next-intl, with routes in the format `/zh/blog/xxx`. It appears to have all the necessary SEO elements: `sitemap.ts`, `robots.ts`, and `BlogPosting` structured data for each post.
+
+That is, until I pulled up the sitemap and took a look at the actual routes.
+
+This round of updates was carried out in conjunction with an AI agent. Looking back, the agent’s value didn’t lie in “knowing which tags to use for SEO”—that kind of information is just a quick search away—but rather in the fact that it diligently used `curl` to fetch each URL in the sitemap one by one and then presented the response codes to you.The two most critical issues in this article both arose this way—**they looked perfectly normal in the code**.
+
+<Callout emoji="🧭">
+  One-sentence conclusion:
+  <strong>
+    For sites that use middleware to perform language prefix redirection, the sitemap must output URLs with the prefix.
+  </strong>
+  Otherwise, every URL involves a one-step redirect, and this is completely invisible in the code.
+</Callout>
+
+## Cause: None of the URLs in the sitemap can be accessed
+
+The original `app/sitemap.ts` went something like this:
+
+```ts
+const routes = ['', 'blog', 'projects', 'knowledge', 'about'].map((route) => ({
+  url: `${siteUrl}/${route}`,
+  lastModified: new Date().toISOString().split('T')[0],
+}));
+```
+
+The output is `https://cassianflorin.com/blog`. It looks fine.
+
+However, the actual routes are `/zh/blog` and `/en/blog`—`middleware.ts` redirects paths without a language prefix to those routes. In other words, **every URL in the sitemap results in a 307**.
+
+I ran a test with curl and found that there's more than one hop:
+
+```bash
+curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" https://cassianflorin.com/blog
+```
+
+```text
+307 -> https://www.cassianflorin.com/blog
+```
+
+`data/siteMetadata.js` specifies `siteUrl` as `https://cassianflorin.com`, but the primary domain configured on Vercel is **www**. When these two issues occur together, the complete chain is:
+
+```text
+https://cassianflorin.com/blog          （sitemap 里写的）
+  ↓ 307  非 www → www
+https://www.cassianflorin.com/blog
+  ↓ 307  middleware 补语言前缀
+https://www.cassianflorin.com/zh/blog   （真实页面）
+```
+
+Web crawlers will follow redirects, so the page will eventually be indexed and won’t be completely overlooked. However, every time a page is crawled, it’s a wasted effort, and the canonical tag also points to a URL with no actual content.
+
+What these two incidents have in common: **You can’t tell just by looking at the code.** `siteUrl` There was nothing wrong with that line of code itself; the issue was that it didn’t match the production deployment. After that, I developed a habit: whenever I need to make a decision involving deployment, I run a `curl` command against the production environment first.
+
+## Fix 1: Sitemap outputs URLs with language prefixes
+
+Change it to expand by locale, and add an `hreflang` attribute to each entry:
+
+```ts
+function localizedEntries(path: string, options: { ... }) {
+  const languages = languageAlternates(path);
+  return locales.map((locale) => ({
+    url: localeUrl(locale, path),
+    lastModified: options.lastModified,
+    changeFrequency: options.changeFrequency,
+    priority: locale === defaultLocale ? options.priority : ...,
+    alternates: { languages },
+  }));
+}
+```
+
+Next.js's `MetadataRoute.Sitemap` supports `alternates.languages` and renders it as standard `xhtml:link`:
+
+```xml
+<url>
+<loc>https://www.cassianflorin.com/zh/blog</loc>
+<xhtml:link rel="alternate" hreflang="zh-CN" href="https://www.cassianflorin.com/zh/blog" />
+<xhtml:link rel="alternate" hreflang="en" href="https://www.cassianflorin.com/en/blog" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://www.cassianflorin.com/zh/blog" />
+</url>
+```
+
+I took the opportunity to include the tab and blog pagination that had been omitted previously. The result was **22 entries → 146 entries**, and all returned a 200 status code.
+
+Here’s a detail about pagination: Page 1 and `/blog` contain exactly the same content, so the pagination entries start on Page 2 to avoid duplicating the same content.
+
+## Fix #2: hreflang—What to Do If the Content Isn't Translated
+
+This site’s interface is bilingual, but **the article content is in Chinese only**. `/en/blog/xxx` and `/zh/blog/xxx` display the same Chinese article; only the navigation and footer—the “shell”—are in English.
+
+At first, I thought I should add a canonical tag to the `/en` version pointing back to `/zh`. But that would be wrong: hreflang requires that **each language version be self-canonical**; pointing back would be like telling search engines that “the English version doesn’t count,” which would render the hreflang tag ineffective.
+
+The correct approach is to have each version use `self-canonical`, and then use `hreflang` to reference each other:
+
+```text
+/zh/blog/xxx  canonical → 自己    hreflang: zh-CN, en, x-default
+/en/blog/xxx  canonical → 自己    hreflang: zh-CN, en, x-default
+```
+
+`x-default` Points to the default language (Chinese). Search engines will automatically determine which version to display to each user and will not penalize the site for duplicate content.
+
+## Fix 3: Three H1 tags on each page
+
+I ran a script to count the rendered HTML, and found that each article page contains 3 instances of `<h1>`:
+
+| Source                    | Content                                 |
+| ----------------------- | ------------------------------------ |
+| `EntryCurtain` Opening Animation | `Cassian Florin` (**on every page**) |
+| `PageTitle`             | Article Title (the correct one)               |
+| MDX Body                | Written by the author `# 一级标题`                |
+
+The first one is the most outrageous—a decorative brand animation is taking up the H1 tag on every page of the site. Just change it to `div`; keep `aria-label` as is. The visuals and animation will remain completely unchanged.
+
+The third one is a bit trickier. Out of 17 posts, 15 have body text that starts with “`# 标题`” (which duplicates the title in the frontmatter). Manually editing the content is both tedious and would disrupt my writing habits going forward, so I wrote a “remark” plugin to handle this during the build process:
+
+```js
+export default function remarkDemoteHeadings() {
+  return (tree) => {
+    let hasTopLevelHeading = false;
+    visit(tree, 'heading', (node) => {
+      if (node.depth === 1) hasTopLevelHeading = true;
+    });
+
+    if (!hasTopLevelHeading) return;
+
+    visit(tree, 'heading', (node) => {
+      node.depth = Math.min(node.depth + 1, 6);
+    });
+  };
+}
+```
+
+Lower the entire section by one level rather than simply changing the `h1` to `h2`—this way, the relative hierarchical relationship established by the author (`#` → `##` → `###`) is fully preserved; it is simply moved down one level and nested under the `h1` used for layout rendering. Articles beginning with `##` are completely unaffected.
+
+For now, just write the main text as usual `# 标题`; it will automatically be converted into a valid single H1 document during the build process.
+
+## Make it apply to future posts as well
+
+Fixing the existing issues is only half the battle. More importantly, you won't have to worry about these issues with new articles.
+
+**Fully automated**: canonical, hreflang, `og:locale`, structured data, sitemap entries, and RSS—all derived from the frontmatter. To publish an article, you just need to write the frontmatter; you don’t have to worry about anything else.
+
+**It can't be automated; it gets caught during the build.** I wrote a `scripts/check-seo.mjs` script and added it as the first step in `build`:
+
+```text
+✖ 错误（中断构建）  缺 title/summary/date、图片缺 alt、封面文件不存在、slug 冲突
+⚠ 警告（仅提示）    标题过长、摘要过短或超长、标签数量异常、内链写死语言前缀
+```
+
+There’s a detail unique to Chinese: SERP truncation is calculated based on pixel width, and Chinese characters are about twice as wide as Latin characters. Therefore, you can’t simply count the number of characters:
+
+```js
+function displayWidth(text) {
+  let width = 0;
+  for (const char of text) {
+    width += /[⺀-￿]/.test(char) ? 2 : 1;
+  }
+  return width;
+}
+```
+
+Based on this criterion, a Chinese abstract that exceeds about 80 characters will be truncated in the search results. After testing it, I found that one article’s abstract had a display width of 191—it was indeed too long.
+
+## An Unexpected Discovery: Yarn 3 Has Never Run `prebuild`
+
+After hanging `check-seo` into `prebuild`, running `yarn build` produces no output.
+
+The reason is that **Yarn 2+ no longer automatically runs the `pre` / `post` lifecycle scripts**. However, `prebuild` in this repository still contains `update-tags` (tag translation added) and `generate-obsidian-graph`:
+
+```json
+"prebuild": "node scripts/patch-contentlayer-opentelemetry.mjs && node scripts/update-tags.mjs && node scripts/generate-obsidian-graph.mjs"
+```
+
+In other words, these two scripts have **never been run during the build process**, either locally or on Vercel. The reason no issues have arisen so far is that their output has been committed to the repository.
+
+The solution is to explicitly chain `build`. However, chaining it directly triggers another issue: `generate-obsidian-graph` depends on `OBSIDIAN_VAULT_ROOT`, and this environment variable only exists on my local machine. On Vercel, it will **overwrite the submitted graph** with empty data.
+
+So, first modify the script to preserve existing files when there is no vault:
+
+```js
+if (!vaultRoot) {
+  if (existsSync(outputPath)) {
+    console.log('Obsidian graph skipped: keeping existing file.');
+    return;
+  }
+  // 只在文件缺失时才写空图谱
+}
+```
+
+I didn't dare to link it until I finished editing it.
+
+## Two Issues Discovered Incidentally
+
+**The GitHub Pages workflow fails on every push**. There’s a file named `pages.yml` in the repository that has been triggering failure emails on every push since June—even though Pages isn’t even enabled for this repository. Furthermore, it uses a static export named `EXPORT=1`, which, if actually enabled, would completely break the middleware’s language routing. Delete it.
+
+**The statistics script is running empty.** The umami script has been loading continuously in production, but `NEXT_UMAMI_ID` has never been configured. It wasn't until I looked through Pliny's source code that I discovered the problem:
+
+```js
+var Umami = (_a) => {
+  var _b = _a, { src = "https://analytics.umami.is/script.js" } = _b, ...
+```
+
+As long as the key `umamiAnalytics` exists, the script will be injected, **regardless of whether an ID is present**. So every visit results in a wasted CDN request, without a single piece of data being recorded. It’s rather ironic that SEO optimization has been completed, yet there’s no tool to measure its effectiveness.
+
+## Results
+
+| Metric                       | Before Renovation           | After Renovation                                                       |
+| -------------------------- | ---------------- | ------------------------------------------------------------ |
+| Sitemap entries               | 22               | 146                                                          |
+| Do sitemap URLs require redirection? | All require redirection (two hops) | All resolve directly to 200                                                 |
+| hreflang                   | None               | 438 annotations                                                   |
+| `og:locale`                | Fixed `en_US`     | Output by language                                                   |
+| Number per page `<h1>`           | 3                | 1                                                            |
+| Structured data                 | Only `BlogPosting` | Add `Person`, `WebSite`, `BreadcrumbList`, `CollectionPage` |
+
+## About Doing This Together with the Agent
+
+After this round, there are a few points worth noting that go beyond simply “how to optimize for SEO.”
+
+**Let it explore the real environment instead of just reading the code.** The two most critical issues mentioned earlier—`siteUrl` written without “www” and the sitemap lacking a language prefix—are perfectly valid code in the repository. What really exposes them is a clumsy approach like `curl -w "%{http_code} -> %{redirect_url}"`.
+
+At one point, I specifically had it check the Vercel dashboard instead of making an educated guess based on the repository. As a result, I discovered something I hadn’t even realized myself: I had integrated the SEO validation script into `build`, but if Vercel overrode the Build Command, this access control wouldn’t execute at all. Only after confirming that the “Build Command was empty” did this solution truly work.This kind of information is only available in the console, not in the code.
+
+**I made the decisions myself.** At several crossroads, the agent didn’t make decisions for me but instead laid out the options and their implications: whether to use “www” or “non-www” for the main domain (changing the code vs. changing the Vercel configuration, which would have different impacts on existing indexing), and which of the landing pages with the same name on the product site and the blog should be set as the canonical page.These are trade-offs, not matters of right or wrong; the agent provided the context, and I made the final call—the process was handled just right.
+
+**Turn conclusions into build constraints.** This is the step I find most worthwhile. `check-seo.mjs` I’ve turned scattered tips like “Don’t make the abstract too long” and “Include alt text for images” into rules that cause the build to fail. Six months from now, I’ll surely have forgotten how many Chinese characters the abstract should be limited to, but the build will remember.
+
+While writing this article, I also ran into a rather interesting catch-22: In the first draft, `summary` was set to a display width of 198, but it was flagged by a script written in the same round; I had to change it to 132 before it passed.When I tagged the article with `Next.js`, it immediately caused the build to fail—next-intl uses `.` to indicate nesting, `tags.Next.js` is parsed as three levels deep, and during initialization, it validates the entire `messages` object; as long as a key with a dot exists, it throws `INVALID_KEY`, regardless of whether it’s actually used.This pitfall had been lurking in the default translation table for `update-tags.mjs` for a long time (on the `'Next.js': 'Next.js'` line), but no one had ever used that tag before.
+
+## If You're Also Doing SEO for Multilingual Websites
+
+Based on the order in which I ran into these pitfalls, it’s worth checking these things first:
+
+1. **Use curl to test each URL in the sitemap one by one** to see if the response is a 200 or a 3xx. This is the most easily overlooked step, yet it has the greatest impact.
+2. **Verify that `siteUrl` matches the primary production domain** (www vs. non-www). This isn’t visible in the code; you’ll need to check the live site.
+3. **Ensure that hreflang and canonical tags don’t conflict**: Each language version must use a self-canonical tag; otherwise, the hreflang tag is invalid.
+4. **Count the number of `h1` tags in the rendered HTML**, paying attention to those hidden within global components (navigation, animations, logos).
+5. **If using Yarn 2+, check whether the `pre` and `post` scripts are running at all.**
+
+Looking back, the most valuable part of the agent’s work during this round wasn’t writing code, but tirelessly sending a URL request for each one and compiling the response codes into a table. It was still up to me to figure out what was wrong and how to make trade-offs—but without that tedious comparison table, I’d probably still be under the impression that the sitemap was working properly.

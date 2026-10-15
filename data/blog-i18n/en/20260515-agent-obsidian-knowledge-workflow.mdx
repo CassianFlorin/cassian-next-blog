@@ -1,0 +1,452 @@
+---
+title: "Agent and Obsidian: Turning Your Personal Knowledge Base into an Actionable \"Second Brain\""
+date: '2026-05-15'
+lastmod: '2026-08-04'
+tags:
+  - AI
+  - Agent
+  - Obsidian
+  - 个人知识管理
+  - 工作流
+summary: "When Agent is integrated with Obsidian, a personal knowledge base is no longer just a static repository of notes; it becomes a long-term knowledge workspace that is searchable, organizable, reusable, and exportable."
+tldr: "Agent does not replace Obsidian; rather, it transforms it from a static note-taking database into a callable knowledge workbench: Obsidian stores verified knowledge, while Agent handles retrieval, refinement, and rewriting. The key distinction is that only conclusions you have verified are included; otherwise, the larger the knowledge base becomes, the less usable it will be."
+draft: false
+sourceHash: '9545959770827c318428e7f018ec7cfde3ee0b85e8349a09d7a90785a21c6ed1'
+translatedAt: '2026-10-15T07:39:07.983Z'
+---
+
+# Agent and Obsidian: Turning Your Personal Knowledge Base into an Actionable Second Brain
+
+Many people use Obsidian to keep their notes, ideas, project materials, and troubleshooting records all in one place where they can be managed over the long term. Many people use Agent to have AI help them write code, look up information, organize data, and generate documents.
+
+Taken separately, both of these things are valuable, but what’s really interesting is what happens when they’re combined:
+
+```text
+对话 / 排查 / 阅读 / 会议
+        |
+        v
+Agent 加工、总结、追问、整理
+        |
+        v
+Obsidian 沉淀为可复用知识
+        |
+        v
+下一次 Agent 再读取、连接、改写、输出
+```
+
+My understanding is that **Agent isn’t meant to replace Obsidian, but rather to transform Obsidian from a “static note repository” into a “callable knowledge workspace.”**
+
+Obsidian is responsible for storing verified knowledge, while Agent is responsible for retrieving, connecting, and applying that knowledge.
+
+If you're not yet familiar with Obsidian itself, you can start by reading this introductory guide: [What Is Obsidian: From Installation to Opening the Knowledge Base via the Command Line](/blog/20260523-what-is-obsidian). It begins by explaining Vaults, Markdown, bidirectional syncing, and the CLI, before returning to the Agent workflow discussed in this article.
+
+If this is your first time using Obsidian, you can think of it as a “Markdown knowledge folder on your computer.”
+
+The biggest difference between it and ordinary cloud note-taking apps isn’t that the interface is more complex, but that the underlying structure is simpler: a Vault is simply a local folder, and a note is typically a file named `.md`. You can open it with Obsidian, or view, back up, search, and migrate it directly within your file system.
+
+The “double links” often mentioned in Obsidian essentially involve using a notation like `[[另一篇笔记]]` to link the current note to another note. The Graph view simply visualizes these connections; what really matters isn’t how pretty the graph looks, but that pieces of knowledge can reference one another.
+
+So this article isn’t about “how to set up Obsidian like a pro,” but rather a simpler question: When your knowledge already exists in the form of files and links, can the Agent bring it back into your daily workflow?
+
+## Why Is the Memory for Ordinary Chats Insufficient?
+
+When we interact with AI, it’s easy to fall into the illusion that as long as the model becomes more and more powerful, the issue of memory will naturally be resolved.
+
+In real-world applications, however, the issue isn’t whether a model can remember a few rounds of context, but whether that context can be transformed into its own assets in a long-term, stable, and verifiable manner.
+
+There are usually several issues with ordinary chat logs.
+
+First, **the context gets lost**. The project background, API fields, and business rules we discussed today will likely need to be explained all over again when we start a new conversation a few days from now. Even if the system has some form of long-term memory, it may not necessarily store the information in the structure you want.
+
+Second, **conclusions are hard to reuse**. A troubleshooting session might take two hours, but in the end, only three things are truly valuable: what caused the problem, how to verify it, and what to do if it happens again. If these conclusions remain only in chat logs, they’ll quickly become just a vague memory of “I think I’ve looked into this before.”
+
+Third, **the boundaries of knowledge are unclear**. Chat logs are a mix of speculation, processes, failed attempts, and final conclusions. If you simply save all of this content as knowledge, it will actually cloud your judgment the next time you try to reuse it.
+
+Therefore, the Agent needs a more stable external knowledge layer. This knowledge layer should not consist solely of the model’s own internal memory; rather, it should be something that users can view, edit, organize, and version control.
+
+This is exactly where Obsidian comes in.
+
+## Obsidian is well-suited as a long-term knowledge base for Agents
+
+Obsidian’s core strength isn’t its flashy plugins or graph view—it’s its simplicity: local Markdown files, a standard directory structure, bidirectional links, searchability, and portability.
+
+For people, it's a note-taking app. For Agent, it's more like a local knowledge file system.
+
+These characteristics are crucial.
+
+### Markdown Is a Native Interface
+
+Markdown is user-friendly and program-friendly.
+
+An Obsidian note can be read directly by users or accessed by an agent via the file system, the CLI, or a script. Unlike some proprietary knowledge bases, it doesn’t hide content in a database, nor does it force all information to go through a complex API.
+
+This means that an agent can perform a wide range of specific tasks:
+
+- Find past notes related to a specific project.
+- Summarize common conclusions after reading a set of articles.
+- Rewrite the troubleshooting process as a team document.
+- Consolidate scattered ideas into a blog draft.
+- Add a table of contents, tags, citations, and next steps to existing notes.
+
+The key point here isn't that "AI can write Markdown," but rather that Markdown allows people and agents to share the same knowledge assets.
+
+### Dual Chains Enable Knowledge to Be Connected
+
+Obsidian's linking system is well-suited for long-term content accumulation.
+
+For example, suppose you have a note titled `Agent Loop`, another titled `工具调用机制`, and yet another titled `Agent 与 Obsidian 工作流`. They don’t need to be included in a single, massive document; they just need to link to each other.
+
+When the Agent reads these notes, it doesn’t just receive a piece of text—it receives a knowledge network:
+
+```text
+[[Agent Loop]]
+    -> [[工具调用机制]]
+    -> [[长期记忆]]
+    -> [[Obsidian 工作流]]
+    -> [[博客输出流程]]
+```
+
+People are well-suited for browsing the web, while agents are well-suited for searching and reorganizing information on the web. The two complement each other perfectly.
+
+### Local Files: Make Knowledge Your Own
+
+This point is often underestimated.
+
+If all knowledge were confined to a single online product, you could certainly use it, but it would be difficult to have complete control over it. Export formats, synchronization policies, search capabilities, and automation capabilities are all subject to the platform’s limitations.
+
+Obsidian's local file model makes knowledge more like a code repository: you can back it up, search it, process it with scripts, migrate it, and, if necessary, have the Agent manipulate it directly.
+
+For a personal knowledge base, this level of control is very important.
+
+## What Should the Agent Do in This Scenario?
+
+An agent shouldn't just be an "automatic note-taking machine." If you simply copy and paste every chat verbatim into Obsidian, your knowledge base will quickly turn into yet another dumping ground for chat logs.
+
+A more reasonable division of labor would be:
+
+```text
+Agent：提炼、归纳、连接、改写、校验
+Obsidian：保存、组织、回看、沉淀、复用
+人：判断、确认、取舍、命名、建立边界
+```
+
+In other words, the greatest value of an agent isn't that it saves everything for you, but that it takes care of the tedious work in between.
+
+### Extracting Knowledge from Conversations
+
+A technical discussion often involves a lot of process-related information. For example:
+
+- What were the initial hypotheses?
+- Which possibilities were ruled out along the way?
+- Which field or code path was ultimately identified as the source of the issue?
+- How can this issue be quickly verified next time?
+- Which conclusions are definitive, and which are merely tentative assumptions?
+
+It's exhausting to write summaries by hand, so people often can't be bothered to do it. Agent can organize these processes into structured notes:
+
+```markdown
+## 背景
+
+这次问题发生在什么场景。
+
+## 现象
+
+用户看到什么，系统日志里有什么。
+
+## 排查路径
+
+1. 先看了哪里。
+2. 排除了什么。
+3. 最终证据是什么。
+
+## 结论
+
+真正原因是什么。
+
+## 下次复用
+
+再遇到类似问题时，优先查哪些字段、日志、接口。
+```
+
+Notes like these will be useful next time. They aren’t just chat logs—they’re a distillation of experience.
+
+### Recovering Context from Notes
+
+Another benefit of the Agent is that it helps you regain context.
+
+For example, suppose you return to a project a month later and can only remember that “we seemed to have discussed why this API couldn’t be deployed to the commerce platform.” In that case, instead of sifting through a pile of chat logs, you can have an agent search for the relevant notes in Obsidian.
+
+Ideally, the Agent should return not a list of search results, but a curated context:
+
+- Key conclusions from previous discussions.
+- Relevant fields and business requirements.
+- Which assumptions have already been validated by the database or code.
+- Which points were still undecided at the time.
+- Where to pick up from for the current task.
+
+This is the value of Obsidian as external memory: it allows the Agent to avoid having to start from scratch every time.
+
+### Turning Knowledge into Output
+
+The content in Obsidian is usually written for myself, whereas blog posts, team documents, and requirement specifications are written for others. These are not the same style of writing.
+
+Agents are well-suited to handle the work of the "rewriting layer."
+
+For example, a set of project troubleshooting notes could be rewritten as:
+
+- Internal team post-mortem.
+- API process documentation.
+- Personal operating manual.
+- Blog post for readers.
+- Requirements clarification document for product or business teams.
+
+The same body of knowledge, when rewritten in different ways, can be applied to different contexts.
+
+This is also where I believe the combination of Agent and Obsidian is most productive: **Obsidian preserves the original thoughts, while Agent is responsible for reorganizing and rephrasing them according to the target scenario.**
+
+## A More Everyday Example
+
+Suppose you’ve just finished a project meeting and all you have is a set of meeting minutes:
+
+```text
+今天讨论了新功能的上线节奏。大家担心一次性全量发布风险太高，
+所以决定先灰度一部分用户。后续需要补充回滚方案、监控指标和通知文案。
+```
+
+If you simply copy this passage into your notes, it will quickly become an isolated entry. When you look back at it later, you may have to reassess: What exactly was decided at this meeting? What still needs to be done? How does this relate to the previous release specifications?
+
+At this point, the Agent can first organize it into a version that is better suited for storage:
+
+```markdown
+## 背景
+
+新功能准备上线，但团队担心一次性全量发布风险过高。
+
+## 已确认结论
+
+- 采用灰度发布，而不是直接全量发布。
+- 灰度范围先覆盖一部分用户。
+
+## 后续行动
+
+- 补充回滚方案。
+- 明确监控指标。
+- 准备通知文案。
+
+## 相关链接
+
+- [[发布流程]]
+- [[灰度策略]]
+- [[线上回滚预案]]
+```
+
+Once you save it to Obsidian, it’s no longer just a set of meeting notes—it becomes a searchable, linkable, and reusable work asset. The next time you need to write a release plan, you can have the Agent read this note and the related links first, and then generate a more comprehensive draft of the plan.
+
+The key point in this example isn't how complex the automation is, but rather that the division of roles has become clearer: the raw information comes from actual work, the Agent is responsible for organizing it, Obsidian is responsible for storing it, and the old knowledge is retrieved for the next task.
+
+## A Practical Workflow
+
+A workflow that you can truly stick with over the long term must not be too complicated. My advice is to start with a minimal closed loop.
+
+### Step 1: Have the Agent Participate in Real-World Tasks
+
+Don't take notes just for the sake of taking notes. First, have the Agent participate in real tasks, such as:
+
+- Troubleshoot a production issue.
+- Review a project's codebase.
+- Map out a business process.
+- Write a technical blog post.
+- Summarize a meeting discussion.
+
+Real knowledge is gained only through real-world tasks.
+
+### Step 2: Have the Agent generate a “saveable version”
+
+At the end of the task, do not save the entire chat history directly; instead, have the Agent generate a version that can be saved.
+
+You can use this prompt:
+
+```text
+请把这次讨论整理成一篇 Obsidian 笔记。
+要求：
+1. 只保留已确认的事实和结论。
+2. 区分背景、证据、结论、后续行动。
+3. 不保留无效尝试，除非它能帮助下次排查。
+4. 给出适合的标题、标签和相关链接建议。
+```
+
+The key to this step is filtering. Not every conversation is worth including in the knowledge base.
+
+### Step 3: Export to Obsidian and Preserve the Structure
+
+When taking notes, use a consistent organizational structure rather than just piling all your notes into a single folder.
+
+You can design it to suit your own work style. For example:
+
+```text
+1. Input/
+  学习笔记/
+  项目排查/
+  临时想法/
+
+2. Areas/
+  工作流/
+  AI Agent/
+  技术架构/
+
+3. Knowledge/
+  方法论/
+  长期复用手册/
+```
+
+The table of contents doesn't have to be perfect from the start, but it should be clear enough for both you and the agent to understand.
+
+### Step 4: For Follow-Up Tasks, Start by Searching Through Old Notes
+
+The real change will happen next time.
+
+The next time you tackle a similar task, have the Agent check Obsidian first, then start the new task:
+
+```text
+请先从我的 Obsidian 中找一下和这个主题相关的历史笔记，
+总结已有结论、未解决问题和可以复用的路径。
+```
+
+This way, the knowledge base isn't just an archive—it actively feeds back into the workflow.
+
+### Step 5: Turn Your Reflections into Output
+
+Once a topic has been developed to a certain extent, the Agent can rewrite it as an external output.
+
+For example:
+
+```text
+请基于这些 Obsidian 笔记，改写成一篇博客。
+要求：
+1. 不要照搬笔记结构。
+2. 面向没有上下文的读者重新组织。
+3. 用一个完整故事串起来。
+4. 保留方法论，但删除内部敏感细节。
+```
+
+This step allows your knowledge to grow exponentially. You’re not starting from a blank page every time; instead, you’re building upon your existing understanding to refine your expression.
+
+## The Most Important Rule: Only Verified Knowledge Goes into Obsidian
+
+The most common mistake when integrating Agent with Obsidian is “over-automation.”
+
+The solution that seems easiest is to automatically export the entire chat history to Obsidian after each conversation. It’s great in the short term, but terrible in the long run.
+
+Because the knowledge base will be filled with these things:
+
+- Speculations that have already been disproved.
+- Unverified assumptions.
+- Noise in the process.
+- Repetitive context.
+- Temporary information that was meaningful only at the time.
+
+Over time, when the agent reads this content again, it will mistake noise for knowledge and guesses for facts.
+
+So I’d recommend a simple principle:
+
+> Obsidian only saves verified knowledge; chat logs are used only as raw material.
+
+This statement may sound conservative, but it determines whether the knowledge base can remain healthy in the long run.
+
+The agent can help you organize this, but a person should verify it in the end:
+
+- Is this conclusion really valid?
+- Is there any evidence to support it?
+- Is it worth keeping long-term?
+- In which folder would it be easiest to reuse?
+- Which old notes should I link to?
+
+People don't need to do all the physical labor, but they do need to retain the ability to make decisions.
+
+## An agent isn't a second brain, and neither is Obsidian
+
+Many tools like to talk about a “second brain,” but I think a more accurate way to put it is this: a second brain isn’t a single tool, but rather a set of working mechanisms.
+
+Under this mechanism:
+
+- Obsidian is long-term storage.
+- Agent provides processing and retrieval capabilities.
+- Markdown serves as a common interface.
+- Links represent knowledge relationships.
+- Human judgment serves as quality control.
+
+If any part is missing, it is incomplete.
+
+With just Obsidian and no Agent, knowledge tends to lie dormant. You’ve certainly written a lot of notes, but when you need to use them, you still have to search through them, read them, and organize them yourself.
+
+With just the Agent and no Obsidian, knowledge tends to fade away. You’ve certainly completed many conversations, but you’ll still have to explain the background all over again next time.
+
+Once these two are combined, the ideal scenario is:
+
+```text
+Agent 让知识流动起来。
+Obsidian 让知识沉淀下来。
+人决定哪些知识值得留下。
+```
+
+## How would I get started?
+
+If I were to build this workflow from scratch, I wouldn’t start with complex automation right away, nor would I dive into researching a bunch of plugins. Instead, I’d spend five minutes getting a minimal working prototype up and running.
+
+First, create the simplest Vault in Obsidian, starting with just four folders:
+
+```text
+Inbox/
+Projects/
+Knowledge/
+Outputs/
+```
+
+`Inbox` for temporary notes, `Projects` for project processes, `Knowledge` for long-term methods and conclusions, and `Outputs` for content to be turned into blog posts, documents, or proposals. This structure doesn’t have to be perfect—just good enough for now.
+
+Second, start by creating a real note rather than just imagining a knowledge system. You can begin with the most specific thing that happened today:
+
+```text
+请把我今天这次讨论整理成一篇 Obsidian 笔记。
+只保留确认后的结论、后续行动和下次可复用的信息。
+```
+
+Third, provide the Agent with a fixed “writing standard”:
+
+- Make sure the title is searchable.
+- In the first paragraph, clearly state what problem this note addresses.
+- Keep conclusions and evidence separate.
+- Clearly label any content that is uncertain.
+- Link to related notes.
+
+Fourth, after completing each real-world task, ask only one question:
+
+```text
+这次有没有值得下次复用的知识？
+```
+
+If there is one, have Agent organize it and write it to Obsidian. If there isn't, don't save it.
+
+This is an important point. A knowledge base isn't necessarily better the larger it is; rather, it's better the more reusable it is.
+
+## Summary
+
+The integration of Agent and Obsidian isn’t about “having AI automatically keep track of everything for me,” but rather about establishing a more reliable knowledge cycle:
+
+```text
+真实任务产生经验
+Agent 提炼经验
+Obsidian 保存经验
+下一次任务复用经验
+Agent 再把经验改写成新的输出
+```
+
+Once this cycle gets going, Obsidian will no longer be just a quiet repository for notes, but will become a long-term knowledge base that Agents can draw upon.
+
+What is truly valuable is not a particular tool, but this division of labor:
+
+- Agents are responsible for making knowledge easier to use.
+- Obsidian is responsible for storing knowledge reliably over the long term.
+- People are responsible for determining what constitutes true knowledge.
+
+Only when these three elements work together will your personal knowledge base evolve from “I’ve written a lot of things” to “These things will actually help me in my next project.”

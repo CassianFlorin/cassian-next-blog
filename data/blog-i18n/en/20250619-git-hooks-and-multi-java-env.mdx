@@ -1,0 +1,263 @@
+---
+title: "Resolving Issues with Git Hooks in Multi-JDK Environments"
+date: '2025-06-19 22:00:00'
+lastmod: '2026-09-16'
+tags:
+  - Git
+  - 开发习惯
+  - 解决方案
+  - GitHub
+  - Tools
+  - Guide
+  - Java
+  - JavaScript
+summary: "The company uses a Git commit hook to perform pre-commit validation, but the presence of multiple JDKs on the local machine (up to JDK 22) prevents the Maven Spotless plugin from running properly."
+tldr: "When multiple JDKs coexist, Maven Spotless will throw an `InvocationTargetException` due to a higher-version JDK. The solution is to install the required version using SDKMAN, place a `.sdkmanrc` file in the project root directory, and load SDKMAN at the beginning of the pre-commit hook to lock down the Java version used for building."
+draft: false
+sourceHash: '5d5cf351f8a984794f42c4dff3cf38eb3592c0d4207946ea71970e0b25526b92'
+translatedAt: '2026-10-15T07:37:50.043Z'
+---
+
+# Git Hooks and Solutions for Multi-JDK Environments
+
+## 🧠 The Cause
+
+The company uses a Git commit hook to perform pre-commit validation on the commit content and code before a Git commit is made.
+I have multiple JDK versions installed locally, with JDK 22 being the latest, so I encounter issues when trying to run the Spotless plugin with Maven.
+
+<ErrorDisplay
+  title="Maven Spotless 插件执行失败"
+  error="java.lang.reflect.InvocationTargetException: 'com.sun.tools.javac.tree.JCTree com.sun.tools.javac.tree.JCTree$JCImport.getQualifiedIdentifier()'"
+  code="1"
+  path="Maven spotless plugin execution"
+  details={[
+    'JDK 版本不兼容导致的问题',
+    'Spotless 插件与高版本 JDK 存在兼容性问题',
+    'Git hooks 执行失败，阻止代码提交',
+  ]}
+/>
+
+Example of an error log:
+
+```bash
+[ERROR] Failed to execute goal com.diffplug.spotless:spotless-maven-plugin:2.30.0:apply(default-cli) on project qnvip-referral-client: Execution default-cli of goal com.diffplug.spotless:spotless-maven-plugin:2.30.0:apply failed: java.lang.reflect.InvocationTargetException: 'com.sun.tools.javac.tree.JCTree com.sun.tools.javac.tree.JCTree$JCImport.getQualifiedIdentifier()' -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR]
+[ERROR] After correcting the problems, you can resume the build with the command
+[ERROR]   mvn <args> -rf :qnvip-referral-client
+husky - pre-commit script failed (code 1)
+```
+
+## 💼 Solution
+
+<Callout emoji="💡">
+  Since some people may have multiple JDKs installed, just like me, and based on this situation and the information I’ve found, I recommend using
+  SDKMAN to manage Java versions.
+</Callout>
+
+## ⚙️ Install SDKMAN
+
+Refer to the [SDKMAN Installation and Configuration Guide](/blog/20250619-install-sdkman), which provides detailed instructions for installation on both Mac and Windows systems.
+
+<Callout emoji="📖">
+  If you haven't installed SDKMAN yet, please read the installation guide before proceeding with the configuration steps in this article.
+</Callout>
+
+## ⚙️ Install the required JDK
+
+### View Available Java Versions
+
+Run the following command to see which Java versions are currently available:
+
+```bash
+sdk list java
+```
+
+### Install the JDK required for the project
+
+This environment is currently using JDK 8. Once you've found the version you need, run the following command:
+
+```bash
+sdk install java 8.0.452-amzn
+```
+
+### Verify the Installation
+
+After installation, verify the Java version:
+
+```bash
+java -version
+```
+
+Expected Output:
+
+```bash
+openjdk version "1.8.0_452"
+OpenJDK Runtime Environment (build 1.8.0_452-b08)
+OpenJDK 64-Bit Server VM (build 25.452-b08, mixed mode)
+```
+
+## 🔧 Configuring SDKMAN in Your Project
+
+### Project Directory Structure
+
+Assume the project directory structure is as follows:
+
+```plaintext
+your-project/
+├── .husky/
+│   └── pre-commit
+├── .sdkmanrc # sdkman配置
+├── mvnw
+├── mvnw.cmd
+├── pom.xml
+├── package.json
+├── lint-staged.config.js
+└── ...
+```
+
+### Create the .sdkmanrc configuration file
+
+You need to create a file named `.sdkmanrc` in the project's root directory and enter the JDK information in it:
+
+```plaintext
+# This file is used by SDKMAN to automatically switch to the correct Java version
+# when entering this project directory
+#
+# 注意：
+# 1. 此文件需要 SDKMAN 支持才能生效
+# 2. 如果您没有安装 SDKMAN，请参考 [SDKMAN 安装与配置指南](/blog/20250619-install-sdkman)
+# 3. Windows 用户需要在 Git Bash 或类似的 Unix-like 环境中使用 SDKMAN
+# 4. 如果您使用的是 IDE（如 IntelliJ IDEA），请确保在项目设置中也配置了正确的 JDK
+#
+# Note:
+# 1. This file requires SDKMAN to take effect
+# 2. If you haven't installed SDKMAN, please refer to the installation guide
+# 3. Windows users need to use SDKMAN in Git Bash or similar Unix-like environment
+# 4. If you're using an IDE (like IntelliJ IDEA), make sure to configure the correct JDK in project settings
+
+java=8.0.452-amzn
+```
+
+## 🔧 Configure the pre-commit hook
+
+### Complete pre-commit script
+
+Here is a complete pre-commit configuration file that supports cross-platform use:
+
+```bash
+#!/bin/sh
+# Check if running on Windows or Unix-like system
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    # Windows environment
+    IS_WINDOWS=true
+    SDKMAN_DIR="$USERPROFILE/.sdkman"
+    SDKMAN_INIT="$SDKMAN_DIR/bin/sdkman-init.sh"
+    ;;
+  *)
+    # Unix-like environment (macOS, Linux, etc.)
+    IS_WINDOWS=false
+    SDKMAN_DIR="$HOME/.sdkman"
+    SDKMAN_INIT="$SDKMAN_DIR/bin/sdkman-init.sh"
+    ;;
+esac
+
+# Check if .sdkmanrc file exists and SDKMAN is installed
+if [ -f .sdkmanrc ] && [ -f "$SDKMAN_INIT" ]; then
+  echo "SDKMAN detected, activating project Java version"
+  # Load sdkman
+  source "$SDKMAN_INIT"
+
+  # Execute sdkman commands
+  sdk env
+else
+  echo "SDKMAN not detected or .sdkmanrc not found. Using system Java version."
+  # Print current Java version for reference
+  if command -v java >/dev/null 2>&1; then
+    echo "Current Java version: $(java -version 2>&1 | head -n 1)"
+  else
+    echo "Warning: Java not found in PATH"
+  fi
+fi
+
+# Execute other pre-commit hooks
+if [ -f "$HOME"/qnvip.gitconfig.sh ]; then
+  bash "$HOME"/qnvip.gitconfig.sh
+fi
+
+npx --no-install node .husky/scripts/modify-author-from-file.js
+npx lint-staged --verbose --debug
+```
+
+### Script Feature Description
+
+<Callout emoji="🔍">
+  Main features of this script: 1. **Cross-platform detection**: Automatically identifies Windows and Unix-like systems 2.
+  **SDKMAN Integration**: Automatically loads SDKMAN and switches to the Java version specified by the project 3. **Error Handling**:
+  Displays the current Java version information when SDKMAN is unavailable 4. **Other Hooks**: Executes additional Git
+  hooks and code checks
+</Callout>
+
+## ✅ Verify the configuration
+
+### Testing a Git Commit
+
+Once the configuration is complete, try committing once to verify that it is correct:
+
+```bash
+git add .
+git commit -m "test: 验证 SDKMAN 配置"
+```
+
+If you see output similar to the following, it means the configuration was successful:
+
+```bash
+SDKMAN detected, activating project Java version
+Using java version 8.0.452-amzn in this shell.
+```
+
+### Troubleshooting Common Issues
+
+<ErrorDisplay
+  title="SDKMAN 未检测到"
+  error="SDKMAN not detected or .sdkmanrc not found"
+  code="0"
+  path="Project directory"
+  details={['SDKMAN 未正确安装', '.sdkmanrc 文件不存在', '需要先安装 SDKMAN']}
+/>
+
+**Solution**: Refer to the [SDKMAN Installation and Configuration Guide](/blog/20250619-install-sdkman)
+
+<ErrorDisplay
+  title="Java 版本仍然不匹配"
+  error="Java version mismatch in Git hooks"
+  code="1"
+  path="Git hooks execution"
+  details={['SDKMAN 未正确加载', '环境变量配置问题', '需要检查 shell 配置']}
+/>
+
+**Solution**: Ensure that SDKMAN is loaded correctly in the shell configuration file
+
+## 🔗 Related Content
+
+### Related Blog Posts
+
+- [SDKMAN Installation and Configuration Guide](/blog/20250619-install-sdkman) - Detailed steps for installing and configuring SDKMAN
+- [Git Hooks and Node.js Environment Issues](/blog/20250619-git-hooks-and-node-env) - Resolving Node.js environment issues in Git Hooks
+- [Git Configuration Management for Multiple Environments](/blog/20250619-multi-environmental-gitconfig) - Managing Git configurations across multiple environments
+
+### Related Tools
+
+- [Husky](https://typicode.github.io/husky/) - Git hooks tool
+- [Lint-staged](https://github.com/okonet/lint-staged) - Runs a linter on staged files
+- [Maven Spotless](https://github.com/diffplug/spotless) - Code formatting plugin
+
+---
+
+<Callout emoji="🎉">
+  Congratulations! You have now successfully configured SDKMAN to resolve the issue of multiple JDK
+  environments in Git hooks. This will ensure that your team uses a consistent Java environment and avoid version conflicts.
+</Callout>

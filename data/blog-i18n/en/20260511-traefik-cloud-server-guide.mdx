@@ -1,0 +1,1040 @@
+---
+title: "Tutorial on Configuring Traefik on a Cloud Server"
+date: 2026-05-11
+lastmod: '2026-08-04'
+tags:
+  - traefik
+  - docker
+  - reverse-proxy
+  - devops
+summary: "Use Traefik, Docker Compose, and Let's Encrypt to set up a unified entry point on a cloud server, enabling multiple web services to be quickly integrated via domain names, HTTPS, and container labels."
+tldr: "By placing Traefik at the entry point of the cloud server to centrally handle reverse proxying, Let's Encrypt certificates, and routing, application containers can be integrated simply by joining the same Docker network and using labels to specify their domain names and ports. The server only exposes ports 22, 80, and 443, so there is no need to modify the Nginx configuration when adding new services."
+draft: false
+howto:
+  name: 在云服务器上用 Docker Compose 部署 Traefik
+  description: >-
+    把 Traefik 作为云服务器的统一 HTTPS 入口，负责反向代理、Let's Encrypt 证书签发
+    和路由分发，业务容器通过 Docker labels 接入。
+  steps:
+    - name: 准备服务器环境
+      text: >-
+        更新系统、安装 Docker 与 Docker Compose，并配置防火墙只开放 22、80、443。
+        不要把 Dashboard 的 8080 端口开放到公网。
+      url: '#准备服务器环境'
+    - name: 配置域名解析
+      text: >-
+        在 DNS 服务商添加 A 记录把域名指向服务器公网 IP，用 dig 域名 +short 确认解析
+        已生效再继续。
+      url: '#配置域名解析'
+    - name: 创建 Traefik 工作目录
+      text: 建立存放 compose 文件、静态配置和 acme.json 证书文件的目录结构。
+      url: '#创建-traefik-工作目录'
+    - name: 生成 Dashboard 登录密码
+      text: 用 htpasswd 生成 Basic Auth 凭据，供 Dashboard 路由的中间件使用。
+      url: '#生成-dashboard-登录密码'
+    - name: 编写 Traefik 配置
+      text: >-
+        选择 HTTP-01（适合大多数入门场景）或 DNS-01（适合 Cloudflare 和泛域名证书）
+        证书挑战方式，配置 entrypoints、certificate resolver 和 Docker provider。
+      url: '#编写-traefik-配置'
+    - name: 启动 Traefik
+      text: 用 docker compose up -d 启动，并通过 docker logs -f traefik 确认没有报错。
+      url: '#启动-traefik'
+    - name: 用 whoami 验证代理链路
+      text: >-
+        先接入官方 whoami 测试容器，确认域名解析、证书签发和路由转发整条链路都通了，
+        再接自己的服务。
+      url: '#用-whoami-验证代理链路'
+    - name: 接入自己的业务服务
+      text: >-
+        让业务容器加入同一个 traefik 网络，用 labels 声明 Host 规则、entrypoint、
+        证书解析器和容器内部端口即可被统一代理。
+      url: '#接入自己的业务服务'
+faq:
+  - q: Traefik 证书一直签发失败怎么办
+    a: >-
+      通常是域名没有解析到服务器、80 端口未开放，或者 DNS 还没生效。依次检查
+      dig 域名 +short 的返回、云服务商安全组，以及 ufw status。
+  - q: 访问域名返回 502 是什么原因
+    a: >-
+      Traefik 找不到业务容器端口或网络不通。检查 labels 里的
+      loadbalancer.server.port 是否填的是容器内部端口，以及容器有没有加入 traefik 网络。
+  - q: 访问域名返回 404 怎么排查
+    a: >-
+      多半是容器没有设置 traefik.enable=true，或者 Host 规则写错了。对照容器 labels
+      和 Traefik Dashboard 里的 Routers 检查。
+  - q: Traefik Dashboard 可以直接开放到公网吗
+    a: >-
+      不可以。不要开启 --api.insecure=true，也不要把 8080 端口开放到公网。Dashboard
+      应该通过域名、HTTPS 和 Basic Auth 访问。
+sourceHash: '1f019a62f0618b9d7ed5ceae321e486ce4545de1959b47a14f4ff8360569b738'
+translatedAt: '2026-10-15T07:39:02.837Z'
+---
+
+# Tutorial on Configuring Traefik on a Cloud Server: Setting Up a Reusable HTTPS Entry Point with Docker Compose
+
+If you have a cloud server and plan to gradually deploy a blog, an admin panel, an API, a file service, and a WebSocket service on it, you’ll eventually run into a problem: each service requires you to manage its own ports, domain names, HTTPS certificates, and forwarding rules, which can quickly become a mess to maintain.
+
+My approach is to place Traefik at the server’s entry point, where it handles reverse proxying, HTTPS certificates, and traffic routing. Business containers simply need to be added to the same Docker network and use labels to specify their domain names, entry points, certificate resolvers, and internal ports—after which they can be proxied uniformly.
+
+This article isn't just a list of commands; it shares a reusable approach for deploying Traefik on cloud servers. You can start by using the `whoami` service to test the connection, then gradually integrate your own services, such as Spring Boot, Node.js, Nginx, WebSocket, gRPC, and Gitea SSH.
+
+## What Situations Is It Suitable For?
+
+This article assumes you already meet the following requirements:
+
+- The cloud server has a public IP address.
+- A domain name has been purchased, and DNS records can be configured.
+- Services are deployed on the server using Docker Compose.
+- I want to use Let's Encrypt to automatically issue HTTPS certificates.
+- Services primarily run as Docker containers.
+
+Here's what the final result looks like:
+
+```text
+用户浏览器
+    |
+    | HTTPS / TCP
+    v
+Traefik
+    |
+    | Docker network: traefik
+    v
+业务容器：blog / api / file / whoami / gitea ...
+```
+
+The core value of Traefik lies in the fact that there is only one entry point, and the rules follow the containers. In the future, when adding new services, there’s no need to modify a bunch of Nginx configuration files—you simply need to add labels to the containers.
+
+> [!tip]
+> If you're just running a service temporarily, Nginx can certainly handle it. But if you're continuously adding services to a server, Traefik's Docker provider will make future maintenance much easier.
+
+## Overall Plan
+
+This plan is divided into several parts:
+
+1. The server only opens the necessary ports: `22`, `80`, `443`, and TCP service ports as needed.
+2. Traefik uses the Docker provider to read container labels.
+3. All proxied containers are added to the same external Docker network: `traefik`.
+4. HTTPS certificates are automatically issued by Let's Encrypt.
+5. The dashboard is accessible only via domain name, HTTPS, and Basic Auth.
+6. Cloudflare users can opt for the DNS-01 challenge to easily enable Cloudflare proxy and wildcard certificates.
+
+I recommend placing Traefik in `/opt/traefik`:
+
+```text
+/opt/traefik
+├── .env
+├── docker-compose.yml
+├── whoami.yml
+└── letsencrypt
+    └── acme.json
+```
+
+`acme.json` stores certificate information, while `.env` stores sensitive configurations such as domain names, email addresses, Basic Auth, and Cloudflare tokens.
+
+## Setting Up the Server Environment
+
+First, log in to the server:
+
+```bash
+ssh root@你的服务器IP
+```
+
+Update the system and install commonly used tools:
+
+```bash
+apt update && apt upgrade -y
+apt install -y curl vim ufw apache2-utils dnsutils
+```
+
+If Docker is not yet installed on the server, you can use the official installation script:
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+Verify that Docker and Compose are available:
+
+```bash
+docker version
+docker compose version
+```
+
+Next, configure the firewall:
+
+```bash
+ufw allow OpenSSH
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw enable
+ufw status
+```
+
+> [!warning]
+> Do not expose the Traefik Dashboard's `8080` port directly to the public internet. The Dashboard should be accessed via a domain name, HTTPS, and Basic Authentication.
+
+## Configuring Domain Name Resolution
+
+First, add an A record in your DNS provider to point the domain name to the server's public IP address.
+
+| Record Name                | Type | Value            |
+| --------------------- | ---- | ------------- |
+| `traefik.example.com` | A    | Server Public IP |
+| `whoami.example.com`  | A    | Server Public IP |
+| `app.example.com`     | A    | Server Public IP |
+
+Replace `example.com` with your own domain name.
+
+Verify whether the resolution is in effect:
+
+```bash
+dig traefik.example.com +short
+dig whoami.example.com +short
+```
+
+Return to the server's public IP address and then continue configuring Traefik.
+
+### Cloudflare Users' Choices
+
+If your domain is hosted on Cloudflare, you can first connect the domain to Cloudflare and then manage the DNS records using Cloudflare.
+
+Basic Process:
+
+1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/).
+2. Click `Add a domain` and enter your root domain, such as `example.com`.
+3. Select a plan; the free plan is usually sufficient.
+4. Verify that the DNS records detected by Cloudflare are correct.
+5. Go to your domain registrar’s control panel and change the NS servers to the two nameservers provided by Cloudflare.
+6. Wait until Cloudflare shows the domain status as `Active`.
+
+The recommended DNS records are as follows:
+
+| Record Name    | Type | Value            | Proxy Status        |
+| --------- | ---- | ------------- | ------------------- |
+| `traefik` | A    | Server Public IP | DNS only or Proxied |
+| `whoami`  | A    | Server Public IP | DNS only or Proxied |
+| `app`     | A    | Server Public IP | DNS only or Proxied |
+
+If you are using the HTTP-01 certificate challenge, we recommend setting it to `DNS only` during the debugging phase to prevent the Cloudflare proxy layer from interfering with troubleshooting. Once the certificate has been issued and the access connection is working properly, enable `Proxied` as needed.
+
+Cloudflare recommends setting the SSL/TLS mode to:
+
+```text
+SSL/TLS -> Overview -> Full (strict)
+```
+
+`Full (strict)` Requires that the origin server also have a valid certificate, which is provided by Traefik and Let's Encrypt.
+
+## Create a Traefik working directory
+
+```bash
+mkdir -p /opt/traefik/letsencrypt
+cd /opt/traefik
+touch letsencrypt/acme.json
+chmod 600 letsencrypt/acme.json
+```
+
+The permissions for `acme.json` must be tightened; otherwise, Traefik may refuse to use this file.
+
+Next, create an external Docker network:
+
+```bash
+docker network create traefik
+```
+
+Any service containers that need to be proxied by Traefik in the future should be added to this network.
+
+## Generate a Dashboard Login Password
+
+You must enable Basic Auth for the Dashboard. First, generate a username and password:
+
+```bash
+htpasswd -nbB admin '换成你的强密码'
+```
+
+The command will output something like:
+
+```text
+admin:$2y$05$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+In Docker Compose labels, `<keep id="___KEEP_46___">___KEEP_46___</keep># Tutorial on Configuring Traefik on a Cloud Server: Setting Up a Reusable HTTPS Entry Point with Docker Compose
+
+If you have a cloud server and plan to gradually deploy a blog, an admin panel, an API, a file service, and a WebSocket service on it, you’ll eventually run into a problem: each service requires you to manage its own ports, domain names, HTTPS certificates, and forwarding rules, which can quickly become a mess to maintain.
+
+My approach is to place Traefik at the server’s entry point, where it handles reverse proxying, HTTPS certificates, and traffic routing. Business containers simply need to be added to the same Docker network and use labels to specify their domain names, entry points, certificate resolvers, and internal ports—after which they can be proxied uniformly.
+
+This article isn't just a list of commands; it shares a reusable approach for deploying Traefik on cloud servers. You can start by using the `whoami` service to test the connection, then gradually integrate your own services, such as Spring Boot, Node.js, Nginx, WebSocket, gRPC, and Gitea SSH.
+
+## What Situations Is It Suitable For?
+
+This article assumes you already meet the following requirements:
+
+- The cloud server has a public IP address.
+- A domain name has been purchased, and DNS records can be configured.
+- Services are deployed on the server using Docker Compose.
+- I want to use Let's Encrypt to automatically issue HTTPS certificates.
+- Services primarily run as Docker containers.
+
+Here's what the final result looks like:
+
+```text
+用户浏览器
+    |
+    | HTTPS / TCP
+    v
+Traefik
+    |
+    | Docker network: traefik
+    v
+业务容器：blog / api / file / whoami / gitea ...
+```
+
+The core value of Traefik lies in the fact that there is only one entry point, and the rules follow the containers. In the future, when adding new services, there’s no need to modify a bunch of Nginx configuration files—you simply need to add labels to the containers.
+
+> [!tip]
+> If you're just running a service temporarily, Nginx can certainly handle it. But if you're continuously adding services to a server, Traefik's Docker provider will make future maintenance much easier.
+
+## Overall Plan
+
+This plan is divided into several parts:
+
+1. The server only opens the necessary ports: `22`, `80`, `443`, and TCP service ports as needed.
+2. Traefik uses the Docker provider to read container labels.
+3. All proxied containers are added to the same external Docker network: `traefik`.
+4. HTTPS certificates are automatically issued by Let's Encrypt.
+5. The dashboard is accessible only via domain name, HTTPS, and Basic Auth.
+6. Cloudflare users can opt for the DNS-01 challenge to easily enable Cloudflare proxy and wildcard certificates.
+
+I recommend placing Traefik in `/opt/traefik`:
+
+```text
+/opt/traefik
+├── .env
+├── docker-compose.yml
+├── whoami.yml
+└── letsencrypt
+    └── acme.json
+```
+
+`acme.json` stores certificate information, while `.env` stores sensitive configurations such as domain names, email addresses, Basic Auth, and Cloudflare tokens.
+
+## Setting Up the Server Environment
+
+First, log in to the server:
+
+```bash
+ssh root@你的服务器IP
+```
+
+Update the system and install commonly used tools:
+
+```bash
+apt update && apt upgrade -y
+apt install -y curl vim ufw apache2-utils dnsutils
+```
+
+If Docker is not yet installed on the server, you can use the official installation script:
+
+```bash
+curl -fsSL https://get.docker.com | sh
+```
+
+Verify that Docker and Compose are available:
+
+```bash
+docker version
+docker compose version
+```
+
+Next, configure the firewall:
+
+```bash
+ufw allow OpenSSH
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw enable
+ufw status
+```
+
+> [!warning]
+> Do not expose the Traefik Dashboard's `8080` port directly to the public internet. The Dashboard should be accessed via a domain name, HTTPS, and Basic Authentication.
+
+## Configuring Domain Name Resolution
+
+First, add an A record in your DNS provider to point the domain name to the server's public IP address.
+
+| Record Name                | Type | Value            |
+| --------------------- | ---- | ------------- |
+| `traefik.example.com` | A    | Server Public IP |
+| `whoami.example.com`  | A    | Server Public IP |
+| `app.example.com`     | A    | Server Public IP |
+
+Replace `example.com` with your own domain name.
+
+Verify whether the resolution is in effect:
+
+```bash
+dig traefik.example.com +short
+dig whoami.example.com +short
+```
+
+Return to the server's public IP address and then continue configuring Traefik.
+
+### Cloudflare Users' Choices
+
+If your domain is hosted on Cloudflare, you can first connect the domain to Cloudflare and then manage the DNS records using Cloudflare.
+
+Basic Process:
+
+1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/).
+2. Click `Add a domain` and enter your root domain, such as `example.com`.
+3. Select a plan; the free plan is usually sufficient.
+4. Verify that the DNS records detected by Cloudflare are correct.
+5. Go to your domain registrar’s control panel and change the NS servers to the two nameservers provided by Cloudflare.
+6. Wait until Cloudflare shows the domain status as `Active`.
+
+The recommended DNS records are as follows:
+
+| Record Name    | Type | Value            | Proxy Status        |
+| --------- | ---- | ------------- | ------------------- |
+| `traefik` | A    | Server Public IP | DNS only or Proxied |
+| `whoami`  | A    | Server Public IP | DNS only or Proxied |
+| `app`     | A    | Server Public IP | DNS only or Proxied |
+
+If you are using the HTTP-01 certificate challenge, we recommend setting it to `DNS only` during the debugging phase to prevent the Cloudflare proxy layer from interfering with troubleshooting. Once the certificate has been issued and the access connection is working properly, enable `Proxied` as needed.
+
+Cloudflare recommends setting the SSL/TLS mode to:
+
+```text
+SSL/TLS -> Overview -> Full (strict)
+```
+
+`Full (strict)` Requires that the origin server also have a valid certificate, which is provided by Traefik and Let's Encrypt.
+
+## Create a Traefik working directory
+
+```bash
+mkdir -p /opt/traefik/letsencrypt
+cd /opt/traefik
+touch letsencrypt/acme.json
+chmod 600 letsencrypt/acme.json
+```
+
+The permissions for `acme.json` must be tightened; otherwise, Traefik may refuse to use this file.
+
+Next, create an external Docker network:
+
+```bash
+docker network create traefik
+```
+
+Any service containers that need to be proxied by Traefik in the future should be added to this network.
+
+## Generate a Dashboard Login Password
+
+You must enable Basic Auth for the Dashboard. First, generate a username and password:
+
+```bash
+htpasswd -nbB admin '换成你的强密码'
+```
+
+The command will output something like:
+
+```text
+admin:$2y$05$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+In Docker Compose labels, . If you place the password hash in `.env` and enclose it in single quotes, you can preserve the original format:
+
+```dotenv
+TRAEFIK_BASIC_AUTH_USERS='admin:$2y$05$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+```
+
+## Writing a Traefik Configuration
+
+First, create `/opt/traefik/.env`:
+
+```dotenv
+TRAEFIK_IMAGE=traefik:v3.6
+TRAEFIK_DOMAIN=traefik.example.com
+ACME_EMAIL=你的邮箱@example.com
+TRAEFIK_BASIC_AUTH_USERS='admin:$2y$05$替换成你生成的密码哈希'
+```
+
+If you're using the Cloudflare DNS-01 challenge, add the following:
+
+```dotenv
+CF_DNS_API_TOKEN=替换成你的Cloudflare_API_Token
+```
+
+Restrict `.env` permissions:
+
+```bash
+chmod 600 /opt/traefik/.env
+```
+
+> [!warning] > Do not place `.env` in a public repository, and do not post the actual token in notes, group chats, or screenshots. Although Basic Auth hashes are not plaintext passwords, it is still recommended that you treat them as sensitive information.
+
+### HTTP-01 Version: Suitable for most entry-level scenarios
+
+If you aren't using Cloudflare, or if you just want to get the basic connection working first, you can use HTTP-01. This requires that port `80` on the server be accessible from the public internet.
+
+Create `/opt/traefik/docker-compose.yml`:
+
+```yaml
+services:
+  traefik:
+    image: ${TRAEFIK_IMAGE}
+    container_name: traefik
+    restart: unless-stopped
+    env_file:
+      - .env
+    command:
+      - '--api.dashboard=true'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--providers.docker.network=traefik'
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.websecure.address=:443'
+      - '--entrypoints.ssh.address=:2222'
+      - '--entrypoints.web.http.redirections.entrypoint.to=websecure'
+      - '--entrypoints.web.http.redirections.entrypoint.scheme=https'
+      - '--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}'
+      - '--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json'
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge=true'
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web'
+    ports:
+      - '80:80'
+      - '443:443'
+      - '2222:2222'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.traefik.rule=Host(`${TRAEFIK_DOMAIN}`)'
+      - 'traefik.http.routers.traefik.entrypoints=websecure'
+      - 'traefik.http.routers.traefik.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.traefik.service=api@internal'
+      - 'traefik.http.routers.traefik.middlewares=traefik-auth'
+      - 'traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH_USERS}'
+
+networks:
+  traefik:
+    external: true
+```
+
+Here are a few key points:
+
+- `exposedbydefault=false`: By default, no containers are exposed; you must explicitly add `traefik.enable=true`.
+- `providers.docker.network=traefik`: Tells Traefik to prioritize using this Docker network to access backend containers.
+- `web` and `websecure`: Correspond to `80` and `443`, respectively.
+- `entrypoints.web.http.redirections...`: Automatically redirects HTTP to HTTPS.
+- `api@internal`: Exposes Traefik’s own Dashboard as an internal service, then binds it to a domain name via the router.
+
+### DNS-01 Version: Compatible with Cloudflare and wildcard certificates
+
+If your domain is hosted on Cloudflare, we recommend using DNS-01. It has three advantages:
+
+- Certificate verification does not rely on the `80` port.
+- You can enable the Cloudflare proxy.
+- You can apply for a wildcard certificate, such as `*.example.com`.
+
+First, create a Cloudflare API token:
+
+1. Go to [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens).
+2. Click `Create Token`.
+3. You can choose the `Edit zone DNS` template or create a custom token.
+4. Permissions must include at least `Zone / Zone / Read` and `Zone / DNS / Edit`.
+5. Limit Zone Resources to the domain you want to manage, such as `example.com`.
+6. After creating the token, copy it and enter it into `CF_DNS_API_TOKEN` in `/opt/traefik/.env`.
+
+Then replace the commands related to the ACME challenge with DNS-01:
+
+```yaml
+command:
+  - '--api.dashboard=true'
+  - '--providers.docker=true'
+  - '--providers.docker.exposedbydefault=false'
+  - '--providers.docker.network=traefik'
+  - '--entrypoints.web.address=:80'
+  - '--entrypoints.websecure.address=:443'
+  - '--entrypoints.ssh.address=:2222'
+  - '--entrypoints.web.http.redirections.entrypoint.to=websecure'
+  - '--entrypoints.web.http.redirections.entrypoint.scheme=https'
+  - '--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}'
+  - '--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json'
+  - '--certificatesresolvers.letsencrypt.acme.dnschallenge=true'
+  - '--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare'
+  - '--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53'
+```
+
+If a service requires a wildcard certificate, you can add the following to the corresponding router:
+
+```yaml
+labels:
+  - 'traefik.http.routers.app.tls.domains[0].main=example.com'
+  - 'traefik.http.routers.app.tls.domains[0].sans=*.example.com'
+```
+
+> [!note]
+> Traefik's DNS-01 capabilities rely on Lego at the core. The Cloudflare provider supports `CF_DNS_API_TOKEN` and also supports splitting "Zone Read" and "DNS Edit" into two more granular permission tokens: `CF_ZONE_API_TOKEN` and `CF_DNS_API_TOKEN`.
+
+## Start Traefik
+
+```bash
+cd /opt/traefik
+docker compose up -d
+docker compose logs -f traefik
+```
+
+Then go to:
+
+```text
+https://traefik.example.com/dashboard/
+```
+
+If you can see the Basic Auth login screen and can view the Dashboard after logging in, it means the entry proxy is running successfully.
+
+> [!tip]
+> Certificate issuance may take a while on the first startup. When troubleshooting, check `docker compose logs -f traefik` first; do not restart the service too many times without checking, to avoid triggering Let's Encrypt's rate limit.
+
+## Verify the proxy chain using `whoami`
+
+Before officially launching a service, I usually start by deploying a test service called `whoami`. It’s simple enough to quickly verify that the domain name, certificate, routing, and Docker network are all working properly.
+
+Create `/opt/traefik/whoami.yml`:
+
+```yaml
+services:
+  whoami:
+    image: traefik/whoami
+    container_name: whoami
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.whoami.rule=Host(`whoami.example.com`)'
+      - 'traefik.http.routers.whoami.entrypoints=websecure'
+      - 'traefik.http.routers.whoami.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.whoami.loadbalancer.server.port=80'
+
+networks:
+  traefik:
+    external: true
+```
+
+Start the test service:
+
+```bash
+docker compose -f /opt/traefik/whoami.yml up -d
+```
+
+Verification:
+
+```bash
+curl -I https://whoami.example.com
+```
+
+A return value of `HTTP/2 200` or `HTTP/1.1 200 OK` indicates that the HTTPS proxy is functioning normally.
+
+## Integrating Your Own Business Services
+
+There are only three key points for integrating business services with Traefik:
+
+1. Join the `traefik` external network.
+2. Configure `traefik.enable=true`.
+3. Use labels to declare the domain name, entry point, certificate resolver, and container internal port.
+
+Minimal example:
+
+```yaml
+services:
+  app:
+    image: your-app:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.app.rule=Host(`app.example.com`)'
+      - 'traefik.http.routers.app.entrypoints=websecure'
+      - 'traefik.http.routers.app.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.app.loadbalancer.server.port=8080'
+
+networks:
+  traefik:
+    external: true
+```
+
+`loadbalancer.server.port=8080` refers to the port that the container listens on internally, not the host machine port. After integrating with Traefik, application containers typically no longer need to specify:
+
+```yaml
+ports:
+  - '8080:8080'
+```
+
+Unless this port really needs to be exposed directly, bypassing Traefik.
+
+## Common Service Integration Templates
+
+### Standard Web Services
+
+Spring Boot, Node.js, Nginx, front-end static sites, and admin dashboards can all use this type of template:
+
+```yaml
+services:
+  app:
+    image: your-app:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.app.rule=Host(`app.example.com`)'
+      - 'traefik.http.routers.app.entrypoints=websecure'
+      - 'traefik.http.routers.app.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.app.loadbalancer.server.port=8080'
+
+networks:
+  traefik:
+    external: true
+```
+
+### File Upload Service
+
+By default, Traefik does not impose upload size limits like Nginx does (`client_max_body_size`). Actual upload size limits are typically enforced by the business application, Nginx, Spring Boot, the gateway, the object storage SDK, or Cloudflare.
+
+If you want to actively limit upload sizes at the Traefik layer, you can use the `buffering` middleware:
+
+```yaml
+services:
+  file-api:
+    image: your-file-api:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.file-api.rule=Host(`file.example.com`)'
+      - 'traefik.http.routers.file-api.entrypoints=websecure'
+      - 'traefik.http.routers.file-api.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.file-api.middlewares=file-upload-limit'
+      - 'traefik.http.middlewares.file-upload-limit.buffering.maxRequestBodyBytes=104857600'
+      - 'traefik.http.middlewares.file-upload-limit.buffering.memRequestBodyBytes=10485760'
+      - 'traefik.http.services.file-api.loadbalancer.server.port=8080'
+
+networks:
+  traefik:
+    external: true
+```
+
+Explanation of the configuration above:
+
+- `maxRequestBodyBytes=104857600`: Maximum upload request body size is 100 MB.
+- `memRequestBodyBytes=10485760`: Request bodies larger than 10 MB are not fully loaded into memory.
+
+> [!warning]
+> If Cloudflare’s Orange Cloud proxy is enabled, you should also be aware of Cloudflare’s own upload size limits. For large file uploads, we recommend that clients upload files directly to object storage—such as S3, R2, or OSS—and then have the business service save the file URL.
+
+### File Download Service
+
+For standard download services, you can use the HTTP router directly. When downloading large files, the key is to avoid having the application layer load the entire file into memory at once.
+
+```yaml
+services:
+  download:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./downloads:/usr/share/nginx/html:ro
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.download.rule=Host(`download.example.com`)'
+      - 'traefik.http.routers.download.entrypoints=websecure'
+      - 'traefik.http.routers.download.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.download.loadbalancer.server.port=80'
+
+networks:
+  traefik:
+    external: true
+```
+
+If you need to limit the size of the download response, you can also use `buffering.maxResponseBodyBytes`:
+
+```yaml
+labels:
+  - 'traefik.http.routers.download.middlewares=download-limit'
+  - 'traefik.http.middlewares.download-limit.buffering.maxResponseBodyBytes=524288000'
+```
+
+It is not recommended to arbitrarily set `maxResponseBodyBytes` for large file downloads, as Traefik will reject requests that exceed the limit. In most cases, limits should be enforced through service authentication, signed object storage URLs, or CDN rules.
+
+### WebSocket Service
+
+Traefik automatically handles the HTTP Upgrade for WebSockets, so there is generally no need to configure the `Upgrade` or `Connection` request headers.
+
+```yaml
+services:
+  ws-app:
+    image: your-ws-app:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.ws-app.rule=Host(`ws.example.com`)'
+      - 'traefik.http.routers.ws-app.entrypoints=websecure'
+      - 'traefik.http.routers.ws-app.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.ws-app.loadbalancer.server.port=3000'
+
+networks:
+  traefik:
+    external: true
+```
+
+Example of a client connection:
+
+```javascript
+const socket = new WebSocket('wss://ws.example.com/socket');
+```
+
+If WebSocket and the regular API are on the same domain, you can split the routing by path:
+
+```yaml
+labels:
+  - 'traefik.http.routers.app-api.rule=Host(`app.example.com`) && PathPrefix(`/api`)'
+  - 'traefik.http.routers.app-api.entrypoints=websecure'
+  - 'traefik.http.routers.app-api.tls.certresolver=letsencrypt'
+  - 'traefik.http.routers.app-api.service=app-api'
+  - 'traefik.http.services.app-api.loadbalancer.server.port=8080'
+  - 'traefik.http.routers.app-ws.rule=Host(`app.example.com`) && PathPrefix(`/socket`)'
+  - 'traefik.http.routers.app-ws.entrypoints=websecure'
+  - 'traefik.http.routers.app-ws.tls.certresolver=letsencrypt'
+  - 'traefik.http.routers.app-ws.service=app-ws'
+  - 'traefik.http.services.app-ws.loadbalancer.server.port=3000'
+```
+
+> [!note]
+> When Cloudflare proxies WebSockets, WebSockets must also be enabled on the Cloudflare side. Most accounts support this by default, but if connections frequently drop, you should check your Cloudflare rules, server heartbeats, and application timeout settings.
+
+### gRPC Services
+
+gRPC uses HTTP/2. When Traefik receives HTTPS traffic and forwards it to the backend gRPC service, you typically need to specify the service scheme as `h2c`.
+
+```yaml
+services:
+  grpc-api:
+    image: your-grpc-api:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.grpc-api.rule=Host(`grpc.example.com`)'
+      - 'traefik.http.routers.grpc-api.entrypoints=websecure'
+      - 'traefik.http.routers.grpc-api.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.grpc-api.loadbalancer.server.scheme=h2c'
+      - 'traefik.http.services.grpc-api.loadbalancer.server.port=50051'
+
+networks:
+  traefik:
+    external: true
+```
+
+### SSH Service
+
+SSH is not HTTP; you cannot use the `traefik.http.*` label and must use a TCP router instead. Since the host machine typically already occupies port `22`, it is recommended that Traefik use `2222` for external traffic, while still forwarding traffic internally to `22`.
+
+The Traefik main configuration must include an SSH entrypoint:
+
+```yaml
+command:
+  - '--entrypoints.ssh.address=:2222'
+ports:
+  - '2222:2222'
+```
+
+Gitea SSH Example:
+
+```yaml
+services:
+  gitea:
+    image: gitea/gitea:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    volumes:
+      - ./gitea:/data
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.gitea.rule=Host(`git.example.com`)'
+      - 'traefik.http.routers.gitea.entrypoints=websecure'
+      - 'traefik.http.routers.gitea.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.gitea.loadbalancer.server.port=3000'
+      - 'traefik.tcp.routers.gitea-ssh.rule=HostSNI(`*`)'
+      - 'traefik.tcp.routers.gitea-ssh.entrypoints=ssh'
+      - 'traefik.tcp.routers.gitea-ssh.service=gitea-ssh'
+      - 'traefik.tcp.services.gitea-ssh.loadbalancer.server.port=22'
+
+networks:
+  traefik:
+    external: true
+```
+
+Connection Methods:
+
+```bash
+ssh -p 2222 git@git.example.com
+git clone ssh://git@git.example.com:2222/用户名/仓库名.git
+```
+
+> [!warning]
+> The TCP router's `HostSNI` can only be distinguished by domain name in TLS connections. SSH itself does not support SNI, so the common practice is to have one SSH entrypoint correspond to one SSH service; if there are multiple SSH services, assign multiple external ports, such as `2222` and `2223`.
+
+### TCP services such as databases, Redis, and MQTT
+
+Databases, Redis, MQTT, and similar services are also TCP services, and their configuration is similar to that of SSH. However, they generally should not be directly exposed to the public internet; it is more appropriate to access them via an internal network, VPN, jump server, or Cloudflare Tunnel.
+
+If you really need to temporarily expose PostgreSQL, configure it something like this:
+
+```yaml
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: 强密码
+    networks:
+      - traefik
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.tcp.routers.postgres.rule=HostSNI(`*`)'
+      - 'traefik.tcp.routers.postgres.entrypoints=postgres'
+      - 'traefik.tcp.routers.postgres.service=postgres'
+      - 'traefik.tcp.services.postgres.loadbalancer.server.port=5432'
+
+networks:
+  traefik:
+    external: true
+```
+
+The following needs to be added to the Traefik main configuration:
+
+```yaml
+command:
+  - '--entrypoints.postgres.address=:5432'
+ports:
+  - '5432:5432'
+```
+
+> [!danger]
+> Exposing a database directly to the public internet poses a high risk. At a minimum, you should restrict the source IP addresses in the security group, use strong passwords, enable TLS on the database itself, and prioritize access via a VPN or the internal network.
+
+## Common Operations and Maintenance Commands
+
+View the Traefik logs:
+
+```bash
+docker logs -f traefik
+```
+
+Check the Traefik version:
+
+```bash
+docker exec traefik traefik version
+```
+
+Restart Traefik:
+
+```bash
+cd /opt/traefik
+docker compose restart traefik
+```
+
+Update Traefik:
+
+```bash
+cd /opt/traefik
+docker compose pull
+docker compose up -d
+```
+
+Before updating, we recommend backing up your certificate files:
+
+```bash
+cp /opt/traefik/letsencrypt/acme.json /opt/traefik/letsencrypt/acme.json.bak
+```
+
+Check the final Compose configuration:
+
+```bash
+cd /opt/traefik
+docker compose config
+```
+
+This command is useful for checking whether the `.env` variable is enabled.
+
+## Troubleshooting Common Issues
+
+| Problem                        | Possible Cause                                                      | Solution                                                          |
+| --------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Certificate issuance consistently fails            | The domain name is not resolved to the server, port 80 is not open, or DNS changes have not taken effect               | Check `dig 域名 +short`, security groups, and `ufw status`                      |
+| 404 error when accessing the domain                | Container does not have `traefik.enable=true` configured, or the Host rule is incorrect           | Check the container labels and Routers in the Traefik Dashboard                   |
+| 502 error when accessing the domain                | Traefik cannot find the application container port or the network is unreachable                          | Check `loadbalancer.server.port` and whether the container is added to the `traefik` network     |
+| Dashboard is inaccessible          | The Dashboard domain is not resolved, Basic Auth is configured incorrectly, or the route label is incorrect    | Check `docker logs -f traefik`                                     |
+| HTTP Not Redirecting to HTTPS         | Missing entrypoint redirection configuration                              | Check `entrypoints.web.http.redirections.entrypoint.*`             |
+| Let's Encrypt Rate Limiting      | Frequent retries after repeated failures                                            | Troubleshoot the configuration before restarting; use the ACME staging server during debugging            |
+| Cloudflare DNS-01 failure      | Insufficient API token permissions or incorrect zone scope                            | Verify that the token has `Zone:Read` and `DNS:Edit`, and is bound to the correct domain         |
+| Access Issues After Enabling Cloudflare Orange Cloud | SSL/TLS mode is not set to “Full strict,” or the origin server certificate has not been issued                | Configure Cloudflare `SSL/TLS -> Full (strict)` and check the Traefik certificate logs |
+| `.env` variable is not taking effect         | File is not in the same directory as Compose, or variable name is incorrect                         | Execute `docker compose config` in `/opt/traefik`                    |
+| WebSocket connection failed          | Incorrect backend path, server not handling "Upgrade," or Cloudflare rules affecting the connection     | First, bypass Cloudflare to test; then check application logs and routing rules                  |
+| File upload failed                | Backend restrictions, Cloudflare upload limits, Traefik buffering limits         | Check the application configuration, Cloudflare quota limits, and `maxRequestBodyBytes` separately     |
+| Unable to connect via SSH                  | TCP entrypoint not open, host port conflict, incorrect TCP service port | Check `ports`, security groups, `ufw`, and `traefik.tcp.services.*.port`      |
+| Multiple SSH services cannot be load-balanced by domain name | SSH does not support SNI                                                  | Configure different entrypoints and external ports for different SSH services                     |
+
+## Minimum Security List
+
+Once you've deployed Traefik at the public network entry point, you need to take security configuration seriously. Here's my minimum list:
+
+- Do not enable `--api.insecure=true` for public network access.
+- Do not expose `8080` to the public network.
+- Use read-only mounting for the Docker socket: `/var/run/docker.sock:/var/run/docker.sock:ro`.
+- Disable automatic exposure by default: `--providers.docker.exposedbydefault=false`.
+- The Dashboard must use HTTPS and Basic Authentication.
+- Set permissions for `.env` to `600`; do not expose the Cloudflare API token.
+- Grant the Cloudflare API token only to necessary domains and with minimal permissions.
+- Use fixed-version images, such as `traefik:v3.6`; do not use `latest` for extended periods.
+- Business containers should preferably be added only to the Traefik network; do not directly expose the host machine’s ports.
+- For TCP services such as SSH, databases, and MQTT, assess individually whether they truly need to be exposed to the public internet.
+- In scenarios where VPNs, internal networks, or Cloudflare Tunnel can be used, do not directly expose database ports to the public internet.
+
+## Summary
+
+Traefik is best suited for solving the problem of “increasing difficulty in maintaining entry point configurations as the number of services on a cloud server grows.” It separates reverse proxy rules from a centralized configuration file and places them on each container’s own labels, allowing the service deployment declaration and routing declaration to be kept together.
+
+Once this solution is up and running, adding new services later typically requires only four steps:
+
+1. Set up DNS resolution for the domain name.
+2. Add the container to the `traefik` network.
+3. Specify the host, entrypoint, certificate resolver, and internal port in the container labels.
+4. `docker compose up -d` Start the service.
+
+From a maintenance perspective, this approach is better suited for personal servers, small-team servers, and experimental environments with multiple services than manually writing an Nginx server block each time. It offers a clear entry point, automatic certificate renewal, and a unified integration method, so you won’t have to start from scratch when later expanding to include WebSocket, gRPC, SSH, or TCP services.
+
+## References
+
+- [Traefik Docker Quick Start](https://doc.traefik.io/traefik/getting-started/docker/)
+- [Traefik Installation Documentation](https://doc.traefik.io/traefik/master/getting-started/install-traefik/)
+- [Traefik ACME Certificate Resolver](https://doc.traefik.io/traefik/master/reference/install-configuration/tls/certificate-resolvers/acme/)
+- [Traefik TCP Router](https://doc.traefik.io/traefik/reference/routing-configuration/tcp/routing/router/)
+- [Traefik WebSocket Guide](https://doc.traefik.io/traefik/v3.4/user-guides/websocket/)
+- [Traefik Buffering Middleware](https://doc.traefik.io/traefik/v2.9/middlewares/http/buffering/)
+- [Lego Cloudflare DNS Provider](https://go-acme.github.io/lego/dns/cloudflare/)
+- [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens)
