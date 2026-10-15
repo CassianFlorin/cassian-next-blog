@@ -21,16 +21,8 @@
     "title": "Cassian Florin",
     "description": "I build AI engineering tools, developer workflows, and knowledge systems for serious software work.",
     "hero": {
-      "lines": [
-        "Building things.",
-        "Mapping ideas.",
-        "Leaving traces."
-      ],
-      "areas": [
-        "AI Engineering",
-        "Developer Tools",
-        "Knowledge Systems"
-      ],
+      "lines": ["Building things.", "Mapping ideas.", "Leaving traces."],
+      "areas": ["AI Engineering", "Developer Tools", "Knowledge Systems"],
       "explore": "Explore",
       "summary": "A personal system for building tools, thinking clearly, and leaving traces."
     },
@@ -63,26 +55,15 @@
       "areas": {
         "building": {
           "label": "Building",
-          "items": [
-            "AI Agents",
-            "Developer Tools"
-          ]
+          "items": ["AI Agents", "Developer Tools"]
         },
         "thinking": {
           "label": "Thinking",
-          "items": [
-            "System Design",
-            "Engineering",
-            "Architecture"
-          ]
+          "items": ["System Design", "Engineering", "Architecture"]
         },
         "remembering": {
           "label": "Remembering",
-          "items": [
-            "Obsidian",
-            "Knowledge",
-            "Personal Systems"
-          ]
+          "items": ["Obsidian", "Knowledge", "Personal Systems"]
         }
       }
     },
@@ -405,11 +386,11 @@
     "openclaw": "OpenClaw",
     "Hermes": "Hermes",
     "hermes": "Hermes",
-    "工具对比": "工具对比",
-    "架构设计": "架构设计",
+    "工具对比": "Tool Comparison",
+    "架构设计": "Architecture Design",
     "Harness Engineering": "Harness Engineering",
     "harness-engineering": "Harness Engineering",
-    "工程方法论": "工程方法论",
+    "工程方法论": "Engineering Methodology",
     "工程效率": "Engineering Efficiency",
     "traefik": "Traefik",
     "docker": "Docker",

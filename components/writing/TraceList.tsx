@@ -1,3 +1,5 @@
+import { slug } from 'github-slugger';
+import { useTranslations } from 'next-intl';
 import Link from '@/components/Link';
 import Reveal from '@/components/motion/Reveal';
 
@@ -23,6 +25,14 @@ export default function TraceList({
   traces: Trace[];
   size?: 'large' | 'compact';
 }) {
+  const tTags = useTranslations('tags');
+  const formatTag = (tag: string) => {
+    const tagSlug = slug(tag);
+    if (tTags.has(tagSlug)) return tTags(tagSlug);
+    if (!tag.includes('.') && tTags.has(tag)) return tTags(tag);
+    return tag;
+  };
+
   const large = size === 'large';
   const groups = new Map<string, Array<Trace & { day?: string }>>();
 
@@ -99,7 +109,7 @@ export default function TraceList({
                     </h3>
                     {trace.tags.length > 0 && (
                       <p className="type-meta text-gray-500 dark:text-gray-400">
-                        {trace.tags.slice(0, 3).join(' · ')}
+                        {trace.tags.slice(0, 3).map(formatTag).join(' · ')}
                       </p>
                     )}
                   </div>

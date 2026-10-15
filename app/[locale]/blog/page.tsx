@@ -1,8 +1,7 @@
-import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer';
-import { allBlogs } from 'contentlayer/generated';
 import { genPageMetadata } from 'app/seo';
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
+import { getLocalizedPosts } from '@/lib/postTranslations';
 import JsonLd from '@/components/JsonLd';
 import Link from '@/components/Link';
 import TraceList from '@/components/writing/TraceList';
@@ -33,11 +32,11 @@ export default async function BlogPage(props: {
   const t = await getTranslations('blog.archive');
   const tk = await getTranslations('knowledge');
   const seo = await getTranslations({ locale, namespace: 'seo' });
-  const posts = allCoreContent(sortPosts(allBlogs));
+  const posts = getLocalizedPosts(locale);
   const firstYear = posts.length
     ? new Date(posts[posts.length - 1].date).getFullYear()
     : new Date().getFullYear();
-  const index = getKnowledgeIndex();
+  const index = getKnowledgeIndex(locale);
 
   return (
     <div className="bleed">

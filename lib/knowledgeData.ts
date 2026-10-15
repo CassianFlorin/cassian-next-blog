@@ -1,9 +1,8 @@
-import { allBlogs } from 'contentlayer/generated';
-import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer';
 import obsidianGraph from '@/generated/obsidian-graph.json';
 import projectsData from '@/data/projectsData';
 import type { KnowledgeGraphData } from './knowledgeGraph';
 import { buildKnowledgeIndex, type NodeEntry } from './knowledgeNodes';
+import { getLocalizedPosts } from './postTranslations';
 
 /** Obsidian vault notes (post-type nodes in the generated graph). */
 const vaultNotes = (): NodeEntry[] =>
@@ -18,9 +17,9 @@ const vaultNotes = (): NodeEntry[] =>
     }));
 
 /** The site-wide knowledge index, built from published content at render. */
-export function getKnowledgeIndex() {
+export function getKnowledgeIndex(locale?: string) {
   return buildKnowledgeIndex({
-    posts: allCoreContent(sortPosts(allBlogs)),
+    posts: getLocalizedPosts(locale),
     notes: vaultNotes(),
     projects: projectsData,
   });

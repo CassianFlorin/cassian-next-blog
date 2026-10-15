@@ -7,7 +7,7 @@ import {
 } from '@/lib/knowledgeGraph';
 import { getKnowledgeIndex } from '@/lib/knowledgeData';
 import { isKnowledgeNodeKey, knowledgeNodeHref } from '@/lib/knowledgeNodes';
-import { allBlogs } from 'contentlayer/generated';
+import { getLocalizedPosts } from '@/lib/postTranslations';
 import { genPageMetadata } from 'app/seo';
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
@@ -30,20 +30,23 @@ const pad = (value: number) => String(value).padStart(2, '0');
 
 /** Explore mode: the whole graph, plus the territory index for Focus mode. */
 export default async function KnowledgePage({
+  params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ post?: string; territory?: string }>;
 }) {
-  const [{ post, territory }, t] = await Promise.all([
+  const [{ locale }, { post, territory }, t] = await Promise.all([
+    params,
     searchParams,
     getTranslations('knowledge'),
   ]);
+  const localizedPosts = getLocalizedPosts(locale);
   const graphData = mergeKnowledgeGraphs(
-    buildKnowledgeGraph(allBlogs),
+    buildKnowledgeGraph(localizedPosts),
     obsidianGraph,
   );
-  const index = getKnowledgeIndex();
+  const index = getKnowledgeIndex(locale);
 
   return (
     <div className="bleed">

@@ -14,6 +14,7 @@ import {
   allAuthors,
 } from 'contentlayer/generated';
 import type { Authors, Blog } from 'contentlayer/generated';
+import { getLocalizedPosts } from '@/lib/postTranslations';
 import PostSimple from '@/layouts/PostSimple';
 import PostLayout from '@/layouts/PostLayout';
 import PostBanner from '@/layouts/PostBanner';
@@ -143,7 +144,7 @@ export default async function Page(props: {
   const locale = resolveLocale(params.locale);
   const t = await getTranslations({ locale, namespace: 'seo' });
   // Filter out drafts in production
-  const sortedCoreContents = allCoreContent(sortPosts(allBlogs));
+  const sortedCoreContents = getLocalizedPosts(locale);
   const postIndex = sortedCoreContents.findIndex((p) => p.slug === slug);
   if (postIndex === -1) {
     return notFound();
@@ -175,12 +176,15 @@ export default async function Page(props: {
   const displayBody = translation ? translation.body : post.body;
   const displayToc = translation ? translation.toc : post.toc;
   const isTranslated = !!translation;
-  const localKnowledgeGraph = buildLocalKnowledgeGraph(allBlogs, slug);
+  const localKnowledgeGraph = buildLocalKnowledgeGraph(
+    getLocalizedPosts(locale),
+    slug,
+  );
 
   // Article → territories, projects and nearby writing, from the same model
   // as the knowledge map so both sides of every link agree.
   const tProjects = await getTranslations({ locale, namespace: 'projects' });
-  const knowledgeIndex = getKnowledgeIndex();
+  const knowledgeIndex = getKnowledgeIndex(locale);
   const citations = new Map(
     caseStudies.map((entry) => [entry.projectId, entry.relatedPostSlugs || []]),
   );

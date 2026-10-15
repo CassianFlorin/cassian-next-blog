@@ -3,6 +3,7 @@ import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer';
 import { notFound } from 'next/navigation';
 import siteMetadata from '@/data/siteMetadata';
 import { allBlogs } from 'contentlayer/generated';
+import { getLocalizedPosts } from '@/lib/postTranslations';
 import tagData from 'app/tag-data.json';
 import { genPageMetadata } from 'app/seo';
 import { Metadata } from 'next';
@@ -74,12 +75,8 @@ export default async function TagPage(props: {
   const t = await getTranslations('blog');
   const tk = await getTranslations('knowledge');
 
-  const posts = allCoreContent(
-    sortPosts(
-      allBlogs.filter((post) =>
-        post.tags?.some((postTag) => slug(postTag) === tagSlug),
-      ),
-    ),
+  const posts = getLocalizedPosts(locale).filter((post) =>
+    post.tags?.some((postTag) => slug(postTag) === tagSlug),
   );
   if (!posts.length) notFound();
 
