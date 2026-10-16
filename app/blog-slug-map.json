@@ -4,6 +4,7 @@
   "blog-geo-overhaul": "20260804-blog-geo-overhaul",
   "cloud-mail-deployment": "20261012-cloud-mail-deployment",
   "cloud-mail-r2-resend-verification": "20261013-cloud-mail-r2-resend-verification",
+  "cloud-mail-reading-privacy": "20261016-cloud-mail-reading-privacy",
   "codegraph-agent-coding": "20260526-codegraph-agent-coding",
   "codex-cli-relay-station-config": "20260727-codex-cli-relay-station-config",
   "docker-tailscale-dns-conflict": "20260916-docker-tailscale-dns-conflict",
