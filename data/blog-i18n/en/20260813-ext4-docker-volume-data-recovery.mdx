@@ -98,19 +98,10 @@ The encrypted backups for the last 5 days sit quietly on the cloud storage, but 
 The backups are all there, but the key is gone. The latest plaintext backup I have right now is from a month ago.
 
 <Callout emoji="⚠️">
-
-{' '}
-<strong>Two lessons to keep in mind:</strong>① Before deleting any "potentially
-redundant" directory, first run <code>
-  docker inspect &lt;container&gt; --format '&#123;&#123;json
-  .Mounts&#125;&#125;'
-</code>
-—use the actual mount path as a reference, as directory names can be misleading;
-② The passphrase for encrypted backups must have
-<strong>a second copy stored independently of this server</strong>
-(a password manager or a remote file location works), otherwise the backup is
-useless.
-
+  <strong>Two lessons to keep in mind:</strong> Before deleting a directory that
+  looks redundant, run `docker inspect` and trust the real mount path. Directory
+  names can be misleading. The passphrase for an encrypted backup needs a second
+  copy that does not live on this server, otherwise the backup is useless.
 </Callout>
 
 ## 🧊 Golden Rule: Preserve the Scene First
@@ -212,6 +203,7 @@ The intersection of these three lines of evidence pinpointed a single candidate 
       Identification Principles: Don’t guess based on file size or quantity;
 
 {' '}
+
 <strong>
   Look for monotonically increasing counters and external event anchors in
   business data
