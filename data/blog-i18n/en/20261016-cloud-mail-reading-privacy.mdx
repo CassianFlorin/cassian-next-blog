@@ -1,0 +1,79 @@
+---
+title: >-
+  Cloud Mail: Follow-up Notes on Reading Emails—Remote Images Are Now Fetched
+  from the Server
+date: '2026-10-16'
+tags:
+  - Open Source
+  - 运维
+  - 独立开发
+draft: false
+summary: >-
+  Notes on Cloud Mail isolating scripts on the reading page, fetching remote
+  images from the server, and removing executable content from HTML attachments
+  before download.
+tldr: >-
+  The reading page does not execute scripts contained in emails. Regular remote
+  images are fetched by a logged-in server; the reader's IP address is not sent
+  to the sender, though the sender may still be able to tell that the image has
+  been retrieved.
+sourceHash: dd00626cb0e580ed48dde430a05ea766bd7b5bb29e4ec22e859d994f0c1820e4
+translatedAt: '2026-10-16T01:46:43.740Z'
+---
+[Domain Email Setup](/blog/20261012-cloud-mail-deployment) and [Attachment Verification](/blog/20261013-cloud-mail-r2-resend-verification) covered receiving mail and downloading attachments. Next, I looked at opening an HTML email. Can the sender still tell that I have read it, and can anything in the message reach the mailbox login state?
+
+On October 16, 2026, this reading handling is already live. As in the previous two posts, the domain and mailbox address are replaced with `example.com`. Resource IDs and credentials are not written here.
+
+## Reading Pages and Login Status
+
+The email body is stored in the database. It will be cleaned up again when opened, but the original text in the database will remain unchanged. The cleanup process removes scripts, embedded frames, event handlers, and forms that submit automatically.
+
+The login token is stored in the browser's local storage and included in the `Authorization` header when a request is made. If the component reading the email is considered the same origin as the email service, once the code in the email is executed, it will be running within the email service itself, with the token readily available.
+
+The reading page is therefore placed within an isolated frame. The frame does not allow scripts to run. The outer page still needs to measure the height of the inner page and display the images it generates, so the frame and the email page are still considered to be from the same origin. Script permissions cannot be enabled simultaneously. If both are enabled at the same time, this isolation will fail, and the code in the email will be executed on the email website.
+
+There is also a content restriction within the framework. For images, audio, video, and fonts, only URLs generated on this page and small images directly embedded in the page are accepted. Remote styles, remote fonts, and external submissions are not allowed. If cleanup misses an image URL, the browser still will not request it on its own.
+
+I created an identical framework using Chrome on my local machine, which included the script, handling for image loading failures, and a small remote image. The script did not execute, the error handling did not trigger, and the request for the small image was not sent. The local image placed in the outer layer displayed correctly, with a width of 1. This only verified the framework itself. I did not open an actual malicious email online to test it.
+
+## Remote Images
+
+A tracking pixel is a very small remote image. When the browser retrieves it, the sender's server knows that the email has been opened and can also see the IP address of the device that retrieved the image.
+
+By default, regular remote images are still not loaded. Click "Show Anyway" or turn off "Block Email Tracking" to display regular images. Previously, the browser fetched the other party's URL directly, so the open and the reader's network address were both handed over.
+
+Now, the image is retrieved through the email interface that the user has already logged into. The browser sends the image URL to its own website, which retrieves the content and converts it into a URL that can only be used on that page. The sender cannot see the reader’s IP address. The sender may still know that someone has retrieved the image, but what they see is Cloudflare’s address.
+
+Tracking pixels do not follow this path. Whether the switch is on or off, pixels, remote styles, and remote fonts will all be removed. When writing a reply or a forward, the quoted original in the editor also has this remote content removed, so composing the message does not confirm the open to the other party.
+
+The proxy service only accepts images from public networks: `http` and `https`. URLs containing account credentials, localhost, intranet addresses, and URLs like `169.254.169.254`—where cloud servers query their own information—will all be rejected. SVG files are not accepted. If the request redirects to another URL, the service will follow it for a maximum of a few steps, re-checking at each step. Each image is limited to 5MB, and the fetch stops after 8 seconds. The API requires authentication. Attempting to call the API without logging in will result in a 401 error.
+
+Logged-in users can use it to retrieve regular images from the public internet. Private IP addresses and non-image content are blocked, and users who aren't logged in can't access it either. For this personal email account, I'm okay with these restrictions.
+
+## Links and Replies
+
+Some click tracking systems wrap the actual URL within their own domain, and do so very clearly. When reading emails, these are unwrapped and replaced with the destination URL, without including the source. For tracking domains that cannot be unwrapped but that I recognize, the links are removed entirely and cannot be clicked. Regular external links remain intact and open in a new window, also without including the source.
+
+Tracking domains not on the list are not included in this process. If you click on those links, the other party may still receive a visit count.
+
+I checked the existing code for sending emails. The app uses the sender's address saved when the email was received for replies, rather than the reply-to address specified in the email itself. I didn't modify the code for this.
+
+## Downloaded Attachments
+
+If HTML, SVG, and XML files are downloaded as-is and then opened in a browser, the page-cleaning process won't apply to them. This time, the processing is done when the files are sent. The original files in the bucket and the KV store remain unchanged.
+
+Small files that fit in memory will first have their scripts and remote tracking removed, then be downloaded as attachments, and the browser will be instructed not to treat them as webpages capable of running scripts. Files larger than 2 MB will not be parsed but will instead be downloaded as regular binary files, and the browser will similarly be instructed not to open them as webpages. Once the file is downloaded and opened, it has left the mailbox site and cannot read the login state. If it still contains something that can make an outbound request, that happens after the download. It may notify the other party, and it cannot obtain the mailbox token.
+
+When the file extension indicated HTML but the object could not be found, empty content used to be returned as a normal web page. Now, when an attachment cannot be found, a 404 error is returned.
+
+The login page background will continue to follow the original public path and will not use this attachment-handling process.
+
+Telegram uses the same isolation framework for viewing the full message. That page has no login state, so it cannot fetch images for the reader, and remote images stay unloaded. The page states how many items were blocked.
+
+## Results Verified at Launch
+
+Fifteen anti-tracking and privacy tests passed, along with 10 mail-claim tests, 10 storage tests, and 21 Telegram notification tests. The front-end production build passed. No database migrations were replayed.
+
+After going live, the website returns an HTTP 200 response. The first time the homepage is loaded, the edge cache is still pointing to the previous version of the script. Upon the next request—which bypasses that old cache—the page loads the current version of the script. Attempts to access attachments and remote image APIs while not logged in result in 401 errors.
+
+Account forwarding still forwards the original email exactly as it is. Rewriting the original before forwarding can drop attachments and can touch the incoming signature, so that path was left unchanged. For mail sent through Resend, if the domain has open tracking turned on, the sending service records that itself. The reading page's cleanup does not cover it.
