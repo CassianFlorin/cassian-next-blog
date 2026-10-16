@@ -6,9 +6,11 @@
  * 特性：
  * 1. 严格使用 gray-matter 解析与序列化 Frontmatter，彻底避免 YAML 缩进格式错误。
  * 2. 占位保护代码块、数学公式、行内代码、自定义 JSX 标签（<Callout>, <StepProgress> 等）。
- * 3. 仅对包含中文字符的段落送翻译（hasChinese 检查），无中文段落（纯标签/纯代码/纯符号）100% 原样保留，绝无标签错位或复制问题。
- * 4. 保护 MDX 中的 HTML 实体（&lt;, &gt;, &#123;, &#125;），防止被解析器误当作 JSX 表达式。
- * 5. 内容 Hash 缓存机制，翻译过的文章下次 0 字符消耗。
+ * 3. 正文合成一篇送出。DeepL 只在同一条 text 内共享上下文，按空行拆开会让指代各自猜测。
+ *    无中文段落仍只放占位符，原文不进入请求。单篇超过请求体积时按二级标题再切块。
+ * 4. 标题、摘要、tldr 另一次请求，并把中文正文作为 context。context 不计费、不输出。
+ * 5. 保护 MDX 中的 HTML 实体（&lt;, &gt;, &#123;, &#125;），防止被解析器误当作 JSX 表达式。
+ * 6. 内容 Hash 缓存机制，翻译过的文章下次 0 字符消耗。
  */
 
 import fs from 'fs';
@@ -24,6 +26,9 @@ const BLOG_DIR = path.join(__dirname, '../data/blog');
 const I18N_BLOG_DIR = path.join(__dirname, '../data/blog-i18n/en');
 
 const MAX_RETRIES = 3;
+// DeepL 文本接口的请求体上限是 128 KiB。留出 JSON 与 context 的空间。
+const TEXT_BUDGET_BYTES = 96 * 1024;
+const CONTEXT_BUDGET_BYTES = 32 * 1024;
 
 // 参数解析
 const args = process.argv.slice(2);
@@ -59,7 +64,8 @@ if (args.includes('--help') || args.includes('-h')) {
 
 const authKey = process.env.DEEPL_AUTH_KEY || process.env.DEEPL_API_KEY;
 
-if (!authKey && !isDryRun) {
+function requireAuthKey() {
+  if (authKey || isDryRun) return;
   console.error(`
 ❌ 错误: 未找到 DeepL API 密钥。
 请通过环境变量提供密钥：
@@ -88,10 +94,14 @@ function sha256(content) {
   return crypto.createHash('sha256').update(content).digest('hex');
 }
 
+function byteLength(text) {
+  return Buffer.byteLength(text, 'utf8');
+}
+
 /**
- * 保护正文中的不可翻译节点（代码块、行内代码、公式、JSX 标签、链接 URL）
+ * 占位符按插入顺序编号。还原时从外向内替换，避免外层原文里再出现内层编号。
  */
-function protectMarkdown(content) {
+export function createPlaceholderStore() {
   const placeholders = new Map();
   let counter = 0;
 
@@ -100,6 +110,15 @@ function protectMarkdown(content) {
     placeholders.set(key, text);
     return `<keep id="${key}">${key}</keep>`;
   }
+
+  return { placeholders, store };
+}
+
+/**
+ * 保护正文中的不可翻译节点（代码块、行内代码、公式、JSX 标签、链接 URL）
+ */
+export function protectMarkdown(content) {
+  const { placeholders, store } = createPlaceholderStore();
 
   let protectedText = content;
 
@@ -148,7 +167,112 @@ function protectMarkdown(content) {
     },
   );
 
-  return { protectedText, placeholders };
+  return { protectedText, placeholders, store };
+}
+
+const PURE_KEEP = /^<keep id="___KEEP_\d+___">___KEEP_\d+___<\/keep>$/;
+
+export function shouldTranslateParagraph(paragraph) {
+  const trimmed = paragraph.trim();
+  if (!trimmed || !/[\u4e00-\u9fa5]/.test(trimmed)) return false;
+  return !PURE_KEEP.test(trimmed);
+}
+
+/**
+ * 把不需要翻译的段落收成占位符，其余中文保持原有顺序拼成一篇。
+ * DeepL 对数组里的每一条 text 单独翻译，拼成一篇后段与段才共享上下文。
+ */
+export function assembleDocument(protectedText, store) {
+  return protectedText
+    .split(/\n\n+/)
+    .map((paragraph) => {
+      if (!paragraph.trim() || shouldTranslateParagraph(paragraph)) {
+        return paragraph;
+      }
+      return store(paragraph);
+    })
+    .join('\n\n');
+}
+
+/**
+ * 超长正文按二级标题切开，切不开再按段落切。拼回后与原文一致。
+ */
+export function splitDocument(text, maxBytes) {
+  if (byteLength(text) <= maxBytes) return [text];
+
+  const sections = text.split(/(?=^## )/m);
+  const chunks = [];
+  let current = '';
+
+  function flush() {
+    if (!current) return;
+    chunks.push(current);
+    current = '';
+  }
+
+  for (const section of sections) {
+    if (byteLength(section) > maxBytes) {
+      flush();
+      chunks.push(...splitOversizedSection(section, maxBytes));
+      continue;
+    }
+    if (current && byteLength(current + section) > maxBytes) flush();
+    current += section;
+  }
+  flush();
+  return chunks;
+}
+
+function splitOversizedSection(section, maxBytes) {
+  const tokens = [];
+  const separator = /\n\n+/g;
+  let last = 0;
+  let match = separator.exec(section);
+  while (match) {
+    tokens.push(section.slice(last, match.index + match[0].length));
+    last = match.index + match[0].length;
+    match = separator.exec(section);
+  }
+  tokens.push(section.slice(last));
+
+  const pieces = [];
+  let current = '';
+  for (const token of tokens) {
+    if (!current || byteLength(current + token) <= maxBytes) {
+      current += token;
+      continue;
+    }
+    pieces.push(current);
+    current = token;
+  }
+  if (current) pieces.push(current);
+  return pieces;
+}
+
+export function fitToBytes(text, maxBytes) {
+  if (!text || byteLength(text) <= maxBytes) return text || '';
+  let end = text.length;
+  while (end > 0 && byteLength(text.slice(0, end)) > maxBytes) {
+    end = Math.floor(end * 0.9) || end - 1;
+  }
+  const sliced = text.slice(0, end);
+  const breakAt = sliced.lastIndexOf('\n\n');
+  return breakAt > 0 ? sliced.slice(0, breakAt) : sliced;
+}
+
+export function keepMarkers(text) {
+  return [...text.matchAll(/___KEEP_\d+___/g)].map((match) => match[0]);
+}
+
+export function assertKeepsSurvived(source, translated) {
+  const before = keepMarkers(source);
+  const after = keepMarkers(translated);
+  if (
+    before.length !== after.length ||
+    before.some((marker, index) => marker !== after[index])
+  ) {
+    throw new Error('DeepL 改动了占位符，已中止这篇文章的写入');
+  }
 }
 
 /**
@@ -164,18 +288,52 @@ function separateBlockTags(text) {
 /**
  * 还原占位符
  */
-function restoreMarkdown(text, placeholders) {
-  let restored = text;
+function unwrapKeeps(text) {
+  let current = text;
+  let previous = '';
+  while (current !== previous) {
+    previous = current;
+    current = current.replace(/<keep[^>]*>([\s\S]*?)<\/keep>/gi, '$1');
+  }
+  return current;
+}
 
-  // 先把 <keep id="___KEEP_x___">___KEEP_x___</keep> 剥去 keep 外壳
-  restored = restored.replace(/<keep[^>]*>([\s\S]*?)<\/keep>/gi, '$1');
+export function restoreMarkdown(text, placeholders) {
+  let restored = text.replace(/&lt;(\/?keep\b[^&]*?)&gt;/gi, '<$1>');
+  const entries = [...placeholders.entries()].reverse();
 
-  // 将所有占位符换回原内容
-  for (const [key, original] of placeholders.entries()) {
-    restored = restored.replaceAll(key, original);
+  // 先剥外壳再替换。外层占位符的原文里还有内层 keep，需要再剥一次。
+  for (let guard = 0; guard <= entries.length; guard++) {
+    restored = unwrapKeeps(restored);
+    let changed = false;
+    for (const [key, original] of entries) {
+      if (!restored.includes(key)) continue;
+      restored = restored.replaceAll(key, original);
+      changed = true;
+    }
+    if (!changed) break;
   }
 
-  return restored;
+  return unwrapKeeps(restored);
+}
+
+/**
+ * DeepL 会把较长的占位符换行，链接的右括号就被拆开。句号后若直接接大写，也补回空格。
+ * 代码块和行内代码保持原样。
+ */
+export function repairTranslatedProse(text) {
+  const chunks = text.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
+  return chunks
+    .map((chunk, index) => {
+      if (index % 2 === 1) return chunk;
+      const linksFixed = chunk.replace(
+        /\[([^\]]*)\]\(\s*([^)\s]+)\s*\)/g,
+        (_, label, url) =>
+          `[${label.replace(/\s*\n\s*/g, ' ').trim()}](${url})`,
+      );
+      return linksFixed.replace(/([A-Za-z0-9])\.(?=[A-Z])/g, '$1. ');
+    })
+    .join('');
 }
 
 /**
@@ -195,11 +353,19 @@ function unescapeXmlFromDeepL(text) {
 /**
  * 调用 DeepL API 翻译单批文本
  */
-async function translateTexts(texts) {
+async function translateTexts(texts, context = '') {
   if (texts.length === 0) return [];
 
   const endpoint = getDeepLEndpoint(authKey);
   const preparedTexts = texts.map((t) => escapeXmlForDeepL(t));
+  const payload = {
+    text: preparedTexts,
+    source_lang: 'ZH',
+    target_lang: 'EN-US',
+    tag_handling: 'xml',
+    ignore_tags: ['keep'],
+  };
+  if (context) payload.context = context;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
@@ -209,13 +375,7 @@ async function translateTexts(texts) {
           Authorization: `DeepL-Auth-Key ${authKey.trim()}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          text: preparedTexts,
-          source_lang: 'ZH',
-          target_lang: 'EN-US',
-          tag_handling: 'xml',
-          ignore_tags: ['keep'],
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -226,6 +386,11 @@ async function translateTexts(texts) {
       }
 
       const data = await response.json();
+      if (!data.translations || data.translations.length !== texts.length) {
+        throw new Error(
+          `DeepL 返回 ${data.translations ? data.translations.length : 0} 条，请求了 ${texts.length} 条`,
+        );
+      }
       return data.translations.map((item) => unescapeXmlFromDeepL(item.text));
     } catch (err) {
       console.warn(
@@ -249,28 +414,19 @@ async function translatePost(file) {
   console.log(`\n📄 正在处理文章: ${file}`);
 
   const separatedContent = separateBlockTags(parsed.content);
-  const { protectedText, placeholders } = protectMarkdown(separatedContent);
+  const { protectedText, placeholders, store } =
+    protectMarkdown(separatedContent);
+  const hasTranslatableBody = protectedText
+    .split(/\n\n+/)
+    .some(shouldTranslateParagraph);
+  const document = hasTranslatableBody
+    ? assembleDocument(protectedText, store)
+    : protectedText;
+  const chunks = hasTranslatableBody
+    ? splitDocument(document, TEXT_BUDGET_BYTES)
+    : [];
 
-  // 准备需要翻译的段落（仅对包含中文字符的段落调用翻译！）
-  const paragraphs = protectedText.split(/\n\n+/);
-  const toTranslateTexts = [];
-  const paraIndices = [];
-
-  paragraphs.forEach((p, index) => {
-    const trimmed = p.trim();
-    // 关键：只有包含中文字符且不是纯占位符的段落，才送给 DeepL 翻译！
-    const hasChinese = /[\u4e00-\u9fa5]/.test(trimmed);
-    if (
-      trimmed &&
-      hasChinese &&
-      !/^<keep id="___KEEP_\d+___">___KEEP_\d+___<\/keep>$/.test(trimmed)
-    ) {
-      toTranslateTexts.push(p);
-      paraIndices.push(index);
-    }
-  });
-
-  // Frontmatter 待翻译项
+  // Frontmatter 待翻译项。短字段单独请求，并用中文正文做 context。
   const metadataTexts = [];
   if (parsed.data.title && /[\u4e00-\u9fa5]/.test(parsed.data.title))
     metadataTexts.push(parsed.data.title);
@@ -279,53 +435,62 @@ async function translatePost(file) {
   if (parsed.data.tldr && /[\u4e00-\u9fa5]/.test(parsed.data.tldr))
     metadataTexts.push(parsed.data.tldr);
 
-  const allTexts = [...metadataTexts, ...toTranslateTexts];
-  const charEstimate = allTexts.reduce((acc, t) => acc + t.length, 0);
+  const charEstimate =
+    chunks.reduce((acc, chunk) => acc + chunk.length, 0) +
+    metadataTexts.reduce((acc, text) => acc + text.length, 0);
 
   console.log(
-    `  - 需翻译段落数: ${toTranslateTexts.length}，需翻译字符数约: ${charEstimate}`,
+    `  - 正文 ${chunks.length} 块，frontmatter ${metadataTexts.length} 项，约 ${charEstimate} 字符`,
   );
 
   if (isDryRun) {
     return { slug, charEstimate, skipped: false };
   }
 
-  // 分批发送给 DeepL
-  const translatedAll = [];
-  const BATCH_SIZE = 25;
-
-  for (let i = 0; i < allTexts.length; i += BATCH_SIZE) {
-    const batch = allTexts.slice(i, i + BATCH_SIZE);
-    const translatedBatch = await translateTexts(batch);
-    translatedAll.push(...translatedBatch);
+  let translatedProtectedBody = protectedText;
+  if (chunks.length > 0) {
+    const bodyContext =
+      chunks.length === 1
+        ? parsed.data.title || ''
+        : fitToBytes(
+            [parsed.data.title, parsed.content.trim()]
+              .filter(Boolean)
+              .join('\n\n'),
+            CONTEXT_BUDGET_BYTES,
+          );
+    const translatedChunks = [];
+    for (const chunk of chunks) {
+      const [translated] = await translateTexts([chunk], bodyContext);
+      assertKeepsSurvived(chunk, translated);
+      translatedChunks.push(translated);
+    }
+    translatedProtectedBody = translatedChunks.join('');
   }
 
-  // 拆回 metadata
+  const translatedMeta = metadataTexts.length
+    ? await translateTexts(
+        metadataTexts,
+        fitToBytes(parsed.content.trim(), CONTEXT_BUDGET_BYTES),
+      )
+    : [];
+
   let metaIdx = 0;
   const enTitle =
     parsed.data.title && /[\u4e00-\u9fa5]/.test(parsed.data.title)
-      ? translatedAll[metaIdx++]
+      ? translatedMeta[metaIdx++]
       : parsed.data.title || '';
   const enSummary =
     parsed.data.summary && /[\u4e00-\u9fa5]/.test(parsed.data.summary)
-      ? translatedAll[metaIdx++]
+      ? translatedMeta[metaIdx++]
       : parsed.data.summary || '';
   const enTldr =
     parsed.data.tldr && /[\u4e00-\u9fa5]/.test(parsed.data.tldr)
-      ? translatedAll[metaIdx++]
+      ? translatedMeta[metaIdx++]
       : parsed.data.tldr || '';
 
-  // 拆回正文段落
-  let paraIdx = 0;
-  const translatedParagraphs = [...paragraphs];
-  paraIndices.forEach((index) => {
-    translatedParagraphs[index] =
-      translatedAll[metadataTexts.length + paraIdx++];
-  });
-
-  // 拼回正文并还原占位符
-  const translatedProtectedBody = translatedParagraphs.join('\n\n');
-  let restoredBody = restoreMarkdown(translatedProtectedBody, placeholders);
+  let restoredBody = repairTranslatedProse(
+    restoreMarkdown(translatedProtectedBody, placeholders),
+  );
 
   // MDX 后处理安全清洗：
   // 1. 折叠跨行的行内标签，避免 MDX 误判为未闭合段落
@@ -378,7 +543,14 @@ async function translatePost(file) {
   return { slug, charEstimate, skipped: false };
 }
 
+function isMainModule() {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  return path.resolve(entry) === __filename;
+}
+
 async function main() {
+  requireAuthKey();
   console.log('📚 检查博客文章翻译状态...');
 
   // 检查 API 配额
@@ -477,7 +649,9 @@ async function main() {
   );
 }
 
-main().catch((err) => {
-  console.error('\n❌ 翻译过程出现错误:', err);
-  process.exit(1);
-});
+if (isMainModule()) {
+  main().catch((err) => {
+    console.error('\n❌ 翻译过程出现错误:', err);
+    process.exit(1);
+  });
+}

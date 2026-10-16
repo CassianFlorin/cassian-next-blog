@@ -1,0 +1,254 @@
+---
+title: 'Next.js Blog Automation: Integrating DeepL for i18n'
+date: '2026-10-15'
+tags:
+  - Next.js
+  - i18n
+  - 自动化
+  - 工程方法论
+  - 解决方案
+draft: false
+summary: >-
+  Documenting the full engineering practice and lessons learned while building
+  an automated i18n pipeline for a personal Next.js blog using DeepL API,
+  Contentlayer, and GitHub Actions.
+tldr: >-
+  By adopting isolated document compilation, incremental SHA-256 hash caching,
+  and AST tag protection mechanisms, we built an automated translation pipeline
+  for UI strings and article bodies within DeepL's free tier.
+sourceHash: aff360521e2df7c3f996c8321bae0dd1d34dab57b07d835157dd1ec8bee6333e
+translatedAt: '2026-10-15T13:10:00.000Z'
+---
+
+# Next.js Blog Automation: Integrating DeepL for i18n
+
+## Why this matters
+
+For a personal engineering blog centered on systems engineering, agent tooling, and developer workflows, keeping content confined exclusively to a Chinese audience is a missed opportunity—many in-depth debugging walkthroughs and architectural retrospectives provide valuable references for developers and open-source communities worldwide. However, when tackling internationalization (i18n), most personal sites face an awkward dilemma:
+
+1. **Manual Bilingual Maintenance**: Drafting a Chinese post and subsequently hand-writing an English version. As post count grows and past posts undergo iterative revisions, the two sets of MDX files inevitably drift apart, culminating in unmanageable maintenance debt.
+2. **Client-side Translation Widgets**: Relying on client-side JavaScript widgets such as Google Translate. Not only do these introduce jarring cumulative layout shifts (CLS), but more crucially, search engine crawlers cannot index statically rendered translated content. They fail to produce distinct English routes, proper `hreflang` tags, or sitemaps, offering zero utility for technical SEO or Generative Engine Optimization (GEO).
+
+This article documents the complete engineering journey of integrating the **DeepL Free API** into this site to establish a fully automated bilingual pipeline: covering UI string extraction, MDX AST syntax isolation and protection, Contentlayer isolated document architecture, SHA-256 incremental hash caching, and automated PR delivery through GitHub Actions. All implemented well within DeepL’s monthly 500,000-character free tier, delivering a zero-overhead publishing workflow.
+
+---
+
+## Core Architecture Design
+
+Before writing translation scripts, the primary architectural question is: **In what format should the translated English text reside in the codebase?**
+
+### 1. Architectural Isolation: Protecting the Knowledge Graph and Canonical Routes
+
+This blog relies on Contentlayer to build its static content model. Articles are not merely isolated standalone pages; they actively participate in **site-wide Knowledge Graph** computation, territory categorization, and bidirectional cross-referencing with project case studies.
+
+Treating English articles naively as standard `Blog` documents (for instance, dropping files into `data/blog/en/`) would introduce destructive side effects:
+
+- Doubling the `allBlogs` count, which in turn doubles the nodes and edges in the graph, distorting its topological structure;
+- Corrupting topic article counts and overall territory statistics;
+- Risking namespace collisions and URL pollution across existing Chinese routes.
+
+Consequently, we established an independent document type, `BlogTranslation`, in `contentlayer.config.ts`:
+
+```typescript
+// contentlayer.config.ts
+export const BlogTranslation = defineDocumentType(() => ({
+  name: 'BlogTranslation',
+  filePathPattern: 'blog-i18n/**/*.mdx',
+  contentType: 'mdx',
+  fields: {
+    title: { type: 'string', required: true },
+    date: { type: 'date', required: true },
+    tags: { type: 'list', of: { type: 'string' }, default: [] },
+    summary: { type: 'string' },
+    tldr: { type: 'string' },
+    sourceHash: { type: 'string' },
+    translatedAt: { type: 'string' },
+  },
+  computedFields: {
+    slug: {
+      type: 'string',
+      resolve: (doc) => doc._raw.flattenedPath.split('/').slice(2).join('/'),
+    },
+    locale: {
+      type: 'string',
+      resolve: (doc) => doc._raw.flattenedPath.split('/')[1] || 'en',
+    },
+  },
+}));
+```
+
+English translations reside strictly under `data/blog-i18n/en/*.mdx`, generating an independent `allBlogTranslations` collection:
+
+- **`allBlogs` Remains Pristine**: Contains only the canonical Chinese manuscripts, ensuring the knowledge graph, tag relation models, and routing hierarchy stay completely clean;
+- **On-Demand Hydration**: When accessing `/en/blog/[slug]`, the page fetches the English title, summary, and MDX body from `allBlogTranslations`; if a translation is missing, it falls back gracefully to Chinese with a helpful banner.
+
+---
+
+### 2. Dual Automated Pipelines: Differentiating UI Strings and Article Content
+
+Translation requirements fall into two categories with vastly different data characteristics and translation strategies:
+
+| Dimension                | UI Strings (`messages/*.json`)                              | Blog Content (`data/blog/*.mdx`)                        |
+| :----------------------- | :---------------------------------------------------------- | :------------------------------------------------------ |
+| **Data Shape**           | Structured nested JSON key-value pairs                      | Rich text MDX with Frontmatter and JSX                  |
+| **Variable Protection**  | ICU syntax placeholders (e.g., `{count, plural, ...}`)      | Inline code, code blocks, LaTeX formulas, HTML wrappers |
+| **Incremental Strategy** | Key diffing (translating only missing keys in English JSON) | SHA-256 hash comparison (zero API calls if unchanged)   |
+| **Execution Script**     | `scripts/translate-messages.mjs`                            | `scripts/translate-blog.mjs`                            |
+
+#### UI String Protection
+
+UI strings frequently contain interpolation tokens for `next-intl`. Before querying DeepL, the script replaces `{param}` tokens with special un-translatable markers, which are accurately restored after translation, ensuring variable identifiers remain intact.
+
+#### SHA-256 Content Hash Caching
+
+In the frontmatter of `data/blog-i18n/en/*.mdx`, the script persists the `sourceHash` of the Chinese original. On every run:
+
+```javascript
+const currentHash = crypto.createHash('sha256').update(chineseBody).digest('hex');
+if (existingTranslation?.sourceHash === currentHash) {
+  // Hash match indicates original manuscript has not changed; skip
+  continue;
+}
+```
+
+This guarantees that **only newly drafted articles or modified paragraphs incur DeepL calls**. Unmodified posts consume zero API quota during recurring maintenance or routine CI runs.
+
+---
+
+## Technical Retrospective: Resolving MDX AST Syntax Breakage
+
+Feeding lengthy Markdown/MDX into a machine translation API often fails not because of awkward phrasing, but because **syntax degradation causes compilation to crash**. Across our 25-post migration, two main challenges emerged:
+
+### Issue 1: YAML Frontmatter Indentation Corruption
+
+In many articles, `summary` or `tldr` values span multiple lines using folded scalar syntax (`>-`). Simple regex-based single-line replacement frequently strips or misaligns indentations, causing the YAML parser to throw:
+
+```text
+YAMLException: All mapping items must start at the same column
+```
+
+**Resolution**: Eliminate regex string manipulation entirely in favor of object-level serialization and parsing with `gray-matter`:
+
+```javascript
+const parsed = matter(rawContent);
+const translatedTitle = await translateText(parsed.data.title);
+const translatedSummary = await translateText(parsed.data.summary);
+const translatedTldr = await translateText(parsed.data.tldr);
+
+const output = matter.stringify(translatedBody, {
+  ...parsed.data,
+  title: translatedTitle,
+  summary: translatedSummary,
+  tldr: translatedTldr,
+  sourceHash: currentHash,
+  translatedAt: new Date().toISOString(),
+});
+```
+
+This eliminates indentation discrepancies and escaping errors at the source.
+
+---
+
+### Issue 2: Breaking JSX Container Tags and Paragraph Boundaries
+
+MDX parsers (acorn / remark) enforce rigorous boundaries between plain text paragraphs and JSX elements. DeepL exhibited two disruptive behaviors when processing custom components or HTML elements:
+
+1. **Collapsing Repeated Closing Tags**: Adjacent closing tags like `</div></div></div>` were occasionally treated as redundant whitespace and collapsed into fewer tags;
+2. **Splitting Opening and Closing Tags across Paragraphs**: For example, table header cells:
+   ```html
+   <th className="px-4 py-2">Scenario</th>
+   ```
+   were sometimes returned as:
+   ```html
+   <th className="px-4 py-2">Scenario</th>
+   ```
+   With opening tags isolated on newlines and closing tags attached to text, acorn would throw: `Expected closing tag before end of paragraph`.
+
+**Resolution**: A dual-layer isolation and compaction strategy:
+
+1. **Pre-translation Block Tag Isolation (`separateBlockTags`)**:
+   Before dispatching text to DeepL, standalone HTML/JSX tag lines have blank lines inserted around them, ensuring they are treated as standalone non-translatable blocks and preserved verbatim;
+2. **Post-translation Compact Sanitization**:
+   Patterns such as `<tag>\n text</tag>` are collapsed back into single-line representations, cleaning up stray newlines inside containers:
+   ```javascript
+   restored = restored.replace(
+     /<([a-z][a-z0-9]*)\s*([^>]*)>\s*\n\s*([^<\n]+)\s*<\/\1>/gi,
+     '<$1 $2>$3</$1>',
+   );
+   ```
+3. **CI Validation Guardrail**:
+   In GitHub Actions, an explicit `npx contentlayer2 build` check runs before committing PR changes. Any malformed MDX output is caught and stopped immediately within the runner.
+
+---
+
+## Full-Stack UI and Listing Localization
+
+A robust i18n implementation should not stop at article bodies. If visiting `/en` displays a Chinese article archive timeline or Chinese category tags, the experience remains broken.
+
+We resolved this by implementing unified localization helpers:
+
+### 1. Unified Post Extraction with `getLocalizedPosts(locale)`
+
+In [`lib/postTranslations.ts`](/blog/20261015-nextjs-blog-deepl-i18n-automation):
+
+```typescript
+export function getLocalizedPosts(locale?: string): CoreContent<Blog>[] {
+  const sorted = allCoreContent(sortPosts(allBlogs));
+  if (!locale || locale === 'zh') return sorted;
+
+  const translationMap = new Map(allBlogTranslations.map((t) => [t.slug, t]));
+  return sorted.map((post) => {
+    const trans = translationMap.get(post.slug);
+    if (!trans) return post;
+    return {
+      ...post,
+      title: trans.title || post.title,
+      summary: trans.summary || post.summary,
+      tldr: trans.tldr || post.tldr,
+    };
+  });
+}
+```
+
+The homepage Writing Section, `/blog` archive, knowledge territory nodes, and topic tags all feed from this function to render matching titles and summaries.
+
+### 2. Automatic Tag Localization and Typography
+
+The `TraceList` component incorporates `useTranslations('tags')` to translate tag keys:
+
+```typescript
+const tTags = useTranslations('tags');
+const formatTag = (tag: string) => {
+  const tagSlug = slug(tag);
+  if (tTags.has(tagSlug)) return tTags(tagSlug);
+  if (!tag.includes('.') && tTags.has(tag)) return tTags(tag);
+  return tag;
+};
+```
+
+Paired with the site's typography utility `type-meta` (`text-transform: uppercase`), tags render with clean, editorial uppercase styling:
+
+- `运维` → `OPERATIONS`
+- `独立开发` → `INDIE DEVELOPMENT`
+- `打印机` → `PRINTER`
+
+---
+
+## Performance and Quota Overhead
+
+Running this automated pipeline across all **25 existing deep-dive articles**:
+
+- **Character Consumption**: 25 in-depth technical posts consumed approximately 182,000 characters—well below the DeepL Free limit of 500,000 characters per month;
+- **Duration**: Translating a full-length post took 5–8 seconds;
+- **Ongoing Cost**: Each new 3,000–5,000 character post uses only ~4,000 characters, **meaning the monthly quota comfortably accommodates 80–100 new articles**;
+- **Zero Mental Friction**: Authors simply draft Chinese MDX in `data/blog/` and commit to `main`. An automated GitHub Actions run detects changes, formats the translations, validates the build, and opens a ready-to-merge PR for Vercel deployment.
+
+---
+
+## Key Takeaways
+
+Building this automated workflow reinforces a core principle: **content internationalization is fundamentally an engineering problem of data flow modeling and AST error recovery.**
+
+1. **Single Source of Truth (SSOT)**: Always treat the original manuscript as the primary source of truth, and translations as read-only generated artifacts.
+2. **Clear Boundaries between AST and Natural Language**: Machine translation engines understand prose, not code syntax. Strip tags, formulas, and code before sending text over the wire.
+3. **Keep Validation in CI**: Automation demands rigid verification. Typechecks, unit tests, and pre-build compilation in CI are essential to ensuring production stability.
