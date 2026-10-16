@@ -1,7 +1,7 @@
 ---
 title: >-
-  A Detailed Look at the ValidatorUtils Utility Class: Validation Functions for
-  ID Cards, Cell Phone Numbers, Bank Cards, and More
+  Detailed Explanation of the ValidatorUtils Utility Class: Validation Functions
+  for ID Cards, Mobile Phone Numbers, Bank Card Numbers, and More
 date: '2025-07-01 16:00:00'
 lastmod: '2026-08-04'
 tags:
@@ -13,37 +13,37 @@ tags:
   - Tips
 draft: false
 summary: >-
-  This section provides a detailed overview of the features and usage of the
-  ValidatorUtils utility class, including common validation functions such as ID
-  number validation, mobile phone number validation, and bank card validation,
-  along with a variety of usage examples.
+  A detailed introduction to the features and usage of the ValidatorUtils
+  utility class, including common validation functions such as ID number
+  validation, mobile number validation, and bank card validation, along with a
+  wealth of usage examples.
 tldr: >-
-  ValidatorUtils is a Java validation utility class that handles ID cards
-  (conversion from 15 digits to 18 digits, data extraction), mobile phone
+  ValidatorUtils is a Java validation utility class that covers ID cards
+  (15-digit to 18-digit conversion and information extraction), mobile phone
   numbers (carrier identification), bank cards (type identification), email
   addresses, password strength, URLs, and IP addresses. Regular expression
   validation incurs a performance overhead; in high-concurrency scenarios,
   you’ll need to implement your own caching.
 sourceHash: 2deb5e2ff5fd3e4b1b66a2d826ebeb9dba35cef6ec7fb159a9c714458d50454f
-translatedAt: '2026-10-15T07:37:59.561Z'
+translatedAt: '2026-10-16T05:38:03.005Z'
 ---
 
-# A Detailed Explanation of the ValidatorUtils Utility Class
+# Detailed Explanation of the ValidatorUtils Utility Class
 
-In day-to-day development, data validation is a critical step. Whether it’s user registration, data entry, or data import, it’s necessary to validate data in various formats. This article will provide a detailed overview of the features and usage of the `ValidatorUtils` utility class.
+In everyday development, data validation is a crucial step. Whether it’s user registration, data entry, or data import, various data formats must be validated. This article will provide a detailed introduction to the features and usage of the `ValidatorUtils` utility class.
 
-## 🎯 Overview of Utility Classes
+## 🎯 Overview of the Utility Class
 
-`ValidatorUtils` is a powerful Java validation utility class that provides the following main features:
+`ValidatorUtils` is a powerful Java validation utility class that provides the following key features:
 
-- **ID Number Verification**: Supports verification of 15-digit and 18-digit Chinese ID numbers
+- **ID Card Number Validation**: Supports validation of 15-digit and 18-digit Chinese ID card numbers
 - **Mobile Number Validation**: Validation of mainland China mobile number formats and carrier identification
 - **Bank Card Validation**: Validation of bank card number formats and type identification
 - **Other Validations**: Email addresses, password strength, URLs, IP addresses, etc.
 
-## 📋 ID Number Verification
+## 📋 ID Number Validation
 
-### Basic Verification
+### Basic Validation
 
 ```java
 // 验证 18 位身份证号码
@@ -75,7 +75,7 @@ String province = ValidatorUtil.getIdCardProvince(idCard);
 System.out.println("省份: " + province); // 北京
 ```
 
-### 15-bit to 18-bit
+### Converting 15-Digit to 18-Digit
 
 ```java
 String idCard15 = "110101900101123";
@@ -83,9 +83,9 @@ String idCard18 = ValidatorUtil.convert15To18(idCard15);
 System.out.println("转换后的18位身份证: " + idCard18);
 ```
 
-## 📱 Phone Number Verification
+## 📱 Mobile Phone Number Validation
 
-### Basic Verification
+### Basic Validation
 
 ```java
 // 验证手机号格式
@@ -100,6 +100,9 @@ System.out.println("无效手机号: " + isInvalid); // false
 ```
 
 ### Carrier Identification
+
+" + op);
+}
 
 ```java
 String mobile = "13812345678";
@@ -133,9 +136,9 @@ String masked = ValidatorUtil.maskMobile(mobile);
 System.out.println("隐藏后: " + masked); // 138****5678
 ```
 
-## 💳 Bank Card Verification
+## 💳 Bank Card Validation
 
-### Basic Verification
+### Basic Validation
 
 ```java
 // 验证银行卡号
@@ -161,7 +164,7 @@ String cardType = ValidatorUtil.getBankCardType(bankCard);
 System.out.println("银行卡类型: " + cardType); // 工商银行借记卡
 ```
 
-### Formatting Features
+### Formatting Function
 
 ```java
 String bankCard = "6222021234567890123";
@@ -175,9 +178,9 @@ String masked = ValidatorUtil.maskBankCard(bankCard);
 System.out.println("隐藏后: " + masked); // 6222 **** **** 0123
 ```
 
-## 📧 Other Verification Features
+## 📧 Other Validation Functions
 
-### Email Verification
+### Email Validation
 
 ```java
 String email = "test@example.com";
@@ -236,9 +239,9 @@ boolean isValidPlate = ValidatorUtil.isValidPlateNumber(plateNumber);
 System.out.println("车牌号是否有效: " + isValidPlate); // true
 ```
 
-## 🔧 Real-World Applications
+## 🔧 Practical Application Scenarios
 
-### User Registration Verification
+### User Registration Validation
 
 ```java
 public class UserRegistrationValidator {
@@ -286,7 +289,7 @@ public class DataImportValidator {
 }
 ```
 
-### Redaction of Sensitive Information
+### Sensitive Information Masking
 
 ```java
 public class DataMaskingService {
@@ -310,34 +313,35 @@ public class DataMaskingService {
 }
 ```
 
-## ⚠️ Important Notes
+## ⚠️ Precautions
 
-1. **Performance Considerations**: Regular expression validation incurs some performance overhead; caching strategies should be considered in high-concurrency scenarios.
-2. **Data Updates**: Information such as mobile phone number ranges and bank card prefixes is updated periodically and requires timely maintenance.
-3. **Internationalization**: The current utility is primarily designed for Mainland China; support for other regions requires expansion.
-4. **Security**: A successful validation does not guarantee that the data is authentic or valid; critical business operations still require additional verification measures.
+1. **Performance Considerations**: Regular expression validation incurs some performance overhead; caching strategies should be considered in high-concurrency scenarios
+2. **Data Updates**: Information such as mobile phone number ranges and bank card prefixes is updated periodically and requires timely maintenance
+3. **Internationalization**: The current utility class is primarily designed for Mainland China; support for other regions requires extension
+4. **Security**: Passing validation does not guarantee that the data is authentic or valid; additional verification methods are required for critical business operations
 
 ## 📚 Summary
 
-`ValidatorUtils` The utility class provides comprehensive data validation functionality that covers common validation needs in everyday development. By using these validation methods appropriately, you can:
+`ValidatorUtils` The utility class provides comprehensive data validation functionality, covering common validation needs in daily development. By using these validation methods appropriately, you can:
 
 - Improve data quality
 - Reduce system errors
-- Enhance the user experience
+- Enhance user experience
 - Lower maintenance costs
 
-We recommend selecting the appropriate validation method based on specific requirements in actual projects and re-encapsulating it in conjunction with business logic.
+It is recommended to select appropriate validation methods based on specific requirements in actual projects and to re-wrap them in conjunction with business logic.
 
 ---
 
 <Callout emoji="💡">
-  Note: The code examples in this article can be used directly in your project;
-  we recommend adjusting and optimizing them according to your specific needs.
+
+Note: The code examples in this article can be used directly in your projects; it is recommended to adjust and optimize them according to your actual needs.
+
 </Callout>
 
 ## 📄 Complete Code Guide
 
-Below is the complete source code for the `ValidatorUtils` utility class, for your reference and use:
+Below is the complete source code for the `ValidatorUtils` utility class, provided for reference and use:
 
 ```java
 package com.qnvip.referral.common.util;
@@ -1035,18 +1039,19 @@ public class ValidatorUtil {
 ```
 
 <Callout emoji="📝">
-  **Code Notes**: - The complete source code includes mappings for all bank card
-  prefixes (to save space, some bank card prefixes have been omitted with
-  comments in the code above) - When using this code, please ensure that all
-  necessary dependencies (Apache Commons Lang 3) are included. - It is
-  recommended to adjust certain validation rules based on actual business
-  requirements.
+
+**Code Notes**: -
+The complete source code includes all bank card prefix mappings (to save space, some bank card prefixes have been omitted with comments in the code above)
+
+- When using this in practice, please ensure that all necessary dependencies (Apache Commons Lang 3) are included -
+  It is recommended to adjust certain validation rules based on actual business requirements
+
 </Callout>
 
 ---
 
 ## 🔗 Related Resources
 
-- [Detailed Explanation of the ID Number Verification Algorithm](https://zh.wikipedia.org/wiki/中华人民共和国居民身份证)
+- [Detailed Explanation of ID Number Validation Algorithms](https://zh.wikipedia.org/wiki/中华人民共和国居民身份证)
 - [Mobile Phone Number Range Lookup](https://www.ip138.com/mobile.asp)
-- [Bank Card Number Verification Algorithm](https://zh.wikipedia.org/wiki/Luhn算法)
+- [Bank Card Number Validation Algorithms](https://zh.wikipedia.org/wiki/Luhn算法)

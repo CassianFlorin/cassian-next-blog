@@ -1,7 +1,7 @@
 ---
 title: >-
-  GEO Blog Revamp: Making Posts Citable by AI, and Uncovering the "500" Online
-  Along the Way
+  GEO Blog Overhaul: Making Posts Citable by AI, and Uncovering 500 Errors in
+  Production Along the Way
 date: '2026-08-04 10:00:00'
 tags:
   - GEO
@@ -11,19 +11,17 @@ tags:
   - Agent
   - 排错
 summary: >-
-  I made a round of GEO optimizations to my blog: one-sentence summaries,
-  structured data, full-text RSS feeds, llms.txt, and share cards. While I was
-  at it, I discovered that
-
-  the favicon had been returning a 500 error for a long time, and that the RSS
-  feed was being blocked by code in my own posts.
+  I performed a round of GEO optimization on the blog: one-sentence summaries,
+  structured data, full-text RSS, llms.txt, and share cards. Along the way, I
+  uncovered a long-standing 500 error with the favicon, as well as an RSS feed
+  being blocked by code in my own articles.
 tldr: >-
-  GEO’s focus isn’t on keywords, but on ensuring that content can be extracted
-  in full by generative engines: each article should have a self-contained
-  conclusion, Q&A sections and step-by-step instructions should be formatted as
-  structured data, and the full text should be output via RSS. The two truly
-  challenging issues in this round aren’t in the code—they can only be seen on
-  the test bench.
+  The key to GEO isn’t keywords; it’s ensuring that generative engines can
+  extract entire paragraphs of content: a self-contained conclusion for each
+  article, structuring Q&As and step-by-step guides as structured data, and
+  outputting the full text via RSS. The two truly tricky issues in this round
+  weren’t in the code at all—they could only be spotted by testing the live
+  site.
 draft: false
 faq:
   - q: GEO 和 SEO 有什么区别
@@ -63,34 +61,40 @@ howto:
     - name: 把规则写进构建
       text: 新增的约定要变成构建期校验，否则半年后自己也记不住。
 sourceHash: afc984aefd6cd8bf6427a40a9c46e8c683dcd63f979ca9bb2294c3362b1f946d
-translatedAt: '2026-10-15T07:39:26.406Z'
+translatedAt: '2026-10-16T05:43:28.944Z'
 ---
 
-# Blog GEO Redesign
+# Blog GEO Overhaul
 
 First, let’s define what GEO is: **Generative Engine Optimization**.
 
-SEO is about getting content to rank high in search results, while GEO is about getting content **cited in AI-generated answers**—when engines like ChatGPT, Claude, Perplexity, and Google AI Overviews provide answers directly, does your site get cited as a source, mentioned by name, or linked to?
+SEO is about getting content to rank high in search results, while GEO is about getting content **cited in AI-generated answers**——when engines like ChatGPT, Claude, Perplexity, and Google AI Overviews directly provide answers, does your site get recognized as a source of information, mentioned by name, or linked to?
 
-This term comes from a 2023 paper (Aggarwal et al., later published in KDD).They conducted experiments to compare which rewriting techniques could improve the “citation rate,” and their conclusions were quite counterintuitive: **Including specific statistics, citing authoritative sources, and inserting direct quotes from experts resulted in a 30–40 percent improvement in performance, whereas traditional keyword stuffing had virtually no effect.**
+This term originated from a 2023 paper (Aggarwal et al., later published in KDD).They conducted experiments to compare which rewriting techniques could improve the “citation rate,” and the conclusion was quite counterintuitive: **Including specific statistics, citing authoritative sources, and inserting direct quotes from experts resulted in a 30–40% performance boost; whereas traditional keyword stuffing had virtually no effect.**
 
 <Callout emoji="🧭">
-  Let’s start with a reality check: GEO and SEO overlap significantly at the
-  core (authority, original content, citations from other sources). It’s not a
-  new track replacing SEO; rather, it’s a reweighting of the same set of tasks
-  in the era of zero-click search results. Many “GEO services” on the market are
-  simply SEO sold under a different name.
+Let’s pour a bucket of cold water on this first: GEO and SEO overlap significantly at the core (authority, original content, being cited elsewhere).
+  It’s not a new track replacing SEO; it’s more like a reweighting of the same set of tasks in the zero-click era.
+  Many “GEO services” on the market are simply SEO repackaged under a different name.
+
 </Callout>
+This blog [underwent an SEO overhaul in the previous round](/blog/20260729-nextjs-i18n-seo-overhaul), so the foundation is solid. This time, we’re implementing GEO on top of that, and in the process, we uncovered two live issues—their commonality is that **they look completely normal in the code.**
 
-This blog [underwent an SEO overhaul in the previous round](/blog/20260729-nextjs-i18n-seo-overhaul), and the foundation is solid. This time, I’m implementing GEO on top of that, and in the process, I uncovered two live issues—what they have in common is that **they look completely normal in the code.**
+## Investigate the Live Site First, Then Read the Code
 
-## Explore Online First, Then Read the Code
+The first step isn’t to make changes, but to take stock of the situation. I used `curl` to check the sitemap, `robots.txt`, feed, and a few special paths one by one.
 
-The first step isn't to make changes—it's to take stock of what you have. Use `curl` to check the sitemap, `robots.txt`, feeds, and a few specific URLs one by one.
+The good news is that the foundation is indeed solid: article pages are server-side rendered, and the full content is included in the HTML (AI crawlers generally don’t run JavaScript, so many SPA blogs are eliminated at this stage); `robots.txt`
+is `User-Agent: *`
+/ `Allow: /`
+, and GPTBot, ClaudeBot, PerplexityBot, and Google-Extended all pass;Each page contains four JSON-LD blocks: `BlogPosting`
+, `Person`
+, `WebSite`
+, and `BreadcrumbList`
+, which are mutually referenced via `@id`
+to form a graph.
 
-The good news is that the foundation is indeed solid: article pages are server-rendered, and the full body text is included in the HTML (AI crawlers generally don’t run JavaScript, so many SPA blogs are eliminated at this stage); `robots.txt` is `User-Agent: *` / `Allow: /`, and GPTBot, ClaudeBot, PerplexityBot, and Google-Extended all pass;There are four JSON-LD blocks per page: `BlogPosting`, `Person`, `WebSite`, and `BreadcrumbList`, which are cross-referenced using `@id` to form a graph.
-
-Here's the bad news:
+Here’s the bad news:
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" https://www.cassianflorin.com/favicon.ico
@@ -100,11 +104,13 @@ curl -s -o /dev/null -w "%{http_code}\n" https://www.cassianflorin.com/favicon.i
 500
 ```
 
-## The favicon keeps returning a 500 error
+## The favicon consistently returns a 500 error
 
-It's not just the favicon. `/apple-touch-icon.png`, `/llms.txt`, and any URL in the root directory that contains a period and doesn't exist—they all return a 500 error.
+It’s not just the favicon. `/apple-touch-icon.png`
+, `/llms.txt`
+, and any non-existent URL with a dot under the root path—all return 500.
 
-The root cause is that two properly designed systems collided:
+The root cause is a clash between two well-designed features:
 
 ```ts title="middleware.ts"
 export const config = {
@@ -112,16 +118,22 @@ export const config = {
 };
 ```
 
-The middleware uses `.*\..*` to allow all paths containing dots (the intention being to avoid blocking static resources). Meanwhile, `app/[locale]` is the dynamic segment, which **matches any single-segment path**. As a result, `/favicon.ico` bypasses the middleware and is treated by the App Router as `locale = "favicon.ico"`, proceeding all the way to:
+The middleware uses `.*\..*`
+to allow all paths containing a dot (intended to avoid blocking static resources).Meanwhile, `app/[locale]`
+is the dynamic segment, which **matches any single-segment path**. As a result, `/favicon.ico`
+bypasses the middleware and is treated by the App Router as `locale = "favicon.ico"`
+, proceeding all the way to:
 
 ```tsx title="app/[locale]/layout.tsx"
 const { locale } = await params;
 const messages = (await import(`../../messages/${locale}.json`)).default;
 ```
 
-`messages/favicon.ico.json` Does not exist → `MODULE_NOT_FOUND` → 500.
+`messages/favicon.ico.json`
+(which doesn’t exist) → `MODULE_NOT_FOUND`
+→ 500.
 
-Repair is a line of defense:
+The fix is a single guard statement:
 
 ```tsx
 if (!isLocale(locale)) {
@@ -130,164 +142,209 @@ if (!isLocale(locale)) {
 ```
 
 <Callout emoji="🔍">
-  I was able to pinpoint this bug only after seeing the actual error message in
-  the dev server logs. Just looking at the code, there’s nothing suspicious
-  about the `[locale]` layout—it simply trusted the parameters provided by the
-  router.
+I pinpointed this bug only after seeing the actual error in the dev server logs. Just looking at the code, there’s nothing suspicious about the `[locale]`
+layout—it simply trusted the parameters provided by the router.
+
 </Callout>
 
-While I was at it, I copied `favicon.ico` to the root directory of `public/`, and that path now returns a 200 status code.
+I also copied `favicon.ico`
+to the root directory of `public/`
+; that path now returns a 200.
 
-## Modification 1: A single paragraph in each article that can be extracted as a conclusion
+## Modification 1: A Single, Extractable Conclusion for Each Article
 
-This is the one with the highest return on investment.
+This is the modification with the highest return on investment.
 
-Generative engines extract paragraphs that **stand on their own, independent of context**. However, such paragraphs typically do not exist in technical articles—conclusions are scattered across five subsections, so the model has to piece them together on its own.
+Generative engines extract paragraphs that **stand on their own outside of context**. However, such paragraphs rarely exist in technical articles—conclusions are scattered across five subsections, and the model has to piece them together on its own.
 
-So I added a frontmatter field named `tldr`, completing all 18 posts. It appears in three places:
+So I added a `tldr`
+frontmatter field and filled it in for all 18 articles. It appears in three places:
 
-- Visible block at the top of the main content
-- schema.org for `BlogPosting` `abstract`
-- Length validation for `check-seo` (display width of 30–200)
+- The visible block at the top of the main text
+- The schema.org `abstract`
+  for `BlogPosting`
 
-The component is intentionally kept very simple: a `<section>` containing `data-tldr`, with no nested tags between the label and the sentence, making it easy to extract the entire paragraph.
+- The length validation for `check-seo`
+  (display width: 30–200)
 
-Interestingly, that length rule immediately flagged five of my own excessively long lines; I had to compress them before it passed.
+The component is intentionally kept very simple: a `<section>`
+containing `data-tldr`
+, with no nested tags between the label and the sentence, making it easy for the entire paragraph to be extracted.
 
-## Modification 2: Pass the Q&A and steps directly to the engine
+Interestingly, that length rule immediately flagged five of my own excessively long entries; I had to shorten them to pass.
 
-Three new schema.org builders have been added, with frontmatter opt-in:
+## Modification 2: Handing Q&A and Steps Directly to the Engine
 
-| Type          | Coverage   | Content                                                                      |
-| ------------- | ---------- | ---------------------------------------------------------------------------- |
-| `FAQPage`     | 7 articles | 27 Q&A sets                                                                  |
-| `HowTo`       | 4 articles | 18 steps; each step in the Traefik article includes verified section anchors |
-| `DefinedTerm` | 3 articles | Obsidian, Harness Engineering, SDKMAN                                        |
+Added three schema.org builders, enabled via frontmatter opt-in:
 
-After deduplicating, there are a total of 9 articles. All answers were extracted from the error correction tables and the main text of the articles; no new content was written.
+| Type | Coverage | Content |
+| ---- | -------- | ------- |
+
+| `FAQPage`
+| 7 articles | 27 sets of Q&A |
+| `HowTo`
+| 4 articles | 18 steps; each step in the Traefik article includes a verified chapter anchor |
+| `DefinedTerm`
+| 3 articles | Obsidian, Harness Engineering, SDKMAN |
+
+After deduplication, there are 9 articles in total. All answers were extracted from the existing troubleshooting tables and main text of the articles; no new content was written.
 
 <Callout emoji="⚠️">
-  It’s important to note: Starting in 2023, Google will no longer display FAQ
-  and How-To rich results for most sites, so **this section will not result in
-  any changes to how your search results appear**. Its value lies in feeding
-  question-answer pairs and step-by-step sequences directly to generative
-  models, eliminating the need for the model to infer information from prose.
+It’s important to note: Starting in 2023, Google no longer displays FAQ and How-To
+  rich media results for most sites, so **this section will not result in any visible changes to your search results**.
+  Its value lies in feeding Q&A pairs and step sequences directly to the generative engine, eliminating the need for the model to infer them from prose.
+
 </Callout>
 
-All three builders use defensive parsing; when the frontmatter is written incorrectly, they return "`null`" instead of causing the build to fail.
+All three builders employ defensive parsing; when frontmatter is written incorrectly, they return `null`
+instead of failing the build.
 
 ## Modification 3: 18 Automatically Generated Share Cards
 
-None of the previous articles had cover images, so when they were shared, only the site's default banner appeared.
+Previously, none of the articles had cover images; when shared, only the site’s default banner appeared.
 
-I had originally planned to use Next's `opengraph-image` file convention, but the build immediately returned an error:
+The original plan was to use Next’s `opengraph-image`
+file convention, but the build threw an error:
 
 ```text
 Error: Catch-all must be the last part of the URL.
 ```
 
-The article route is a catch-all (`[...slug]`), and Next does not allow the image convention segment to follow it. Change it to a route handler (`app/og/[slug]/route.tsx`), and the URL is (`/og/<slug>.png`).
+The article route is a catch-all (`[...slug]`
+), and Next does not allow the image convention section to follow it. Changed it to a route handler `app/og/[slug]/route.tsx`
+, with the URL being `/og/<slug>.png`
+.
 
-Here’s a tip to avoid a pitfall: **Don’t place it under `/api/`**, because `robots.ts` contains `Disallow: /api/`, and social media crawlers can’t access the images below that.
+Here’s a pitfall to avoid: **Don’t place it under `/api/`
+**, because `robots.ts`
+contains `Disallow: /api/`
+, and social media crawlers can’t access images buried that deep.
 
-The real problem is the font. `next/og` The base font is Satori, **which doesn’t include any Chinese characters**; if you don’t explicitly pass the font along, Chinese titles will render as a block of garbled characters. The full Noto Sans SC font is 18 MB, so it’s not practical to include it in every image generation.
+The real headache is the font. `next/og`
+is based on Satori, **which doesn’t include any Chinese fonts**—if you don’t explicitly pass the font in, Chinese titles will render as a block of garbled characters. The full Noto Sans SC font is 18 MB, which is impractical to include in every image generation process.
 
-The solution is subset creation: fix the variable font to the two weights of 400 and 700, then trim it according to the character set.Character set = the entire site’s corpus + **the 3,755 characters in the GB2312 Level 1 character table** as a fallback—using only the existing corpus would result in just 1,143 characters, making it easy for new articles to exceed the character limit.
+The solution is to create a subset: fix the variable font to the 400 and 700 weights, then trim it based on the character set. Character set = site-wide corpus + **3,755 characters from the GB2312 Level 1 character set** as a fallback—using only the existing corpus would cover just 1,143 characters, and new articles would easily exceed this limit.
 
-The final result consists of 3,988 characters, with two font weights, each 1.1 MB in size. These fonts are used only for rendering during the build process and are not sent to visitors.
+The final result is 3,988 characters, with each of the two weights at 1.1 MB. These fonts are used only for rendering during build time and are not sent to visitors.
 
-There is one more reinforcement:
+One additional security measure:
 
 ```ts
 export const dynamic = 'force-static';
 export const dynamicParams = false;
 ```
 
-The font path is concatenated at runtime by `process.cwd()`. Next.js’s file tracking cannot detect this statically, so the TTF file is not included in the serverless function package. Therefore, unrendered slugs must return a 404 error at the routing layer, rather than failing after entering the handler function because the font cannot be found.
+The font path is concatenated at runtime by `process.cwd()`
+. Next.js’s file tracking cannot detect this, so the TTF files won’t be included in the serverless function package. Therefore, unrendered slugs must return a 404 at the routing layer, rather than failing after entering the handler function due to missing fonts.
 
 ## Modification 4: RSS Outputs Full Text, Then Gets Stuck on Its Own Articles
 
-Previously, the feed only included `description` (summary); subscribers had to click back to the site to read the full text.
+Previously, the feed only contained `description`
+(excerpts), and subscribers had to click back to the site to read the full text.
 
-The challenge is that the main content is written in MDX: there are 470 instances of `<div className>` and 22 instances of `<Callout>` across the 18 articles, as well as several custom components. `contentlayer` only exposes `body.raw` (MDX source code) and `body.code` (compiled bundle); there is no ready-made HTML.
+The challenge is that the full text is written in MDX: out of 18 articles, there are 470 instances of `<div className>`
+, 22 instances of `<Callout>`
+, and several custom components. `contentlayer` only exposes `body.raw`
+(MDX source code) and `body.code`
+(compiled bundle); there is no ready-made HTML.
 
-I wrote a remark/rehype pipeline: strip out presentational JSX (the reader has no stylesheets or React, and the Tailwind wrapper is just noise), map things like `Callout` to semantic HTML, and then rescue the content hidden inside props—The code for `CopyableCodeBlock` and the error for `ErrorDisplay` are both inside the props; simply stripping them out would cause them to be silently lost.
+I wrote a remark/rehype pipeline: stripping out presentational JSX (the reader has no stylesheets or React, and the Tailwind wrapper is pure noise), mapping elements like `Callout`
+to semantic HTML, and then extracting the content hidden inside props—The code in `CopyableCodeBlock`
+and the error in `ErrorDisplay`
+are both inside props; simply stripping them out would result in silent data loss.
 
-Then an error occurred during XML parsing:
+Then the XML parsing threw an error:
 
 ```text
 xml.etree.ElementTree.ParseError: not well-formed (invalid token)
 ```
 
-The number of CDATA tags is balanced, and the structure looks fine. After searching for a while, I found that the culprit is this line:
+The number of CDATA tags is balanced, and the structure looks fine. After searching for a while, the culprit turned out to be this line:
 
 ```js
 width += /[⺀-￿]/.test(char) ? 2 : 1;
 ```
 
-This is the regular expression used in `check-seo` to calculate the display width of Chinese characters, with an upper limit of **U+FFFF**. It appears in the feed because [that article on the previous round of SEO updates](/blog/20260729-nextjs-i18n-seo-overhaul) referenced this code snippet.
+This is the regular expression in `check-seo`
+that calculates the display width for Chinese characters, with an upper bound of **U+FFFF**. It appeared in the feed because [that article from the previous round of SEO updates](/blog/20260729-nextjs-i18n-seo-overhaul) referenced this code snippet.
 
-U+FFFF is an invalid character in XML 1.0; **neither CDATA nor numeric references can save it**—the specification does not allow it to appear at all.
+U+FFFF is an invalid character in XML 1.0—**neither CDATA nor numeric references can save it**—since the specification simply does not allow its presence.
 
 <Callout emoji="🪤">
-  This was a pitfall the author dug for themselves in that article: it cited
-  code written during that very same round of revisions. If it hadn’t been for
-  the full-text RSS project six months later, it would never have been
-  discovered.
+This pitfall was self-inflicted by that article: it referenced code written during that very same round of refactoring.
+  If it weren’t for the full-text RSS implementation six months later, this would never have been discovered.
+
 </Callout>
 
-Processed into the escape sequence `\uXXXX`: This is both valid XML and, within the context of a code block, remains equivalent and readable JavaScript—a better solution than simply deleting it. This also addresses the C0 control character and the lone proxy entry.
+Process it into the `\uXXXX`
+escaped form: this is valid XML, and within the code block context, it remains equivalent and readable JavaScript—a better solution than simply deleting it. This also covers the C0 control character and the lone proxy entry.
 
-The feed size increased from approximately 14 KB to 208 KB. Tag feeds remain in summary format—all 51 tag feeds are subsets of the same set of articles, and repeating the full text offers no benefit.
+The feed size increased from about 14 KB to 208 KB. Tag feeds remain in summary format—all 51 tag feeds are subsets of the same set of articles, so repeating the full text offers no benefit.
 
-## Modification 5: llms.txt
+## Refactoring 5: llms.txt
 
-Follow the [llmstxt.org](https://llmstxt.org) guidelines to output the site navigation at the root path; it is statically generated during build and its content automatically updates along with the articles.
+Following the [llmstxt.org](https://llmstxt.org) specification, output a site map at the root path. It is statically generated during build and its content automatically updates along with the articles.
 
-The structure consists of an H1 heading, a one-sentence summary, and a paragraph of context, followed by a list of links organized into sections labeled `## Posts`, `## Pages`, and `## Optional`. For each article, **`tldr` is used directly as the description**—which is exactly what this field is for. A single crawl allows the model to capture the site-wide structure and the key points of each article.
+The structure consists of an H1 heading, a one-sentence summary, and a paragraph of context, followed by a list of links organized into sections based on `## Posts`
+, `## Pages`
+, and `## Optional`
+.For each article, **`tldr`
+is used directly as the description**—this is precisely what this field is for; a single crawl allows the model to capture the site-wide structure and the key points of each article.
 
-Its adoption rate is limited; it falls into the category of low-cost measures that can be easily implemented—but don’t expect immediate results.
+Adoption rates are limited; this falls into the category of low-cost, easy-to-implement improvements—don’t expect immediate results.
 
-## Modification 6: Automatic Maintenance of `lastmod`
+## Modification 6: Automatically Maintain `lastmod` The `lastmod`
 
-`lastmod` The field already exists, and both `sitemap.ts` and the structured data are reading it. What’s missing is the **value**: none of the 18 articles have had this value filled in, so `dateModified` keeps dropping back to `datePublished`, which effectively tells the engine that “these articles haven’t been updated since they were published.”
+field already exists, and both `sitemap.ts`
+and structured data are reading it. What’s missing is the **value**: none of the 18 articles had it filled in, so `dateModified`
+kept rolling back to `datePublished`
+—effectively telling the search engine that “these articles haven’t been touched since publication.”
 
-Since I’m bound to forget what I wrote by hand, I’ll deduce it from the Git history. Here’s a pitfall that isn’t immediately obvious:
+Manual updates are bound to be forgotten, so we’ll derive the value from the Git history. There’s a not-so-obvious pitfall here:
 
-The straightforward approach is to use `git log -1 --format=%cI -- <file>`. However, when the script writes `lastmod`, it creates a new commit, which becomes the latest change to that file. The next build reads the new date and writes it again—**the script feeds on its own output, causing the date to increment indefinitely**.
+The naive approach is to retrieve `git log -1 --format=%cI -- <file>`
+. However, when the script writes to `lastmod`
+, it creates a new commit. This commit becomes the latest change to the file, and the next build reads the new date, causing it to be written again—**the script consumes its own output, causing the date to increment indefinitely**.
 
-So, check the diffs for each commit to that file one by one, **skipping the commits that only changed the `lastmod:` line**, until you reach the commit that actually changed the content.
+Therefore, you must check the diff for each commit on this file, **skipping those that only modified the `lastmod:`
+line**, and keep going back until you reach the commit that actually changed the content.
 
-Another pitfall is Vercel: By default, it performs a shallow clone, and `git log` cannot retrieve the history of older files. When the script detects `--is-shallow-repository`, it skips it and uses the committed value—which is written and committed by the local build, while the build machine is only responsible for reading it.
+Another pitfall is Vercel: by default, it performs a shallow clone, so `git log`
+cannot retrieve the history of older files. The script skips `--is-shallow-repository`
+when it detects it and uses the value already committed—the value is written and committed by the local build, and the build server is only responsible for reading it.
 
-## Embedding Rules into the Build Process
+## Embedding the Rules into the Build
 
-If I keep new agreements only in my head, I won’t even remember them six months later. So I’ve written them all down in `check-seo`:
+If new conventions exist only in your head, you won’t remember them yourself six months later. So I’ve written everything into `check-seo`
+:
 
-- `tldr` Missing character warning + 30–200 display width
-- Field shape validation for `faq` / `howto` / `definedTerm`
-- OG card font character missing detection (if a character outside the subset is used in the title, an error is reported in advance rather than discovering a blank box only upon sharing)
-- `lastmod` error reported before `date`
+- `tldr`
+  Missing warning + 30–200 display width
+- Field format validation for `faq`
+  / `howto`
+  / `definedTerm`
 
-The value of this system lies in the fact that: **it turns the suggestion that “an article should have a concluding sentence” into a rule that causes the build to fail.**
+- OG card character missing detection (if a title uses a character outside the character set, it’s flagged early instead of being discovered as a blank box only when shared)
+- `lastmod`
+  Errors reported before `date` The value of this set of rules lies in the fact that **it turns the suggestion that “articles should have a one-sentence conclusion” into a rule that causes the build to fail.**
 
-## If You Want to Do GEO, Too
+## If You’re Also Working on GEO
 
-Based on the order of this round, it’s worth doing these things first:
+Following the order of my current round, it’s worth doing these things first:
 
-1. **Check the site first, rather than reading the code.** Use `curl` to test each URL in the sitemap, as well as the `robots.txt` file and the favicon, one by one, to see the actual response codes. The two most valuable discoveries from this round came from doing just that.
-2. **Make sure AI crawlers aren’t blocked.** Many sites have excellent SEO but end up blocking GPTBot altogether.
-3. **Add a self-contained conclusion to every post.** It offers the highest return on investment at virtually no cost.
+1. **Test the live environment first, rather than reading the code.** Use `curl` to check the URLs in the sitemap, `robots.txt`, and the favicon one by one to see the actual response codes. The two most valuable discoveries from this round came from doing exactly that.
+2. **Make sure the AI crawler isn’t blocked.** Many sites have excellent SEO but have inadvertently banned GPTBot entirely.
+3. **Add a self-contained conclusion to every article.** This offers the highest return on investment at virtually no cost.
 4. **Convert Q&A and step-by-step instructions into structured data.** Don’t count on rich media results; instead, focus on eliminating the need for model inference.
 5. **Output the full text via RSS.**
 6. **Incorporate new conventions into build checks.**
 
-As for the content itself—the paper’s conclusion still holds true: specific figures, authoritative citations, and direct quotes are more effective than any keyword tricks. In this regard, GEO’s standards align with those of well-written articles.
+As for the content itself—the paper’s conclusion still holds true: specific numbers, authoritative citations, and direct quotes are more effective than any keyword trick. In this regard, GEO’s standards align with those of well-written articles.
 
-## A Conclusion That Hasn't Changed
+## A Conclusion That Hasn’t Changed
 
-At the end of my previous article on SEO optimization, I wrote, “Use curl to test each URL in the sitemap one by one.”
+At the end of the article from the last round of SEO improvements, I wrote:“Use `curl` to test each URL in the sitemap one by one.”
 
-This round confirmed it once again, and even more thoroughly: the 500 error with the favicon isn't visible in the code, nor are the invalid characters in the feed—the latter was even caused by the code cited in that article itself.
+This round has confirmed that once again—and even more thoroughly: the 500 error with the favicon wasn’t visible in the code, nor were the invalid characters in the feed—the latter was even caused by the code cited in that very article.
 
-**Just because the code reads fine doesn't mean it will work in production.** I'll probably have to keep writing this for a few more years.
+**Just because the code reads fine doesn’t mean it works correctly in production.** I’ll probably have to keep writing this for a few more years.

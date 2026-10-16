@@ -298,11 +298,32 @@ function canSplitTranslation(text, error) {
   );
 }
 
+async function translatePiece(text, context) {
+  const [translated] = await translateTexts([text], context);
+  assertKeepsSurvived(text, translated);
+  return translated;
+}
+
+async function translateBySentences(paragraph, context) {
+  const parts = paragraph.split(/(?<=[。！？])/);
+  if (parts.filter((part) => /[\u4e00-\u9fa5]/.test(part)).length < 2) {
+    throw new Error('DeepL 改动了占位符，已中止这篇文章的写入');
+  }
+  console.warn('  - 这一段仍丢掉占位符，改为按句子重试');
+  const pieces = [];
+  for (const part of parts) {
+    if (!part.trim() || !/[\u4e00-\u9fa5]/.test(part)) {
+      pieces.push(part);
+      continue;
+    }
+    pieces.push(await translatePiece(part, context));
+  }
+  return pieces.join('');
+}
+
 async function translatePreservingKeeps(text, context) {
   try {
-    const [translated] = await translateTexts([text], context);
-    assertKeepsSurvived(text, translated);
-    return translated;
+    return await translatePiece(text, context);
   } catch (error) {
     if (!canSplitTranslation(text, error)) throw error;
     console.warn('  - 整篇没有完整译出，改为按段落重试');
@@ -312,9 +333,14 @@ async function translatePreservingKeeps(text, context) {
         pieces.push(paragraph);
         continue;
       }
-      const [part] = await translateTexts([paragraph], context);
-      assertKeepsSurvived(paragraph, part);
-      pieces.push(part);
+      try {
+        pieces.push(await translatePiece(paragraph, context));
+      } catch (paragraphError) {
+        if (!/占位符/.test(String(paragraphError && paragraphError.message))) {
+          throw paragraphError;
+        }
+        pieces.push(await translateBySentences(paragraph, context));
+      }
     }
     return pieces.join('\n\n');
   }
@@ -362,13 +388,87 @@ export function restoreMarkdown(text, placeholders) {
   return unwrapKeeps(restored);
 }
 
+function isCodeLikeLine(line) {
+  if (!line.trim() || /^#{1,6} /.test(line)) return false;
+  return (
+    /^\s*(\/\/|\/\*|\*\/|\*|import |package |public |private |const |let |var |function |return |if |for |while |class |export |curl |source |\$|[{}]|fi\b|then\b|esac\b)/.test(
+      line,
+    ) ||
+    /<\/|\/>|\(\)|{};|;|2>&1/.test(line) ||
+    /^\s{2,}\S/.test(line)
+  );
+}
+
+/**
+ * DeepL 有时会在真正的代码围栏前再吐出一段围栏里已有的代码。
+ * 只删掉紧挨围栏、且大多数行能在围栏正文里对上的那一段。
+ */
+export function stripDuplicatedCodeBeforeFences(text) {
+  const marks = [...text.matchAll(/^```.*$/gm)];
+  if (marks.length < 2) return text;
+
+  let result = '';
+  let cursor = 0;
+  for (let index = 0; index + 1 < marks.length; index += 2) {
+    const open = marks[index];
+    const close = marks[index + 1];
+    const pre = text.slice(cursor, open.index);
+    const body = text.slice(open.index + open[0].length, close.index);
+    const lines = pre.split('\n');
+    const bodyLines = body
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const inBody = (line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return false;
+      if (bodyLines.includes(trimmed)) return true;
+      return (
+        trimmed.length >= 12 &&
+        bodyLines.some((bodyLine) => bodyLine.endsWith(trimmed))
+      );
+    };
+    let start = lines.length;
+    const keptLines = [];
+    for (let lineIndex = lines.length - 1; lineIndex >= 0; lineIndex--) {
+      const line = lines[lineIndex];
+      if (!line.trim()) {
+        if (keptLines.length > 0) start = lineIndex;
+        continue;
+      }
+      if (!isCodeLikeLine(line) && !inBody(line)) break;
+      keptLines.push(line);
+      start = lineIndex;
+    }
+    const nonempty = keptLines.filter((line) => line.trim());
+    const hits = nonempty.filter((line) => inBody(line));
+    const drop =
+      hits.length > 0 &&
+      hits.length / nonempty.length >= 0.5 &&
+      (hits.length >= 2 || /[<{;]/.test(hits.join('\n')));
+
+    if (drop) {
+      const kept = lines.slice(0, start).join('\n').replace(/\n*$/, '');
+      result += kept ? `${kept}\n\n` : '';
+    } else {
+      result += pre;
+    }
+    result += text.slice(open.index, close.index + close[0].length);
+    cursor = close.index + close[0].length;
+  }
+  result += text.slice(cursor);
+  return result;
+}
+
 /**
  * DeepL 会把较长的占位符换行，链接的右括号就被拆开。
  * 行内代码后面多出来的空行会把句子和表格拆开，这里并回去。
- * 句号或冒号后若直接接大写，也补回空格。代码块保持原样。
+ * 组件标签前残留的 ">、句号或冒号后直接接大写，也在这里修掉。代码块保持原样。
  */
 export function repairTranslatedProse(text) {
-  const normalized = text.replace(/```">```/g, '```');
+  const normalized = stripDuplicatedCodeBeforeFences(
+    text.replace(/```">```/g, '```'),
+  );
   const chunks = normalized.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
   return chunks
     .map((chunk, index) => {
@@ -387,6 +487,7 @@ export function repairTranslatedProse(text) {
           prose = glue + rest;
         }
       }
+      prose = prose.replace(/">(?=<)/g, '');
       const linksFixed = prose.replace(
         /\[([^\]]*)\]\(\s*([^)\s]+)\s*\)/g,
         (_, label, url) =>

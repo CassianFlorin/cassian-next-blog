@@ -1,7 +1,7 @@
 ---
 title: >-
-  Troubleshooting Codex CLI Integration with a Relay Server: A Complete Account
-  of a 401 Error and the Pitfalls I Encountered
+  Codex CLI Proxy Configuration Troubleshooting: A Complete Account of a 401
+  Error and the Pitfalls I Encountered
 date: '2026-07-27 21:30:00'
 lastmod: '2026-08-04'
 tags:
@@ -13,20 +13,18 @@ tags:
   - Tools
 draft: false
 summary: >-
-  When connecting the new version of Codex CLI (tested with v0.145.0) to a
-  third-party relay server, the most common error is a continuous stream of 401
-  responses. This article outlines the correct
-
-  way to write the `config.toml` file, three common pitfalls to avoid, and
-  verification methods—you can use it as a troubleshooting checklist and copy
-  the instructions directly.
+  When connecting to third-party relay servers with the new Codex CLI (tested
+  with v0.145.0), the most common error is a series of 401 responses. This
+  article outlines the correct way to write the `config.toml` file, three common
+  pitfalls, and verification methods—you can use it as a troubleshooting
+  checklist and copy the instructions directly.
 tldr: >-
-  The key to integrating Codex CLI with a third-party relay server is that
-  `base_url` must be specified within the `[model_providers.xxx]` block and
-  referenced by the top-level `model_provider`; if it is specified directly at
-  the top level, it will be completely ignored by the new version. For
-  authentication, use the top-level `experimental_bearer_token` and do not rely
-  on environment variables.
+  The key to connecting Codex CLI to third-party relay servers is: the
+  `base_url` must be written inside the [model_providers.xxx] block and
+  referenced by the top-level `model_provider`; if written directly at the top
+  level, it will be completely ignored by the new version. Use the top-level
+  `experimental_bearer_token` for authentication; do not rely on environment
+  variables.
 howto:
   name: 给 Codex CLI 配置第三方中转站
   description: >-
@@ -59,29 +57,31 @@ faq:
   - q: 报 Not inside a trusted directory 怎么办
     a: 加 --skip-git-repo-check，或者在已经信任的目录里运行。
 sourceHash: 7785253673d286db7dd5eb83065d5cd72a6274acfa5652278036c1a86a21af27
-translatedAt: '2026-10-15T07:39:17.116Z'
+translatedAt: '2026-10-16T05:49:49.780Z'
 ---
 
-# Troubleshooting Codex CLI Configuration for Relay Stations
+# Troubleshooting Codex CLI Integration with a Relay Server
 
-When trying to connect to a third-party relay server with the new version of Codex CLI, you’re most likely to run into a problem here: even though you’ve entered the relay server’s address and key, the request still goes to `api.openai.com`, and then continues on to `401 Unauthorized`.
+When setting up the new version of Codex CLI to connect to a third-party relay server, users often get stuck at one point: even though they’ve entered the relay server’s address and key, requests still end up at `api.openai.com`, followed by a series of `401 Unauthorized` errors.
 
-This article documents the complete process of integrating the Codex CLI (including the Codex built into the ChatGPT desktop app; tested with **v0.145.0**) with the relay server: the correct configuration syntax, three common pitfalls to avoid, and how to verify that it’s actually working. You can use this as a troubleshooting checklist and follow the instructions exactly.
+This article documents my complete process of connecting Codex CLI (including the Codex built into the ChatGPT desktop app; tested with **v0.145.0**) to a relay server: the correct configuration syntax, three common pitfalls, and how to verify that the connection is working properly. You can use this as a troubleshooting checklist and follow the steps exactly.
 
 <Callout emoji="🧭">
-  One-line conclusion:
-  <strong>
-    <code>base_url</code> must be written inside the{' '}
-    <code>[model_providers.xxx]</code> block, and then the top-level
-    <code>model_provider</code> to point to
-  </strong>
-  . A <code>base_url</code> written directly at the top level will be completely
-  ignored by the new version of the Codex.
+
+Conclusion in a nutshell:
+
+{' '}
+<strong>
+  <code>base_url</code> must be specified within the{' '}
+  <code>[model_providers.xxx]</code> block, and then referenced by the top-level{' '}
+  <code>model_provider</code>
+</strong>
+. <code>base_url</code> specified directly at the top level will be completely
+ignored by the new version of Codex.
+
 </Callout>
 
-## Conclusion First: The Correct config.toml
-
-The configuration file is located at `~/.codex/config.toml` (`C:\Users\你\.codex\config.toml` on Windows). Here is the minimal configuration that works:
+## Conclusion First: The Correct `config.toml` The configuration file is located at `~/.codex/config.toml` (`C:\Users\你\.codex\config.toml` on Windows). Here is the minimal configuration that works:
 
 ```toml
 model = "gpt-5.6-sol"          # 换成中转站支持的模型名
@@ -97,13 +97,13 @@ wire_api = "responses"         # 中转站不支持 responses 就改成 "chat"
 
 Structurally, there are only three things that must align:
 
-1. The value of the top-level `model_provider` is equal to the `xxx` in `[model_providers.xxx]`.
+1. The value of the top-level `model_provider` is equal to the `xxx` value inside `[model_providers.xxx]`.
 2. `base_url` is defined inside the `provider` block, not at the top level.
-3. Authentication uses the top-level `experimental_bearer_token` and does not depend on environment variables.
+3. Authentication uses the top-level `experimental_bearer_token` and does not rely on environment variables.
 
-## What Do Error Messages Look Like?
+## What the Error Looks Like
 
-When a connection cannot be established, the most common error message looks like this:
+When a connection fails, the most common error message looks like this:
 
 <ErrorDisplay
   title="请求根本没走中转站"
@@ -116,60 +116,61 @@ When a connection cannot be established, the most common error message looks lik
     '中转站的 key 拿到官方接口当然无效 → 401',
   ]}
 />
-
 <Callout emoji="🔍">
-  The first step in troubleshooting is always to{' '}
-  <strong>check the URL in the error message</strong>: If it’s{' '}
-  <code>api.openai.com</code>, the problem is that the provider isn’t active; if
-  the URL is already your relay domain, then the issue lies with the key or{' '}
-  <code>wire_api</code> . This single clue can save you half the trouble.
+
+The first step in troubleshooting is always to visit <strong> and check the URL in the error message </strong>: If it’s {' '}
+
+{' '}
+<code>api.openai.com</code>, the problem lies with the provider not taking
+effect; if the URL is already your relay domain, then the issue is with the key
+or <code>wire_api</code> . This single clue can save you half the trouble.
+
 </Callout>
 
 ## Three Common Pitfalls
 
-### Pitfall 1: `base_url` Written directly at the top level → Completely ignored (main cause)
+### Pitfall 1: `base_url` Written directly at the top level → Completely ignored (Main Cause)
 
-This is why the vast majority of people get stuck. The new version of Codex **does not recognize the top-level `base_url`**. If there is no `[model_providers.xxx]` block with `model_provider` pointing to it, it falls back to the built-in OpenAI provider, which is hard-coded to `api.openai.com`.
+This is where the vast majority of people get stuck. The new version of Codex **does not recognize the top-level `base_url`**. If there is no `[model_providers.xxx]` block with a reference to `model_provider`, it falls back to the built-in OpenAI provider, which is hardcoded to `api.openai.com`.
 
-| Syntax                                                         | Result                                                                                                            |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| ❌ `base_url` Written directly at the top level                | Silently ignored with no error messages; the request is routed to `api.openai.com`, resulting in a 401 error      |
-| ✅ `base_url` Written inside the `[model_providers.xxx]` block | Works in conjunction with `model_provider` at the top level; the request is correctly routed to the relay station |
+| Approach                                                       | Result                                                                                                     |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| ❌ `base_url` Written directly at the top level                | Silently ignored with no error messages; request routed to `api.openai.com`, resulting in a 401            |
+| ✅ `base_url` Written inside the `[model_providers.xxx]` block | Works in conjunction with `model_provider` at the top level; request correctly routed to the relay station |
 
-Incorrect syntax (explicitly written at the top level; invalid):
+Incorrect Syntax (Directly written at the top level; invalid):
 
 ```toml
 base_url = "http://中转站域名/v1"   # ❌ 被忽略
 wire_api = "responses"
 ```
 
-### Pitfall 2: An extra quote at the end of the key
+### Pitfall 2: An Extra Quotation Mark at the End of the Key
 
-It’s very easy to make a mistake when copying and pasting a key. For example, `'sk-...4eb5"'` — the extra `"` at the end will be treated as part of the key, corrupting the entire key. As a result, even if the provider is paired, the relay station will report `invalid_api_key`.
+It’s very easy to make a typo when copying and pasting a key. For example, with `'sk-...4eb5"'` — the extra `"` at the end will be treated as part of the key, corrupting the entire key. As a result, even if the provider is paired correctly, the relay will report `invalid_api_key`.
 
 <Callout emoji="✂️">
-  Check that the quotation marks are <strong> in pairs and clean </strong>:
-  Single quotes with single quotes, double quotes with double quotes; do not mix
-  them. After pasting the key , move the cursor to the end of the line to
-  confirm there are no extra characters.
+
+Check that the quotes are <strong> paired and clean </strong>
+: Use single quotes with single quotes and double quotes with double quotes; do not mix them. After pasting the key,
+move the cursor to the end of the line to ensure there are no extra characters.
+
 </Callout>
 
-### Pitfall 3: Custom provider doesn't read `auth.json`
-
-In the Codex built into the ChatGPT desktop version, there is a `auth.json`, and the `OPENAI_API_KEY` within it is **intended only for the built-in OpenAI provider**. If a custom provider specifies `env_key = "OPENAI_API_KEY"`, it reads the actual system environment variables rather than `auth.json`, resulting in the following error:
+### Pitfall 3: Custom Provider Not Reading `auth.json` In the Codex built into the ChatGPT desktop app, there’s a `auth.json`, and the `OPENAI_API_KEY` within it is **exclusively for the built-in OpenAI provider**. If a custom provider specifies `env_key = "OPENAI_API_KEY"`, it reads the actual system environment variables instead of `auth.json`, resulting in the following error:
 
 ```text
 Missing environment variable: OPENAI_API_KEY
 ```
 
-Two solutions; I recommend the first one:
+Two Solutions—I Recommend the First One:
 
-- ✅ **Use the top-level `experimental_bearer_token`**: This doesn’t rely on environment variables, so it works reliably whether launched from the command line or via the desktop app.
-- ⚠️ Or use `export OPENAI_API_KEY=sk-xxx`, and then write `env_key = "OPENAI_API_KEY"` in the provider. Note that when the desktop app launches, it **may not inherit** the exports from `~/.zshrc`, so it can be hit-or-miss.
+- ✅ **Use top-level `experimental_bearer_token`**: No reliance on environment variables; works reliably whether launched from the command line or via the desktop app.
+- ⚠️ Alternatively, use `export OPENAI_API_KEY=sk-xxx` and then specify `env_key = "OPENAI_API_KEY"` in the provider. Note that when launching the desktop app, it **may not inherit** the exports from `~/.zshrc`, which can cause inconsistent behavior.
 
 ## Configuration Process Overview
 
-If we translate the three pitfalls above into step-by-step instructions, the process looks like this:
+Translating the three pitfalls above into step-by-step instructions results in the following path:
 
 <StepProgress
   steps={[
@@ -198,18 +199,18 @@ If we translate the three pitfalls above into step-by-step instructions, the pro
 
 ## Verification Methods
 
-It must be run in the **trusted directory**; otherwise, it will return the error `Not inside a trusted directory`:
+It must be run in a **trusted directory**; otherwise, it will return `Not inside a trusted directory`:
 
 ```bash
 cd /受信任的项目目录
 echo "只回复两个字:成功" | codex exec --skip-git-repo-check
 ```
 
-Check the startup message to see if "`provider:`" is the name of your relay station and whether it returns content normally. If you receive the word "Success," it means the entire connection is established.
+Check the startup logs to see if “`provider:`” is your relay station name and whether content is being returned normally. If you see the word “Success,” it means the entire connection is working properly.
 
-## Quick Reference Table for Error Messages
+## Quick Reference Table for Errors
 
-Compile a table of common errors and their corresponding causes so you can quickly identify the issue when it arises:
+I’ve compiled a table of common errors and their corresponding causes—if you run into a problem, just check the table to see what it is:
 
 | Error                                          | Cause                                                                       | Resolution                                                              |
 | ---------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -220,11 +221,15 @@ Compile a table of common errors and their corresponding causes so you can quick
 | `Not inside a trusted directory`               | Not in a trusted directory                                                  | Add `--skip-git-repo-check` or run it from a trusted directory          |
 
 <Callout emoji="📌">
-  Three key tips to wrap things up:
-  <strong>
-    base_url—include it in the request body; don’t put quotes around the key;
-    use bearer_token
-  </strong>{' '}
-  for authentication. The vast majority of issues with connecting to relay
-  stations can be traced back to these three points.
+
+Three Key Tips to Wrap Things Up:
+
+{' '}
+<strong>
+  Use `base_url`, omit quotes around the `key`, and use `bearer_token` for
+  authentication
+</strong>
+. The vast majority of issues with connecting to relay stations can be traced
+back to these three points.
+
 </Callout>

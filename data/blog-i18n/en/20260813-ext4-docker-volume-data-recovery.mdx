@@ -14,39 +14,35 @@ tags:
   - 事故复盘
 draft: false
 summary: >-
-  A data volume from a running Docker container was accidentally deleted in its
-  entirety, and the password for the encrypted backup was lost along with the
-  directory. After hitting dead ends with both the process handle and filesystem
-  log approaches, we ultimately used photorec to reconstruct the SQLite database
-  from the time of deletion by carving it from ext4 free blocks, achieving a
-  zero-loss recovery.This article provides a comprehensive review of the
-  principles, pitfalls, and candidate identification methods for all four
+  An entire data volume from a running Docker container was accidentally
+  deleted, and the password for the encrypted backup was lost along with the
+  directory. Both the process handle and filesystem log approaches hit dead ends
+  one after another; ultimately, photorec was used to reconstruct the SQLite
+  database from the moment of deletion by carving from ext4 free blocks,
+  achieving zero-loss recovery. This article provides a comprehensive review of
+  the principles, pitfalls, and candidate identification methods for all four
   recovery approaches.
 tldr: >-
-  After accidentally deleting data, recovery follows the sequence “process FD →
-  file system log → free block scavenging → fallback to old backups,” with costs
-  increasing and the recovery window narrowing.On a heavily used disk, ext4 logs
-  roll over every few hours, but photorec has a very high success rate at
-  recovering small files like SQLite by carving from free blocks based on file
-  headers;By using the application’s monotonic counter and external events as
-  time anchors, you can identify the exact deletion moment from among dozens of
-  historical traces. Also: The password for encrypted backups must have a second
-  copy stored independently of the server; otherwise, the backup is effectively
-  useless.
+  When recovering accidentally deleted data, follow the sequence “process file
+  descriptor → file system logs → free block carving → old backups as a last
+  resort”; the cost increases and the time window decreases with each step. On a
+  busy disk, ext4 logs roll over every few hours, but photorec has a very high
+  success rate at carving out small files like SQLite from free blocks based on
+  file headers;By using monotonically increasing counters and external events
+  from the application as timestamps, you can identify the exact moment of
+  deletion from among dozens of historical traces. Also: The password for
+  encrypted backups must have a second copy stored independently of the server;
+  otherwise, the backup is effectively useless.
 sourceHash: 4cb0b371dcdd1a295419b7b6e6e0a663babeebe49707d628a12309cd1a444b7b
-translatedAt: '2026-10-15T07:39:29.154Z'
+translatedAt: '2026-10-16T05:43:36.516Z'
 ---
 
 <div className="not-prose">
   <div className="mb-8 rounded-lg bg-gradient-to-r from-slate-700 to-red-900 p-8 text-white shadow-lg">
-    <h1 className="mb-4 text-4xl font-bold">
-      🛟 After Accidentally Deleting a Production Data Volume{' '}
-    </h1>
-    <div className="text-xl opacity-90">
-      Backup Can’t Be Restored, Logs Have Rolled Over—How to Reconstruct the
-      Database Byte by Byte from ext4 Free Blocks
-    </div>
+    <h1 className="mb-4 text-4xl font-bold">🛟 After Accidentally Deleting a Production Data Volume</h1>
+    <div className="text-xl opacity-90">Backup Can’t Be Restored, Logs Have Rolled Over—How to Reconstruct the Database Byte-by-Byte from ext4 Free Blocks</div>
   </div>
+
 </div>
 
 <StepProgress
@@ -74,18 +70,18 @@ translatedAt: '2026-10-15T07:39:29.154Z'
   ]}
 />
 
-## 📖 How It All Happened
+## 📖 How It Happened
 
-A self-hosted service was running on a Debian 12 VPS: a Docker container with a bind-mounted data volume, with a SQLite database at its core. While cleaning up the disk, a directory that “appeared to be a remnant of an older version” was completely `rm -rf`ed.
+A self-hosted service was running on a Debian 12 VPS: a Docker container with a bind-mounted data volume, where the core data was an SQLite database. During a disk cleanup, a directory that “appeared to be a remnant of an old version” was completely `rm -rf` .
 
-The problem is: **That's not the directory from the old version; it's the data volume of a running container.**
+The problem was: **that wasn’t an old version directory—it was the data volume of a running container**.
 
-To make matters worse, besides the database, there are two other things sitting in this directory:
+To make matters worse, besides the database, this directory also contained two other items:
 
-- Daily backup script (create a tar archive → GPG AES256 symmetric encryption → upload to cloud storage)
-- **GPG backup password file—the only copy in the entire universe**
+- A daily backup script (create a tar file → GPG AES256 symmetric encryption → upload to cloud storage)
+- **The GPG backup passphrase file—the only copy in the entire universe**
 
-The encrypted backups from the last 5 days are sitting quietly on the cloud storage, but I can't decrypt a single one:
+The encrypted backups for the last 5 days sit quietly on the cloud storage, but not a single one can be decrypted:
 
 <ErrorDisplay
   title="加密备份解密失败"
@@ -95,39 +91,41 @@ The encrypted backups from the last 5 days are sitting quietly on the cloud stor
     'gpg: AES256.CFB encrypted data',
     'gpg: encrypted with 1 passphrase',
     'The passphrase file is the only copy and was deleted along with the data',
-    'There is no second copy in the password manager, notes, or shell history',
+    'No second copy exists in password managers, notes, or shell history',
   ]}
 />
 
-All the backups are here, but the key is gone. The most recent plaintext backup I have right now is from a month ago.
+The backups are all there, but the key is gone. The latest plaintext backup I have right now is from a month ago.
 
 <Callout emoji="⚠️">
-  <strong>Two important lessons to keep in mind: </strong>① Before deleting any
-  "potentially redundant" directories, first{' '}
-  <code>
-    docker inspect &lt;container&gt; --format '&#123;&#123;json
-    .Mounts&#125;&#125;'
-  </code>
-  —use the actual mount path as a reference, as directory names can be
-  misleading; ② The password for encrypted backups must have
-  <strong>a second copy stored separately from this server</strong>
-  (a password manager or off-site file storage works), otherwise the backup is
-  useless.
+
+{' '}
+<strong>Two lessons to keep in mind:</strong>① Before deleting any "potentially
+redundant" directory, first run <code>
+  docker inspect &lt;container&gt; --format '&#123;&#123;json
+  .Mounts&#125;&#125;'
+</code>
+—use the actual mount path as a reference, as directory names can be misleading;
+② The passphrase for encrypted backups must have
+<strong>a second copy stored independently of this server</strong>
+(a password manager or a remote file location works), otherwise the backup is
+useless.
+
 </Callout>
 
-## 🧊 Golden Rule: Secure the Scene First
+## 🧊 Golden Rule: Preserve the Scene First
 
-Your first reaction upon realizing you’ve accidentally deleted something shouldn’t be “fix it right away,” but rather **to stop any urge to write to the disk**:
+Your first reaction upon discovering an accidental deletion should not be “fix it quickly,” but rather **to stop any urge to write**:
 
-- **Do not restart the container/service**. The process may still be holding handles to the deleted files; restarting it will result in their permanent loss. Even if the handles are gone, the process will continue to run using its in-memory configuration, giving you time to troubleshoot;
-- **Minimize writes to the target disk**. The data blocks of the deleted files are still in the free block pool, and every write to the disk could overwrite them;
-- **Always write the output of the recovery operation to a different disk**.
+- **Do not restart the container/service**. Processes may still hold handles to the deleted files; restarting will result in their permanent loss. Even if the handles are gone, the process will continue to run using its in-memory configuration, buying you time to troubleshoot;
+- **Minimize writes to the target disk**. The data blocks of the deleted files are still residing in free blocks, and every write to the disk could overwrite them;
+- **Always write the output of recovery operations to a different disk**.
 
-Next, we took four different routes in order of cost (from lowest to highest) and time window (from shortest to longest).
+Next, we followed four approaches in order of increasing cost and lengthening time window.
 
-## ❌ Approach 1: Retrieve from the process handle (5 minutes, unsuccessful)
+## ❌ Approach 1: Retrieve from process handles (5 minutes, unsuccessful)
 
-On Linux, when a file is deleted but is still open by a process, the data is actually still there and can be copied back exactly as it was from `/proc`:
+Under Linux, when a file is deleted but remains open by a process, the data is actually still present and can be copied back exactly as is from `/proc` :
 
 ```bash
 # 找被删但仍被打开的文件
@@ -137,13 +135,13 @@ ls -l /proc/<pid>/fd/ | grep -i deleted
 cp /proc/<pid>/fd/<N> /安全位置/recovered.db
 ```
 
-This is the path with the lowest cost and the highest success rate—**always be the first to try it**.
+      This is the approach with the lowest cost and highest success rate; **always try this first**.
 
-Unfortunately, it didn't work this time: the service's SQLite connection is enabled on demand, and the process does not hold the file handle for an extended period.
+Unfortunately, this attempt failed: the service’s SQLite connection is established on-demand, and the process does not hold the file handle for an extended period.
 
-## ❌ Option 2: ext4 Log Recovery (30 minutes, unsuccessful)
+## ❌ Approach 2: ext4 Journal Recovery (30 minutes, unsuccessful)
 
-The ext4 journal temporarily retains the metadata of deleted inodes; `ext4magic` can use this to restore the complete directory tree:
+The ext4 journal temporarily retains metadata for deleted inodes; `ext4magic` can be used to recover the complete directory tree:
 
 ```bash
 apt-get install -y ext4magic
@@ -155,21 +153,21 @@ ext4magic /dev/vdb1 \
   -r -d /另一块盘/recover
 ```
 
-I ran into three pitfalls, all of which are worth noting:
+      I ran into three pitfalls, all worth noting:
 
-1. **`-b` must use the timestamp before deletion**. Using the timestamp after deletion will result in `Inode not found`—the directory inode has already been released, so resolving the path based on "now" will naturally fail;
-2. **Beware of false leads**.The `Inode found ... is allocated` in the output looks like “the directory was actually moved with `mv`,” but checking with `find /挂载点 -inum <号>` reveals that it’s the **parent directory’s** inode—the tool only parsed up to the parent level;
-3. `-m`’s full-scan “magic” mode directly causes a segmentation fault (an old bug in version 0.3.2); don’t count on it as a last resort.
+1. **`-b` must use a timestamp prior to deletion**. Using a timestamp after deletion will result in `Inode not found` —the directory inode has already been released, so resolving the path based on the "current" time will naturally fail;
+2. **Beware of false leads**.The `Inode found ... is allocated` in the output looks like “the directory was actually moved with `mv`,” but checking with `find /挂载点 -inum <号>` revealed that it was the **parent directory**’s inode—the tool only parsed up to the parent level;
+3. `-m` ’s full-scan “magic” mode directly causes a segmentation fault (an old bug in version 0.3.2); don’t count on it as a last resort.
 
-The final conclusion is `No undeled inode in journal found`: The data was deleted more than 3 hours ago, and other services on the same disk are still writing to it, so **the journal has long since been overwritten**. On a busy disk, the time window for log recovery may be only a few minutes—if you’re going to take this route, you’ll have to act fast.
+The final conclusion is `No undeled inode in journal found` : The deletion occurred 3 hours ago, and other services on the same disk are still writing to it—**the journal has long since been flushed**. On a busy disk, the time window for journal recovery may be only a few minutes—if you’re going down this route, you’ll have to act fast.
 
-## ✅ Option 3: photorec free-block carving (20 minutes, successful)
+## ✅ Approach 3: photorec Free-Block Carving (20 minutes, successful)
 
-File carving does not rely on any file system metadata; instead, it extracts the entire file directly from free blocks on the disk based on the **file header signature**. SQLite is an ideal target:
+File carving does not rely on any file system metadata; it directly extracts entire files from free blocks on the disk based on **file header signatures**. SQLite is an ideal target:
 
-- Fixed file header (`SQLite format 3\0`) and strong signature;
-- Small single-file size (tens to hundreds of KB), likely stored contiguously and resistant to fragmentation;
-- The database is repeatedly written to disk, and free blocks often contain **an entire time series of historical versions**.
+- Fixed file headers (`SQLite format 3\0` ) with strong signatures;
+- Small individual file sizes (tens to hundreds of KB), which are likely stored contiguously and are less prone to fragmentation;
+- Databases are repeatedly flushed to disk, so free blocks often contain **an entire time series of historical versions**.
 
 ```bash
 apt-get install -y testdisk sqlite3
@@ -180,17 +178,17 @@ photorec /log /d /另一块盘/carve /cmd /dev/vdb1 \
 
 Parameter Breakdown:
 
-- `options,freespace`— Only scan **free blocks**; do not touch in-use data, which makes the process much faster;
-- `fileopt,everything,disable,sqlite,enable`— Disable everything first, then enable the SQLite signature individually to avoid carving out a bunch of irrelevant files;
-- The output directory is on a separate drive.
+- `options,freespace` — Scans only **free blocks**, leaving in-use data untouched, which is much faster;
+- `fileopt,everything,disable,sqlite,enable` — Disables all signatures first, then enables the SQLite signature separately to avoid extracting a bunch of irrelevant files;
+- The output directory is on a separate disk.
 
-It took just a few minutes to scan the 107GB partition, revealing **42 SQLite files**.
+A 107GB partition was scanned in a few minutes, yielding **42 SQLite files**.
 
-## 🔍 Candidate Identification: Finding the "Moment of Deletion" Among 42 Afterimages
+## 🔍 Candidate Analysis: Finding the one with the “deletion time” among the 42 residual files
 
-What’s been carved out isn’t “a single answer,” but rather dozens of historical snapshots left behind by the database as it repeatedly settled over the past few months. Which one is the most recent?
+What was extracted isn’t “a single answer,” but rather dozens of historical snapshots left behind as the database was repeatedly written to disk over the past few months. Which one is the most recent?
 
-**Step 1: Batch Inspection**—First, eliminate the damaged ones:
+**Step 1: Batch Checkup**—first eliminate the corrupted ones:
 
 ```bash
 for f in carve-hits/*.db; do
@@ -199,26 +197,31 @@ for f in carve-hits/*.db; do
 done
 ```
 
-**Step 2: Identify monotonic quantities in the business data**. The files themselves do not have reliable timestamps (the mtime values of the fabricated files all correspond to the time they were created), but the business data contains a natural clock:
+      **Step 2: Identify monotonically increasing metrics in the business data**. The files themselves lack reliable timestamps (the `mtime` of the extracted files is set to the extraction time), but the business data contains a natural clock:
 
-- Cumulative traffic counter—monotonically increases within the same billing cycle;
-- Number of records—increases but never decreases for each user or order;
-- Expiration date field—renewal simply pushes the date forward.
+- Cumulative traffic counters—monotonically increasing within the same billing cycle;
+- Number of records—only increases for users/orders;
+- Expiration date fields—renewals only push the date forward.
 
-**Step 3: Find an external temporal anchor**. A status file from a scheduled task on the server—which records which users received expiration reminders on a given day—was spared from accidental deletion. The expiration dates it records match exactly with the fields in the candidate database, allowing us to pin the candidates to the timeline.
+**Step 3: Find external time anchors**. A status file from a scheduled task on the server (recording which users received expiration reminders on a given day) escaped accidental deletion; the expiration dates it records match the fields in the candidate database exactly—this allows us to pin the candidate to the timeline.
 
-Three chains of evidence intersect, pinpointing the sole candidate that includes both the “most recent renewal” and the “most recent new user.” `integrity_check` returns “ok”; all configuration tables are complete, and the key settings match those of the live environment. **This is the final version from the time of deletion (or very close to it).**
+The intersection of these three lines of evidence pinpointed a single candidate that contained both the “most recent renewal” and the “most recent new user.” `integrity_check` returned “ok,” confirming that all configuration tables were complete and that the key settings matched the production environment. **This is the final version from the time of deletion (or extremely close to it)**.
 
 <Callout emoji="🔍">
-  Troubleshooting Tip: Don’t make assumptions based on file size or quantity.
-  <strong>
-    Look for monotonic counters and external event anchors in the business data{' '}
-  </strong>
-  —Cumulative traffic, the number of rows that only increases, and expiration
-  times that only shift backward are all natural clocks.
+
+      Identification Principles: Don’t guess based on file size or quantity;
+
+{' '}
+<strong>
+  Look for monotonically increasing counters and external event anchors in
+  business data
+</strong>
+—Cumulative traffic, row counts that only increase, and expiration times that
+can only be pushed back are all natural clocks.
+
 </Callout>
 
-## 🚀 Deployment and Validation
+      ## 🚀 Deployment and Validation
 
 ```bash
 mkdir -p /数据卷路径/db
@@ -226,21 +229,21 @@ cp candidate-9.db /数据卷路径/db/app.db && chmod 600 /数据卷路径/db/ap
 docker restart <容器>
 ```
 
-When verifying, don’t just check that “the container is up”: ensure there are no database errors in the logs, that the web service returns a 200 status code, that the external domain is reachable, and that all core business functions have been tested one by one. If everything passes, there will be **zero configuration loss**; the worst-case scenario is simply a slight loss of statistical data from the very last segment before deletion.
+Don’t limit validation to just “the container is up”: ensure logs contain no database errors, the web service returns a 200 status code, external domain links are reachable, and walk through each core business function one by one. If everything passes, **there is zero data loss at the configuration level**; the worst-case scenario is merely a slight loss of statistical data from the very last segment before deletion.
 
-## 🛡️ Aftermath: Don't Let the Accident Happen Again
+## 🛡️ Cleanup: Don’t Let the Incident Have a Sequel
 
-1. **The backup chain was rebuilt on the same day**:flock anti-re-entry → Stop containers to ensure SQLite consistency → tar → GPG AES256 → rclone upload → Remote verification → Local/remote retention policy, and manually test the entire workflow once—a backup script that isn’t tested is as good as not written;
-2. **I immediately saved a second copy of the new password in my password manager**—the most painful part of this incident wasn’t deleting the database; it was that “all the backups were there, but there was only one key, and it was locked in the same drawer as the database”;
-3. Keep temporary files generated during the recovery process for a few days to monitor them; clean them up only after confirming there are no issues.
+1. **Rebuild the backup chain on the same day**:flock for re-entry prevention → Stop containers to ensure SQLite consistency → tar → GPG AES256 → rclone upload → remote verification → local/remote retention policy, and manually test the entire workflow once—writing a backup script without testing it is pointless;
+2. **Saved a second copy of the new password in a password manager immediately after generating it**—the most painful part of this incident wasn’t deleting the database; it was that “all the backups were there, but there was only one key, and it was locked in the same drawer as the database”;
+3. Retain temporary files generated during the recovery process for a few days to monitor them; clean them up only after confirming everything is in order.
 
-## 🧭 Quick Reference Chart for Recovery Routes
+## 🧭 Quick Reference Table for Recovery Paths
 
-| Order | Route                              | Time Window                                 | Applicable Scenarios                                   |
-| ----- | ---------------------------------- | ------------------------------------------- | ------------------------------------------------------ |
-| 1     | `/proc/<pid>/fd` Process handle    | While the process is running                | File has been deleted but the process is still running |
-| 2     | ext4 log (ext4magic)               | A few minutes to a few hours on a busy disk | Shortly after deletion, when the disk is not busy      |
-| 3     | photorec idle block carving        | Before data blocks are overwritten          | Small files with strong file headers (SQLite, etc.)    |
-| 4     | Old backups + manual data recovery | Always available                            | Fallback option when the first three fail              |
+| Sequence | Path                            | Time Window                                 | Applicable Scenarios                                   |
+| -------- | ------------------------------- | ------------------------------------------- | ------------------------------------------------------ |
+| 1        | `/proc/<pid>/fd` Process Handle | While the process is running                | File has been deleted but the process is still running |
+| 2        | ext4 Logs (ext4magic)           | A few minutes to a few hours on a busy disk | Recently deleted; disk is not busy                     |
+| 3        | photorec Idle Block Carving     | Before data blocks are overwritten          | Small files with strong file headers (SQLite, etc.)    |
+| 4        | Old backups + manual recovery   | Always available                            | A fallback option when the first three fail            |
 
-Try them from top to bottom: costs increase, and the time window decreases. May you never have to use the third one—but if you do, remember to secure the scene first.
+Try them from top to bottom: the cost increases, and the time window decreases. May you never need to use option 3—but if you do, remember to freeze the scene first.

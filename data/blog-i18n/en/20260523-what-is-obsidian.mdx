@@ -1,6 +1,6 @@
 ---
 title: >-
-  What Is Obsidian: From Installation to Accessing the Knowledge Base via the
+  What Is Obsidian: From Installation to Opening the Knowledge Base via the
   Command Line
 date: '2026-05-23'
 lastmod: '2026-08-04'
@@ -12,14 +12,13 @@ tags:
 summary: >-
   Obsidian is a knowledge management tool based on local Markdown files. This
   article introduces its core concepts, installation instructions, how to create
-  a Vault, and how to read and write notes from the command line using
-
-  the Obsidian CLI.
+  a Vault, and how to read and write notes from the command line using the
+  Obsidian CLI.
 tldr: >-
-  Obsidian is a knowledge base tool for managing local Markdown files; a "Vault"
-  is simply a regular folder, and a note is a .md file. Because knowledge is
-  stored as files and through bidirectional links, scripts, the command line,
-  and the Agent can all read and write to it directly.
+  Obsidian is a knowledge management tool that organizes local Markdown files; a
+  “Vault” is simply a regular folder, and a note is a .md file. Because
+  knowledge exists in the form of files and bidirectional links, scripts, the
+  command line, and Agent can all read and write to it directly.
 draft: false
 definedTerm:
   name: Obsidian
@@ -44,38 +43,38 @@ faq:
       可以。Obsidian CLI 支持从命令行查看 Vault、创建笔记、向已有笔记追加内容和 搜索。先确认本机能运行 obsidian
       help，创建、追加、读取三个命令连起来就是最小 的命令行闭环。
 sourceHash: 07901312e0aa76ee182ce8b5ab7748a04b35c3929aecb104ff9c9370267757a1
-translatedAt: '2026-10-15T07:39:11.390Z'
+translatedAt: '2026-10-16T05:42:28.115Z'
 ---
 
 # What Is Obsidian: From Installation to Opening the Knowledge Base via the Command Line
 
-If this is your first time hearing about Obsidian, don't overcomplicate it at first.
+If this is your first time hearing about Obsidian, don’t overcomplicate it just yet.
 
-It is essentially a note-taking tool used to manage local Markdown files. Each note you write is typically a file named `.md` on your computer; these files are stored in a regular folder, which Obsidian refers to as a “Vault.”
+At its core, it’s a note-taking tool designed to manage local Markdown files. Every note you write is typically a file on your computer named something like `.md`;These files are stored in a regular folder, which Obsidian calls a “Vault.”
 
-So Obsidian didn't start out as "just another cloud-based note-taking app," but rather as a knowledge base that more closely resembles a file system: content is stored locally, the format is open, directories are visible to the user, and notes can be linked to one another.
+So Obsidian isn’t just “another cloud-based note-taking app”—it’s more like a knowledge base built around a file system: the content is stored locally, the format is open, the directory structure is visible to you, and notes can be linked together.
 
 ## What Problems Does Obsidian Solve?
 
-Standard note-taking apps typically emphasize recording: whatever comes to mind today, just write it down. Obsidian is better suited for long-term accumulation: the content you write down today can still be searched, linked, organized, and reused in the future.
+Typical note-taking software usually emphasizes recording: write down whatever comes to mind today. Obsidian is better suited for long-term accumulation: content you write today can still be searched, linked, organized, and reused in the future.
 
 It has several key features.
 
-First, **notes are local files**. Your knowledge isn't stored solely in the database of some online service—it's stored in a folder on your own computer. You can back them up, sync them, and migrate them, and you can also open them with other editors.
+First, **notes are local files**.Your knowledge isn’t confined to the database of some online service—it’s stored in folders on your own computer. You can back it up, sync it, migrate it, or open it with other editors.
 
-Second, **the format is Markdown**. Markdown is a very lightweight text format that is suitable for both human reading and machine processing. Headings, lists, code blocks, citations, and links can all be expressed using plain text.
+Second, **the format is Markdown**. Markdown is a very lightweight text format that’s easy for both humans to read and machines to process. Headings, lists, code blocks, citations, and links can all be expressed using plain text.
 
-Third, **notes can be linked to one another**. In Obsidian, typing "`[[项目复盘]]`" will link to another note. Over time, instead of ending up with a collection of isolated documents, you’ll build an interconnected network of knowledge.
+Third, **notes can be linked to one another**. In Obsidian, typing `[[项目复盘]]` creates a link to another note. Over time, you won’t end up with just a collection of isolated documents—you’ll build an interconnected network of knowledge.
 
-Fourth, **it works well with automation tools**. Since notes are essentially files, scripts, agents, and command-line tools can all read and write this content. This is also why it’s well-suited to serve as the foundation for a personal knowledge base.
+Fourth, **it integrates well with automation tools**. Since notes are essentially files, scripts, agents, and command-line tools can all read and write this content. This is also why it’s well-suited to serve as the foundation for a personal knowledge base.
 
 ## A Few Basic Concepts
 
-Understanding a few terms before you begin the installation will make the process much easier.
+Understanding a few terms before installation will make things much easier.
 
 ### Vault
 
-Vault is an entire knowledge base managed by Obsidian. You can think of it as a regular folder, for example:
+A Vault is an entire knowledge base managed by Obsidian. You can think of it as a regular folder, for example:
 
 ```text
 我的知识库/
@@ -85,55 +84,55 @@ Vault is an entire knowledge base managed by Obsidian. You can think of it as a 
 └── 日记/
 ```
 
-Obsidian doesn't open a specific note; it opens the entire Vault. A user can have multiple Vaults, but it's recommended to start with just one.
+Obsidian doesn’t open a single note; it opens the entire Vault. A person can have multiple Vaults, but it’s recommended to start with just one.
 
 ### Note
 
-A "Note" is a note entry, which typically corresponds to a file named `.md`.
+A Note is a single note, typically corresponding to a `.md` file.
 
-For example, if you create a note in Obsidian named `什么是 Agent`, you'll typically see the following in the file system:
+For example, if you create a note called `什么是 Agent` in Obsidian, you’ll usually see the following in your file system:
 
 ```text
 什么是 Agent.md
 ```
 
-This is important: Obsidian doesn't lock your content into some weird format.
+This is important: Obsidian doesn’t lock your content into a proprietary format.
 
 ### Link
 
-A "Link" is a connection between notes.
+A Link is a connection between notes.
 
 ```markdown
 这篇文章和 [[Agent 与 Obsidian 工作流]] 有关。
 ```
 
-When you click this link, Obsidian will open the corresponding note. If the note doesn't exist yet, you can create it right away.
+When you click this link, Obsidian opens the corresponding note. If the note doesn’t exist yet, it will create it on the spot.
 
 ### Graph View
 
-Graph View is Obsidian's graph view. It represents notes as nodes and links as lines.
+Graph View is Obsidian’s graph view. It represents notes as nodes and links as lines.
 
-Many people are initially drawn to Obsidian because of its mind maps, but the mind maps aren’t the core feature. What’s truly valuable is the connections you actively create while taking notes; the mind maps are simply a visual representation of those connections.
+Many people are drawn to the graph when they first encounter Obsidian, but the graph isn’t the core feature. What’s truly valuable is the connections you actively create while writing notes; the graph is simply a visualization of those connections.
 
 ## Installing Obsidian
 
-The safest way is to download it from the Obsidian website:
+The safest way is to download it from the official Obsidian website:
 
 [https://obsidian.md/download](https://obsidian.md/download)
 
-Select your system version:
+Select the version for your operating system:
 
 - macOS: Download `.dmg` and drag it to the Applications folder.
-- Windows: Download the installer and follow the installation wizard to complete the installation.
-- Linux: Choose the appropriate format—AppImage, deb, rpm, or another format—based on your distribution.
+- Windows: Download the installer and follow the setup wizard to complete the installation.
+- Linux: Choose AppImage, deb, rpm, or another format based on your distribution.
 
-Once the installation is complete, open Obsidian. The first time you launch it, you'll be prompted to choose between creating a new Vault or opening an existing folder.
+Once installed, open Obsidian. The first time you launch it, you’ll be prompted to either create a new Vault or open an existing folder.
 
-If you're a new user, we recommend creating a new Vault.
+If you’re a new user, we recommend creating a new Vault.
 
 ## Creating Your First Vault
 
-I suggest not designing a complex directory structure at first; just set up a structure that works.
+I suggest not designing a complex directory structure at first; just set up a basic structure that works.
 
 For example, create a Vault named:
 
@@ -152,22 +151,22 @@ Outputs/
 
 These four directories are enough to get started:
 
-- `Inbox`: Temporary notes; place content here that hasn’t been organized yet.
-- `Projects`: Project processes, meeting minutes, and troubleshooting records.
+- `Inbox`: Temporary notes—use this for content that hasn’t been organized yet.
+- `Projects`: Project processes, meeting minutes, and troubleshooting logs.
 - `Knowledge`: Concepts, methods, and lessons learned for long-term reuse.
-- `Outputs`: Content to be published as blog posts, documents, or proposals.
+- `Outputs`: Content to be published as blog posts, documentation, or proposals.
 
-Your table of contents doesn't have to be perfect from the start. The great thing about Obsidian is that it's essentially a folder, so you can adjust it at any time later on.
+Your directory structure doesn’t have to be perfect from the start. The beauty of Obsidian is that it’s essentially a set of folders—you can adjust them at any time later.
 
-## Writing My First Note
+## Writing Your First Note
 
-First, create a very simple note, such as:
+Start by creating a very simple note, such as:
 
 ```text
 我的第一篇 Obsidian 笔记
 ```
 
-Here's how you can write the content:
+. The content could look like this:
 
 ```markdown
 # 我的第一篇 Obsidian 笔记
@@ -186,27 +185,29 @@ Here's how you can write the content:
 - [[Agent 与 Obsidian 工作流]]
 ```
 
-By now, you've already used Obsidian's core features: Markdown, files, and links.
+By writing this, you’ve already utilized Obsidian’s core capabilities: Markdown, files, and links.
 
-## What Is the Obsidian CLI?
+## What Is the Obsidian CLI
 
-The desktop version of Obsidian is primarily designed for human use: open the app, edit notes, search for content, and view links.
+The desktop version of Obsidian is primarily designed for human use: opening the app, editing notes, searching for content, and viewing links.
 
-CLI, on the other hand, is designed for command-line and automation scenarios: reading, creating, and searching for notes, as well as appending content, all from the terminal. This allows agents or scripts to collaborate with your knowledge base.
+The CLI, on the other hand, is designed for command-line and automation scenarios: reading, creating, and searching for notes, as well as appending content in the terminal. This allows agents or scripts to interact with your knowledge base.
 
-One thing to note: Obsidian supports two common automation methods.
+One thing to note: Obsidian supports two common automation entry points.
 
-The first type is the `obsidian://` URI. It can be used to open Vault, open a note, create a note, or trigger a search via a link, making it suitable for cross-app interactions.
+The first is the `obsidian://` URI. It allows you to open a Vault, open a note, create a note, or trigger a search via a link, making it suitable for cross-application integration.
 
-The second option is the Obsidian CLI, which involves using the `obsidian` command in the terminal. It is suitable for scripts, agents, and more complex automation workflows.
+The second is the Obsidian CLI, which involves using `obsidian` commands in the terminal. It’s suitable for scripts, agents, and more complex automation workflows.
 
-To enable the CLI, first make sure you have a recent version of the Obsidian desktop app installed, and then open the following in Obsidian:
+To enable the CLI, first ensure you have a recent version of the Obsidian desktop app installed, then open the following in Obsidian:
+
+General -> Command line interface
 
 ```text
 Settings -> General -> Command line interface
 ```
 
-Once enabled, follow the on-screen prompts to add the CLI to your system PATH. After adding it, restart the terminal.
+Once enabled, follow the on-screen prompts to add the CLI to your system PATH. After adding it, restart your terminal.
 
 On macOS, this entry is typically created after registration:
 
@@ -214,35 +215,35 @@ On macOS, this entry is typically created after registration:
 /usr/local/bin/obsidian
 ```
 
-On Windows, the installer provides a terminal forwarding entry; on Linux, the CLI is typically placed in `~/.local/bin/obsidian`, and you need to verify that `~/.local/bin` is already in `PATH`.
+On Windows, the installer provides a terminal shortcut; on Linux, the CLI is usually placed in `~/.local/bin/obsidian`, so you’ll need to verify that `~/.local/bin` is already in `PATH`.
 
-You can start by checking:
+You can check first:
 
 ```bash
 command -v obsidian
 obsidian help
 ```
 
-If `command -v obsidian` does not produce any output, you can also check:
+If `command -v obsidian` produces no output, you can also check:
 
 ```bash
 ls -l /usr/local/bin/obsidian
 /usr/local/bin/obsidian help
 ```
 
-If none of these commands exist, it means your system does not yet have a directly executable Obsidian CLI. In this case, first make sure the desktop version of Obsidian is properly installed and running, then go back to Settings to enable and register the CLI.
+If none of these commands exist, it means your system does not yet have a directly executable Obsidian CLI. In this case, first ensure that the desktop version of Obsidian is properly installed and running, then return to Settings to enable and register the CLI.
 
-Additionally, the Obsidian app must be running when you execute CLI commands.
+Additionally, the Obsidian app itself must be running when executing CLI commands.
 
-## Viewing Vault Using the CLI
+## Viewing Vaults with the CLI
 
-Once the CLI is up and running, you can start by checking which commands are available:
+Once the CLI is running properly, you can start by seeing what commands are available:
 
 ```bash
 obsidian help
 ```
 
-If you have multiple Vaults, you can specify the Vault name:
+If you have multiple Vaults, you can specify a Vault name:
 
 ```bash
 obsidian vault="My Knowledge Base" files
@@ -260,14 +261,14 @@ You can also view information about a specific file:
 obsidian vault="My Knowledge Base" file path="Knowledge/个人知识管理.md"
 ```
 
-There are two common parameters here that need to be distinguished:
+There are two common parameters to distinguish between:
 
-- `file=` More like searching by note name, similar to the wikilink experience in Obsidian.
-- `path=` This is the exact file path, suitable for use with scripts and Agents.
+- `file=` is more like searching by note name, similar to the wikilink experience in Obsidian.
+- `path=` specifies the exact file path, suitable for scripts and Agents.
 
-In an automated scenario, I would recommend using `path=` because it is clearer.
+In automated scenarios, I recommend using `path=` because it’s more explicit.
 
-## Creating and Appending Notes Using the CLI
+## Creating and Appending Notes via the CLI
 
 Create a new note:
 
@@ -275,50 +276,50 @@ Create a new note:
 obsidian vault="My Knowledge Base" create path="Inbox/今天的想法.md" content="今天开始整理 Obsidian 工作流。"
 ```
 
-Add content to an existing note:
+Append content to an existing note:
 
 ```bash
 obsidian vault="My Knowledge Base" append path="Inbox/今天的想法.md" content="\n\n## 后续行动\n\n- 整理目录结构\n- 建立第一组链接"
 ```
 
-Read Validation:
+Read and verify:
 
 ```bash
 obsidian vault="My Knowledge Base" read path="Inbox/今天的想法.md"
 ```
 
-When combined, these three commands form the smallest command-line loop: create, append, and read.
+Combined, these three commands form the smallest command-line loop: create, append, read.
 
-## Searching Notes Using the CLI
+## Searching for Notes via the CLI
 
-As the Vault grows, search becomes increasingly important.
+As your Vault grows, searching becomes crucial.
 
 ```bash
 obsidian vault="My Knowledge Base" search query="Agent"
 ```
 
-If you want the Agent to help you find historical context, you can usually have it search first, then read the relevant notes, and finally summarize the existing conclusions.
+If you want the Agent to help you find historical context, you can usually have it search first, then read the relevant notes, and finally summarize existing conclusions.
 
-This process is much more reliable than simply relying on chat logs, because the knowledge is stored in a place where you can view, edit, and verify it.
+This process is much more reliable than relying solely on chat logs, because knowledge is stored where you can see it, edit it, and verify it.
 
-## Recommended Order for Getting Started
+## Recommended Getting Started Sequence
 
-If this is your first time using Obsidian, I recommend following these steps in this order:
+If you’re new to Obsidian, I recommend following this sequence:
 
 1. Install the desktop version of Obsidian.
 2. Create a Vault.
 3. Write your first Markdown note.
 4. Learn how to create links using `[[笔记名]]`.
-5. Verify whether `obsidian help` runs on your machine.
+5. Verify that `obsidian help` runs on your machine.
 6. Use the CLI to create, read, and search for a note.
-7. Then consider using the Agent to help organize and reuse your notes.
+7. Then consider using an Agent to help with organization and reuse.
 
-Don't install too many plugins right from the start, and don't design a complex categorization system right away. First, go through the entire process of entering, organizing, saving, and reusing a single piece of real data.
+Don’t install too many plugins right away, and don’t design a complex categorization system from the start. First, go through the entire process of inputting, organizing, saving, and reusing a piece of real information.
 
-## Next Step: Get the Agent to Use Obsidian
+## Next Step: Getting the Agent to Use Obsidian
 
-Once you understand Vault, Markdown, links, and the CLI, it’s easy to see how the Agent integrates with Obsidian.
+Once you understand Vaults, Markdown, links, and the CLI, the integration of the Agent with Obsidian becomes straightforward.
 
-Obsidian stores long-term knowledge, while Agent is responsible for reading, refining, connecting, and rewriting it. You can organize a discussion into notes, or have Agent retrieve context from old notes to generate new articles, documents, or proposals.
+Obsidian stores long-term knowledge, while the Agent is responsible for reading, distilling, connecting, and rewriting it. You can organize a discussion into a note, or have the Agent retrieve context from old notes to generate new articles, documents, or proposals.
 
-You can continue reading in the next post: [Agent and Obsidian: Turning Your Personal Knowledge Base into an Actionable "Second Brain"](/blog/20260515-agent-obsidian-knowledge-workflow).
+Continue reading in the next post: [Agent and Obsidian: Turning Your Personal Knowledge Base into an Actionable Second Brain](/blog/20260515-agent-obsidian-knowledge-workflow).

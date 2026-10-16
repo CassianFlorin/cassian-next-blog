@@ -1,5 +1,5 @@
 ---
-title: Troubleshooting the Hijacking of Docker Container DNS by Tailscale
+title: Troubleshooting Process for Docker Container DNS Hijacking by Tailscale
 date: '2026-09-16 10:45:00'
 tags:
   - Docker
@@ -11,33 +11,35 @@ tags:
   - 故障排查
 draft: false
 summary: >-
-  All 3x-ui proxies suddenly started returning EOF. The DNS inside the container
-  is configured to point to Tailscale's 100.100.100.100, but MagicDNS is not
-  enabled, and all public domain names are returning a SERVFAIL.
+  The 3x-ui proxy suddenly started returning EOF for all requests. The DNS
+  inside the container was pointing to Tailscale’s 100.100.100.100, but MagicDNS
+  was not enabled, resulting in all public domain names returning a SERVFAIL.
 tldr: >-
   By default, Docker containers inherit the host machine’s DNS settings. When
   Tailscale is running on the host machine, even if MagicDNS is disabled, the
   container’s DNS will be pointed to 100.100.100.100, causing public domain name
-  resolution to fail.You can work around this by explicitly specifying the DNS
-  in the Compose file; however, any container that relies on external DNS
-  resolution will be affected.
+  resolution to fail. You can work around this by explicitly specifying the DNS
+  in the Compose file; however, any container that relies on external domain
+  name resolution will be affected.
 sourceHash: e99ed5835e4a8996b28f4a8b4ba38815c0736b10504559a816a1036fb8b8f7ed
-translatedAt: '2026-10-15T07:39:33.625Z'
+translatedAt: '2026-10-16T05:43:45.260Z'
 ---
 
 <div className="not-prose">
   <div className="mb-8 rounded-lg bg-gradient-to-r from-slate-700 to-blue-900 p-8 text-white shadow-lg">
-    <h1 className="mb-4 text-4xl font-bold">
-      🔍 Troubleshooting Docker DNS Failures
-    </h1>
-    <div className="text-xl opacity-90">
-      Tailscale is hijacking the container's DNS, while MagicDNS isn't actually
-      enabled
-    </div>
+    <h1 className="mb-4 text-4xl font-bold">🔍 Troubleshooting Docker DNS Failures</h1>
+    <div className="text-xl opacity-90">Tailscale Hijacked the Container DNS, While MagicDNS Wasn’t Actually Enabled</div>
   </div>
+
 </div>
 
-One morning, all proxy connections using the 3x-ui route were lost, and the client logs looked like this.
+      One morning, all proxy connections via 3x-ui were lost, and the client logs looked like this.
+
+claude.ai:443
+error: blog.cassianflorin.com:443 connect error: EOF
+
+[TCP] dial PROXY (match Match/) 127.0.0.1:55911 --> chat.openai.com:443
+error: blog.cassianflorin.com:443 connect error: EOF
 
 ```log
 [TCP] dial PROXY (match Match/) 127.0.0.1:56096 --> claude.ai:443
@@ -47,27 +49,29 @@ One morning, all proxy connections using the 3x-ui route were lost, and the clie
   error: blog.cassianflorin.com:443 connect error: EOF
 ```
 
-No matter which target I try to access, the error occurs at the same point: I cannot connect to `blog.cassianflorin.com:443`, and EOF is returned. The domain name `example.com` used consistently in the commands below refers to this one.
+No matter which target I tried to access, the error stopped at the same point—unable to connect to `blog.cassianflorin.com:443` , returning EOF. The domain name `example.com` used in the commands below refers to this one.
 
-## There's nothing wrong with the service itself
+## The Service Itself Is Working Fine
 
-First, check if the container is still there.
+First, check if the container is still running.
+
+2053/tcp
 
 ```bash
 docker ps -a | grep xui
 # 输出：3xui_app   Up 7 hours   127.0.0.1:2053->2053/tcp
 ```
 
-It's been running for 7 hours, and port forwarding is working properly. Let's check the logs again.
+      It’s been running for 7 hours, and port mapping is working normally. Next, check the logs.
 
 ```bash
 docker logs --tail 20 3xui_app
 # 输出显示 x-ui 3.4.2 和 Xray 26.6.27 正常启动
 ```
 
-Nothing out of the ordinary either. The 3x-ui side uses `externalProxy` to disguise the traffic as HTTPS traffic visiting a public website. I went over the configuration and found no issues, but when I try to connect, I just get an EOF.
+No anomalies there either. The 3x-ui side uses `externalProxy` to disguise traffic as HTTPS requests to a public website. I went through the configuration and found no issues, but connecting still results in EOF.
 
-Then try typing that domain name directly on the host machine.
+So let’s try accessing that domain directly on the host machine.
 
 ```bash
 curl -I https://example.com
@@ -77,9 +81,9 @@ openssl s_client -connect example.com:443 -servername example.com
 # 输出：Verification: OK
 ```
 
-Access from the host machine is completely normal, and the certificate is valid. At this point, we’ve ruled out issues at the service, configuration, and network levels. There’s only one remaining difference: all previous tests were performed on the host machine.
+      Access from the host machine works perfectly, and the certificate is valid. At this point, we’ve ruled out the service, configuration, and network layers—there’s only one remaining difference: all previous tests were performed on the host machine.
 
-## Switch to a container for testing
+## Switch to Testing Inside the Container
 
 Resolve the same domain name inside the container.
 
@@ -94,7 +98,7 @@ Address:   127.0.0.11:53
 ** server can't find example.com: SERVFAIL
 ```
 
-It can't be resolved inside the container. The host machine can resolve it, but the container can't, so the problem is with the container's DNS.
+      The container cannot resolve it. Since the host machine can connect but the container cannot, the problem is narrowed down to the container’s DNS.
 
 ```bash
 docker exec 3xui_app cat /etc/resolv.conf
@@ -110,9 +114,9 @@ options ndots:0
 # Overrides: []
 ```
 
-These three lines of information, taken together, tell the whole story. The container uses Docker’s built-in resolver `127.0.0.11`, which forwards traffic to `100.100.100.100`, and the search domain is `.ts.net`. All three point to Tailscale.
+Putting these three pieces of information together explains the issue. The container uses Docker’s built-in resolver `127.0.0.11` , which forwards traffic to `100.100.100.100` , and the search domain is `.ts.net` . All three point to Tailscale.
 
-## Tailscale is running, but MagicDNS is turned off
+## Tailscale Is Running, but MagicDNS Is Disabled
 
 ```bash
 systemctl status tailscaled
@@ -128,26 +132,26 @@ tailscale status --json | grep -i MagicDNS
 }
 ```
 
-Tailscale is indeed running, and the address `100.100.100.100` has indeed been configured, but `MagicDNSEnabled` is `false`. The container is sending all DNS queries to a server that isn't working, so naturally, all public domain names return a SERVFAIL.
+      Tailscale is indeed running, and the address `100.100.100.100`       is indeed configured, but `MagicDNSEnabled`       is `false`       . The container is sending all DNS queries to a server that isn’t operational, so naturally, all public domain name queries result in SERVFAIL.
 
-## Why Are Containers Affected but the Host Machine Is Fine?
+## Why the Container Is Affected but the Host Machine Isn’t
 
-Here’s how DNS works in Docker containers. Inside the container, only the built-in resolver `127.0.0.11` is recognized. When the Docker daemon starts, it reads the host machine’s `/etc/resolv.conf` and extracts `nameserver` from it to use as the forwarding target. The lookup path is: container → `127.0.0.11` → the host machine’s DNS → the public internet.
+Here’s how DNS works in a Docker container. Inside the container, only the built-in resolver `127.0.0.11` is recognized. When the Docker daemon starts, it reads the host machine’s `/etc/resolv.conf` and extracts `nameserver` from it to use as the forwarding target. The query path is: container → `127.0.0.11` → the host machine’s DNS → the public internet.
 
-Once Tailscale is installed, it injects its own DNS address into `/etc/resolv.conf`. This happens regardless of whether MagicDNS is enabled or not; the address remains there even when the feature is disabled. Docker reads this address and passes it on to the container as-is, so the entire chain’s exit point becomes that non-functional DNS server.
+Once Tailscale is installed, it injects its own DNS address into `/etc/resolv.conf` . This happens regardless of whether MagicDNS is enabled or disabled; the address remains even when the feature is turned off. Docker reads this address and passes it directly to the container, so the entire chain’s exit point becomes that non-functional DNS server.
 
-The host machine narrowly escaped disaster because its `/etc/resolv.conf` typically contains more than one `nameserver`.
+The host machine avoids this issue because its `/etc/resolv.conf` typically contains more than one `nameserver` .
 
 ```
 nameserver 8.8.8.8
 nameserver 114.114.114.114
 ```
 
-The system tries them one by one; if the first one fails, there’s a backup. Docker’s inheritance logic works differently—I haven’t looked into exactly which one it uses—but judging by the results, it doesn’t follow this “try each one in turn” behavior.
+The system tries them one by one; if the first one is unreachable, it falls back to a backup. Docker’s inheritance logic works differently—I haven’t delved into exactly which one it selects—but judging by the results, it doesn’t follow this pattern of retrying each entry in turn.
 
-## Three Amendments to the Law
+## Three Solutions
 
-**Explicitly assign a DNS to the container**—change `docker-compose.yml`. This is the method I ended up using.
+**Explicitly specify a DNS for the container** by modifying `docker-compose.yml` —this was the method I ultimately used.
 
 ```yaml
 services:
@@ -159,7 +163,7 @@ services:
     # ... 其他配置
 ```
 
-How to write `docker run`.
+`docker run` .
 
 ```bash
 docker run -d \
@@ -170,7 +174,7 @@ docker run -d \
   3x-ui-3xui:latest
 ```
 
-**Change the Docker daemon's default DNS** by editing `/etc/docker/daemon.json`.
+**Change the Docker daemon’s default DNS** by editing `/etc/docker/daemon.json` .
 
 ```json
 {
@@ -182,19 +186,19 @@ docker run -d \
 systemctl restart docker
 ```
 
-This will affect all containers on this machine that do not have DNS explicitly configured. Think carefully before proceeding.
+      This will affect all containers on this machine that do not have an explicitly configured DNS, so think carefully before making this change.
 
-**Make sure Tailscale's DNS is working properly** if you still rely on it to resolve internal domain names.
+**Make Tailscale’s DNS work properly** if you still need it to resolve internal domain names.
 
 ```bash
 tailscale set --accept-dns=true
 ```
 
-Next, configure the forwarding rules in the Tailscale management console to route public domain name lookups to the public DNS.
+      Then configure forwarding rules in the Tailscale management console to route public domain name queries to the public DNS.
 
 ## Verification
 
-Restart the container and check first to see if the configuration has been updated.
+Restart the container and first check if the configuration has been updated.
 
 ```bash
 docker exec 3xui_app cat /etc/resolv.conf
@@ -208,7 +212,7 @@ options ndots:0
 # Overrides: [nameservers]
 ```
 
-`ExtServers` has been changed to a public DNS server, and `Overrides` now includes `nameservers`, indicating that the explicit configuration has taken effect. Resolve the DNS again.
+`ExtServers` now points to the public DNS, and `Overrides` now includes `nameservers` , indicating that the explicit configuration has taken effect. Try resolving the domain again.
 
 ```bash
 docker exec 3xui_app nslookup google.com
@@ -223,23 +227,23 @@ Name:   google.com
 Address: 142.250.xxx.xxx
 ```
 
-It's working now, and the proxy has been restored as well.
+      is accessible, and the proxy has also been restored.
 
-## A Few Additional Points
+## A Few Additional Notes
 
-`127.0.0.11` is the built-in DNS that Docker runs in each custom network. It’s responsible for allowing containers to locate each other by container name, and it also forwards external domain name queries while caching them. Therefore, the `nameserver` seen inside a container is always this DNS; to see the actual upstream server, look at the `ExtServers` line.
+`127.0.0.11` is the built-in DNS that Docker runs in every custom network. It handles container-to-container communication via container names and forwards external domain name queries, caching them in the process. Therefore, the `nameserver` seen inside a container is always this built-in DNS; the actual upstream server can be found in the `ExtServers` line.
 
-This issue doesn't just affect proxies. Any container that needs to resolve external domain names will be affected—whether it's a client calling an external API, an email service sending messages, or a monitoring system pushing alerts to a webhook. The symptom is that connections suddenly fail, even though the service itself appears to be functioning normally.
+This issue doesn’t just affect the proxy. Any container that needs to resolve external domain names will be affected—clients calling external APIs, email services sending messages, and monitoring systems pushing alerts to webhooks—all exhibit the same symptom: sudden connectivity loss while the services themselves appear to be functioning normally.
 
-As for why the issue happened on that particular day, I haven't been able to determine the exact cause. It could have been due to a Tailscale restart, the container re-inheriting its configuration during rebuild, or changes to the MagicDNS settings in the background—but the logs aren't detailed enough to pinpoint the cause.
+As for why the problem occurred on that particular day, I haven’t been able to pinpoint the cause. It’s possible that Tailscale was restarted, the configuration was re-inherited when the container was rebuilt, or the MagicDNS settings in the background were accidentally changed—but the logs aren’t detailed enough to determine the exact cause.
 
-You don't need to uninstall Tailscale itself. It works quite well for connecting devices within a local network; you just need to explicitly configure the container's DNS settings.
+There’s no need to uninstall Tailscale itself. It works well for internal network connectivity; you just need to explicitly configure the container’s DNS settings.
 
-## Habits That Stick
+## Lessons Learned
 
-Don't expect containers in a production environment to inherit the correct DNS; just hard-code the `dns` field—it's a one-liner.
+Don’t rely on production containers to inherit the correct DNS settings. Hard-code the `dns` field—it’s a one-line fix.
 
-To detect similar issues early on, you can have the health check measure the resolution at the same time.
+To detect similar issues sooner, you can have the health check include a DNS resolution test.
 
 ```yaml
 services:
@@ -251,12 +255,12 @@ services:
       retries: 3
 ```
 
-The part that took the most time this time was that we spent the entire hour or so at the beginning testing on the host machine. The service was running, the ports were open, the certificates were valid, and the domain was accessible—everything was working as expected. The only thing nobody thought to do was go into the container and test it again.
+      The part that took the most time this time was that the entire hour or so was spent testing on the host machine. The service was running, the port was open, the certificate was valid, and the domain was accessible—everything was normal. The only thing no one thought to do was test it again from inside the container.
 
 ---
 
-## Related Resources
+      ## Related Resources
 
-- [Docker Official Documentation: Container Networking Configuration](https://docs.docker.com/config/containers/container-networking/)
+- [Docker Official Documentation: Container Network Configuration](https://docs.docker.com/config/containers/container-networking/)
 - [Tailscale MagicDNS Documentation](https://tailscale.com/kb/1081/magicdns/)
-- [Practical Guide to ext4 Data Recovery](/blog/20260813-ext4-docker-volume-data-recovery) (Another Docker Operations Case Study)
+- [Practical Guide to ext4 Data Recovery](/blog/20260813-ext4-docker-volume-data-recovery) (Another Docker operations case study)

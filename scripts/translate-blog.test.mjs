@@ -56,6 +56,54 @@ test('句号后粘连的英文只改正文，不改代码块', () => {
   );
 });
 
+test('围栏前重复的代码和组件前的引号会被去掉', () => {
+  const source = [
+    'Run this:',
+    '',
+    '/dev/null 2>&1; then',
+    '  echo "ok"',
+    'fi',
+    '```bash',
+    'if command -v java >/dev/null 2>&1; then',
+    '  echo "ok"',
+    'fi',
+    '```',
+    '',
+    'See:',
+    '',
+    '点我了解更多信息</MyButton>',
+    '```jsx',
+    '<MyButton href"/about">点我了解更多信息</MyButton>',
+    '```',
+    '',
+    '"><Callout emoji="📌">',
+    'Hello',
+    '"></Callout>',
+  ].join('\n');
+  assert.equal(
+    repairTranslatedProse(source),
+    [
+      'Run this:',
+      '',
+      '```bash',
+      'if command -v java >/dev/null 2>&1; then',
+      '  echo "ok"',
+      'fi',
+      '```',
+      '',
+      'See:',
+      '',
+      '```jsx',
+      '<MyButton href"/about">点我了解更多信息</MyButton>',
+      '```',
+      '',
+      '<Callout emoji="📌">',
+      'Hello',
+      '</Callout>',
+    ].join('\n'),
+  );
+});
+
 test('行内代码后的空行并回原句，代码块后的空行保留', () => {
   const source = [
     'see `hreflang`',

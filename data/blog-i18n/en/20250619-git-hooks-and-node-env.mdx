@@ -14,15 +14,13 @@ tags:
 summary: >-
   In enterprise development, you may encounter projects that use Git hooks,
   including a `git pre-commit` hook. This article discusses the issues I
-  encountered
-
-  when using Git hooks.
+  encountered when using Git hooks.
 tldr: >-
-  If a Git hook returns the error "npx: command not found," the root cause is
-  usually that the Node.js installed via Homebrew does not match the PATH
-  specified by the hook. Simply uninstall the Homebrew version of Node.js and
-  switch to managing it with nvm; the same principle applies to SDKMAN for Java
-  and pyenv for Python.
+  When a Git hook reports “npx: command not found,” the root cause is usually a
+  mismatch between the Node.js installed via Homebrew and the PATH referenced by
+  the hook. Simply uninstall the Homebrew version of Node.js and switch to
+  managing it with nvm; the same principle applies to using SDKMAN for Java and
+  pyenv for Python.
 draft: false
 faq:
   - q: Git hook 报 npx command not found 怎么解决
@@ -36,20 +34,19 @@ faq:
       Java 用 SDKMAN，Node.js 用 nvm，Python 用 pyenv，并在项目里放 .sdkmanrc、 .nvmrc
       这类配置文件让团队保持一致。
 sourceHash: eea0eed65a8c7a8a96d14e720ec87400b73ba17ff1dee6eb21ab0abfefc6175d
-translatedAt: '2026-10-15T07:37:52.395Z'
+translatedAt: '2026-10-16T05:37:49.266Z'
 ---
 
 # Git Hooks and Node Environment Issues
 
-## 🧠The Cause
+## 🧠Cause
 
-I had previously resolved the issue described in [Git Hooks and Multi-JDK Environment Issues](/blog/20250619-git-hooks-and-multi-java-env). But today, the hooks in my local Node environment 🪝 aren't being recognized again. It really is a case of one setback after another.
+I previously resolved the issue described in [Git Hooks and Multi-JDK Environment Issues](/blog/20250619-git-hooks-and-multi-java-env). However, today I encountered another problem where the local Node environment 🪝 hooks were not being recognized. It really has been a series of setbacks.
 
 <Callout emoji="📖">
-  If you haven't yet read the solutions to JDK environment issues, we recommend
-  first checking out [Git Hooks and Solutions to Multi-JDK Environment
-  Issues](/blog/20250619-git-hooks-and-multi-java-env ) to learn how to use
-  SDKMAN to manage your Java environment.
+If you haven’t yet read the solution to the JDK environment issue, I recommend first checking out [Git Hooks and Multi-JDK Environment Issues](/blog/20250619-git-hooks-and-multi-java-env)
+  to learn how to manage Java environments using SDKMAN.
+
 </Callout>
 
 <ErrorDisplay
@@ -63,7 +60,6 @@ I had previously resolved the issue described in [Git Hooks and Multi-JDK Enviro
     'PATH 环境变量配置问题',
   ]}
 />
-
 The error message is as follows:
 
 ```shell
@@ -75,12 +71,12 @@ husky - pre-commit script failed (code 127)
 husky - command not found in PATH=node_modules/.bin:/opt/homebrew/opt/git/libexec/git-core:/usr/bin:/bin:/usr/sbin:/sbin
 ```
 
-Based on the shell logs above, the Git hook cannot access my Node.js environment. Additionally, there is no npx executable file in the `node_modules` folder installed via `npm install` in the project.
+Judging from the shell log above, Git hooks can no longer detect my Node environment. Additionally, the `node_modules` folder installed via `npm install` in the project does not contain the `npx` executable.
 
-## ❌ Issues
+## ❌ Problem
 
-My development computer is a MacBook Pro with the M1 Pro chip. For students new to Mac development who are setting up their own shell environment on their computers, I imagine some of you will use Homebrew, just like I do.
-I have to say, installing packages with Homebrew is indeed convenient—all you need to do is run `brew install xxx`. However, this can also lead to environment compatibility issues.
+My development computer is a MacBook Pro with an M1 Pro chip. For developers new to the Mac system, when setting up their own shell environment on a new computer, I imagine some of you will use Homebrew, just like I did.
+I have to admit that installing packages this way is indeed convenient—all it takes is `brew install xxx`. However, this can also lead to environment mismatch issues.
 
 <EnvironmentComparison
   environments={[
@@ -105,22 +101,23 @@ I have to say, installing packages with Homebrew is indeed convenient—all you 
   ]}
 />
 
-Before writing this document, my shell environment relied entirely on packages installed via `brew`.
-The specific issue is that files installed via `brew install` are placed in the `/opt/homebrew/bin/` directory, which differs from how the native environment actually accesses them.
-Most Linux and Unix developers use directories such as `/usr/bin` and `/usr/sbin` to locate the executables they need, which differs significantly from actual production environments.
+Before writing this document, my shell environment consisted entirely of packages installed via Homebrew.
+Specifically, the files installed via `brew install` are placed in the `/opt/homebrew/bin/` directory, which differs from where the native environment actually reads them.
+Most Linux and Unix developers use directories like `/usr/bin` and `/usr/sbin` to access the executables they need, and this differs significantly from actual production environments.
 
-## 🔧Solution
+## 🔧 Solution
 
-> Now that we know where the problem lies, let's get started on fixing it!
-> My problem is that `brew install node` prevents `git hook` from reading the data.
-> I'll explain how to solve this problem below.
+&gt; Now that we know where the problem lies, let’s get to work on fixing it!
+&gt; My issue is that `brew install node`
+prevents `git hook`
+from being accessible.
+&gt; The rest of this document explains how to resolve this issue.
 
 <Callout emoji="💡">
-  This issue is similar to the previously resolved [JDK environment
-  issue](/blog/20250619-git-hooks-and-multi-java-env ) — both are caused by PATH
-  configuration problems resulting from environment management tools. The
-  difference is that this time we need to manage the Node.js environment rather
-  than the Java environment.
+This issue is similar to the [JDK environment problem](/blog/20250619-git-hooks-and-multi-java-env)
+  —both caused by PATH configuration issues stemming from environment management tools. The difference is that this time, we need to manage
+  the Node.js environment rather than the Java environment.
+
 </Callout>
 
 <StepProgress
@@ -142,8 +139,7 @@ Most Linux and Unix developers use directories such as `/usr/bin` and `/usr/sbin
     },
   ]}
 />
-
-### Uninstall Node.js
+### Uninstall Node
 
 <CopyableCodeBlock
   code="brew uninstall node"
@@ -162,14 +158,14 @@ Most Linux and Unix developers use directories such as `/usr/bin` and `/usr/sbin
   language="shell"
   title="验证卸载结果"
 />
+This completes the uninstallation of the Node environment installed via
+Homebrew. Next, we’ll install nvm
 
-This completes the uninstallation of the Node.js environment installed via Homebrew. Next, we'll install NVM.
+### Install nvm
 
-### Installing nvm
+&gt; Please Google “What is nvm” yourself
 
-> Please Google "What is nvm" yourself.
-
-We use the instructions provided by the nvm author on GitHub.
+We’ll use the instructions provided by the nvm author on GitHub.
 GitHub: https://github.com/nvm-sh/nvm
 
 <CopyableCodeBlock
@@ -191,30 +187,32 @@ GitHub: https://github.com/nvm-sh/nvm
   language="shell"
   title="安装指定版本的 Node.js"
 />
-
-All right. If you've made it this far, that means you're done. Now you can just use it as usual.
+All set. If you’ve made it this far, you’ve successfully completed the process.
+You can now use it as usual.
 
 ## 📝 Summary
 
-Through resolving this issue, I have gained some important insights regarding development environment management:
+Through resolving this issue, I’ve summarized some important lessons regarding development environment management:
 
-### 🔄 Selecting Environmental Management Tools
+### 🔄 Choosing an Environment Management Tool
 
-1. **Avoid using Homebrew to install development environments**: Although Homebrew is convenient to use, it can cause path inconsistencies that interfere with the proper functioning of Git hooks
-2. **We recommend using version management tools**:
-   - Java environment: Use [SDKMAN](/blog/20250619-git-hooks-and-multi-java-env) for management
-   - Node.js environment: Use NVM for management
-   - Python environment: Use pyenv for management
+1. **Avoid using Homebrew to install development language environments**: Although Homebrew is convenient, it can cause path inconsistencies that interfere with the proper functioning of Git hooks
+2. **Use version management tools**:
+   - Java environment: Manage using [SDKMAN](/blog/20250619-git-hooks-and-multi-java-env)
+   - Node.js environment: Manage using NVM
+   - Python environment: Manage using pyenv
 
 ### 🔗 Related Articles
 
-- [Git Hooks and Solutions for Multi-JDK Environments](/blog/20250619-git-hooks-and-multi-java-env) - Resolving Java Environment Issues
-- [SDKMAN Installation and Configuration Guide](/blog/20250619-install-sdkman) - Detailed Installation Tutorial for SDKMAN
+- [Git Hooks and Multi-JDK Environment Issues](/blog/20250619-git-hooks-and-multi-java-env) - Resolving Java environment issues
+- [SDKMAN Installation and Configuration Guide](/blog/20250619-install-sdkman) - Detailed installation tutorial for SDKMAN
 
 ### 💡 Best Practices
 
-1. **Standardized Environment Management**: Use the same environment management tool consistently across the team
-2. **Project Configuration**: Add the appropriate configuration files to the project (e.g., `.sdkmanrc`, `.nvmrc`)
-3. **Documentation**: Document the environment setup steps in the project documentation so that team members can quickly set up their environments
+1. **Unified Environment Management**: Use the same environment management tool consistently across the team
+2. **Project Configuration**: Add the appropriate configuration files to the project (e.g., `.sdkmanrc`
+   , `.nvmrc`
+   )
+3. **Documentation**: Document the environment setup steps in the project documentation so team members can quickly set up their environments
 
-This way, any issues with either the Java or Node.js environment can be properly resolved, ensuring that Git hooks work as intended.
+This way, whether the issue involves a Java or Node.js environment, it can be properly resolved, ensuring that Git hooks function correctly.

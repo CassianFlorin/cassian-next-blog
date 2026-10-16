@@ -1,7 +1,7 @@
 ---
 title: >-
-  When setting up a domain-based email account with Cloud Mail, there are
-  ownership issues even after receiving emails
+  Setting Up a Domain Email Account with Cloud Mail: Ownership Issues After
+  Receiving Emails
 date: '2026-10-12'
 lastmod: '2026-10-13'
 tags:
@@ -10,115 +10,126 @@ tags:
   - 独立开发
 draft: false
 summary: >-
-  Document the deployment of Cloud Mail domain email, the reclamation of
-  historical emails, and the migration to private R2; explain how to preserve KV
-  configurations and ensure compatibility with reading old files; and verify
+  Documents the deployment of Cloud Mail domain email, the reclamation of
+  historical emails, and the migration to private R2. Explains how to preserve
+  KV configurations, ensure compatibility with reading old files, and verify
   attachment permissions, inline images, and downloads.
 tldr: >-
-  The body and ownership of Cloud Mail are stored in D1, while attachments can
-  be written to private R2 with a KV read fallback; before the switchover,
-  conduct an inventory of actual files, and verify login and ownership
-  permissions for attachment access points.
+  Cloud Mail’s body text and ownership are stored in D1, while attachments can
+  be written to private R2 with a KV read fallback; before the switchover, take
+  inventory of actual files, and verify login and ownership permissions for
+  attachment access points.
 sourceHash: 90fdc6bf88bebcc6d186a44f0c49d3260cd35d01ea2bf5855920b89e09277037
-translatedAt: '2026-10-15T07:39:40.666Z'
+translatedAt: '2026-10-16T05:43:54.934Z'
 ---
 
-After setting up the studio’s website, I went on to configure a domain-based email system for it. In the end, I used the open-source project Cloud Mail, hosted the web interface and API on Cloudflare Workers, handled incoming mail with Email Routing, and used Resend for outgoing mail.
+After setting up the studio’s website, I proceeded to configure a domain-based email system for it. Ultimately, I opted for the open-source project Cloud Mail, with the web interface and API hosted on Cloudflare Workers, incoming mail handled by Email Routing, and outgoing mail sent via Resend.
 
-On October 8, 2026, I had to put the email project on hold halfway through. I resumed work the next day, got the login, external inbox, and domain reply features up and running, and added an email claim feature that wasn’t there before.
+On October 8, 2026, I paused work on the email system midway through the process. I resumed work the next day, getting login, external email reception, and domain-based replies up and running, and I also added an email claim feature that wasn’t there before.
 
-On October 12, I switched the file storage back to Private R2, keeping KV to store settings and login status.
+On October 12, I switched file storage to private R2, keeping the KV store to save settings and login status.
 
-The checks for receiving, previewing, and downloading real attachments, as well as anonymous access checks, which were performed on October 13, along with the Resend key rotation, are documented separately in [R2 Attachment Verification and Resend Key Rotation Supplement](/blog/20261013-cloud-mail-r2-resend-verification).
+On October 13, I implemented real attachment reception, preview and download functionality, and anonymous access checks, as well as Resend key rotation. These are documented separately in [R2 Attachment Verification and Resend Key Rotation Notes](/blog/20261013-cloud-mail-r2-resend-verification).
 
-The most noteworthy issue this time was that the email had already been received by the system, but it wasn’t visible in the newly created mailbox. Once we identified this problem, the deployment process shifted from configuring the domain name and entering the secret key to determining who actually owned the email.
+The most noteworthy issue this time was that while an email had been successfully received by the system, it was not visible in the mailbox created afterward. Upon investigating this, the deployment process shifted from configuring the domain name and entering the secret key to determining who the email actually belonged to.
 
-The following is based on the actual solution used in this deployment. Domain names and email addresses have been uniformly replaced with the examples provided under `example.com`, and the resource identifiers in the configuration have not been disclosed. This document records the results of this deployment; there is no guarantee that future upstream versions will use the same implementation.
+The following is based on the solution actually used this time. Domain names and email addresses have been uniformly replaced with examples from `example.com`
+, and resource identifiers in the configuration are not disclosed. This document records the results of this deployment; there is no guarantee that future upstream versions will use the same implementation.
 
-## Separate Configurations for Incoming, Web, and Outgoing
+## Separate Configurations for Incoming Mail, Web Interface, and Outgoing Mail
 
-When it first went live on October 9, I kept a few things separate.
+When the system went live for the first time on October 9, I separated several tasks.
 
-| Section             | Services Used in This Project             | Responsibilities                                                   |
-| ------------------- | ----------------------------------------- | ------------------------------------------------------------------ |
-| Web Pages and APIs  | Cloudflare Workers                        | Provides web-based email, login, and email operation APIs          |
-| Domain Inbox        | Cloudflare Email Routing and Email Worker | Forward incoming emails to the application for parsing and storage |
-| Email Data          | D1                                        | Stores the body, metadata, and email ownership                     |
-| Attachments         | KV Fallback Solution                      | Stores attachment content                                          |
-| Sending and Replies | Resend                                    | Sends emails using a verified domain identity                      |
+| Section             | Services Used This Time                   | Responsibilities                                                    |
+| ------------------- | ----------------------------------------- | ------------------------------------------------------------------- |
+| Web and API         | Cloudflare Workers                        | Provides web-based email, login, and email operation APIs           |
+| Domain Inbox        | Cloudflare Email Routing and Email Worker | Delivers incoming emails to the application for parsing and storage |
+| Email Data          | D1                                        | Stores body text, metadata, and email ownership                     |
+| Attachments         | KV Fallback Solution                      | Stores attachment content                                           |
+| Sending and Replies | Resend                                    | Sends emails using a verified domain identity                       |
 
-There are two addresses here that are easy to confuse. `mail.example.com` is the web portal, and `user@example.com` is the email address. The custom domain for the website handles HTTPS access; whether emails are received depends on the MX records for the root domain and the Email Routing configuration.
+There are two addresses here that are easy to confuse. `mail.example.com`
+is the web entry point, and `user@example.com`
+is the email address. The custom domain for the website handles HTTPS access; whether emails are received depends on the root domain’s MX records and the Email Routing configuration.
 
-I set up a catch-all rule for the recipient, which forwards emails sent to this domain to Email Worker. Emails received by existing email addresses are saved under their respective accounts. For addresses that haven’t been created yet, I’ve enabled the setting to accept emails from unknown senders, so those emails are temporarily held in the “Unclaimed Mail” section of the admin page.
+I’ve configured a catch-all for incoming mail, routing messages sent to this domain to Email Worker. Emails received by existing mailboxes are saved to their corresponding accounts. For addresses that haven’t been created yet, I’ve enabled the setting to accept messages from unknown senders, so these emails are temporarily held in the “Unclaimed Mail” section of the admin panel.
 
-The purpose of the "catch-all" becomes quite clear at this point. A new prefix can initially receive emails, though storage and request limits still apply. This configuration also requires someone to manage the list of unclaimed mail; it cannot simply be set up and left unattended.
+The purpose of the catch-all rule becomes very clear here. A new prefix can start receiving emails, though storage and requests are still subject to service quotas. This configuration also requires someone to manage the “Unclaimed Mail” list; you can’t just set it up and leave it unattended.
 
-## R2 isn't up and running yet, so use KV for the attachments for now
+## R2 Not Enabled; Using KV for Attachments for Now
 
-When I first checked the Cloudflare resources, the R2 API prompted that it was not yet enabled and needed to be activated in the admin panel. At the time, my email was down, and even after service was restored, I still did not enable R2.
+When I initially checked the Cloudflare resources, the R2 API indicated it was not yet enabled and needed to be activated in the dashboard. At that time, email operations were on hold, and R2 was not enabled even after deployment resumed.
 
-I reviewed the storage options for this version of the code. The application first checks the S3 configuration, then the R2 binding; if neither is present, it falls back to KV. Therefore, by storing the email body and metadata in D1 this time and using KV as a fallback for attachments, we can still continue to validate the functionality required for sending and receiving emails.
+I reviewed the storage options in this version of the code. The application first checks the S3 configuration, then the R2 binding; if neither is present, it falls back to KV. Therefore, for now, I’m routing email bodies and metadata to D1, with attachments falling back to KV—this allows us to continue validating the functionality required for sending and receiving emails.
 
-This choice only addressed the immediate usage needs. At the time, no decisions were made regarding how long to retain attachments, how to back them up, or when to clean them up. The automatic deletion feature also remained turned off. If we switch to R2 in the future, we’ll need to separately verify the readability and migration of existing attachments; we can’t simply assume that the old data has been transferred just by adding a binding.
+This choice only addresses our immediate needs. Decisions regarding how long attachments should be retained, how they should be backed up, and when they should be cleaned up had not yet been finalized at that time. Automatic deletion also remained disabled. If we switch to R2 in the future, we’ll need to separately verify the readability and migration of existing attachments; we cannot simply assume that old data has been migrated just by adding a binding.
 
-## The Resend authentication record must be separate from the recipient's MX record
+## Resend authentication records must be separate from the incoming MX record
 
-After completing the incoming mail configuration, you must also configure "Resend" separately for outgoing emails. Even if you've entered the sending key in the app, you still need to complete domain verification and enable outgoing mail settings.
+After completing the incoming mail configuration, “Resend” must be configured separately for reply emails. Even after entering the sending key in the application, you must still complete domain verification and enable outgoing mail settings.
 
-This time, we retained the root zone MX records for Cloudflare incoming mail and added records required for resends. The list below shows only the purposes; the specific values should be based on what is generated in your account dashboard.
+In this setup, the root domain’s MX record for Cloudflare’s incoming mail was retained, and additional records required by “Resend” were added. The table below lists only the purposes; refer to the specific values generated in your account dashboard.
 
-| Record | Example Name                    | Purpose                                      |
-| ------ | ------------------------------- | -------------------------------------------- |
-| TXT    | `resend._domainkey.example.com` | DKIM authentication for resends              |
-| MX     | `send.example.com`              | Sender feedback records required for resends |
-| TXT    | `send.example.com`              | SPF authentication                           |
-| CNAME  | `rsend.example.com`             | Additional records required by the backend   |
+| Record                                      | Example Name                    | Purpose |
+| ------------------------------------------- | ------------------------------- | ------- |
+| TXT                                         | `resend._domainkey.example.com` |
+| DKIM authentication for Resend              |
+| MX                                          | `send.example.com`              |
+| Outgoing feedback record required by Resend |
+| TXT                                         | `send.example.com`              |
+| SPF authentication                          |
+| CNAME                                       | `rsend.example.com`             |
+| Additional records required by the backend  |
 
-The MX records for `send.example.com` and the root domain are entries under different names and can be configured according to their respective purposes. When entering DNS settings based on the email service’s backend, be sure to check the hostname carefully and retain the existing root domain incoming mail records.
+The MX record for `send.example.com`
+and the root domain MX record are under different names and can be configured according to their respective purposes. When configuring DNS based on the instructions in the email service’s backend, be sure to check the hostnames carefully and retain any existing root domain mail reception records.
 
-The send key used is a dedicated key that allows sending only from specified domains. Credentials are stored in the app settings and restricted configuration, while the JWT signing key is stored in Worker Secrets; neither articles nor repositories store these values.
+The sending key uses a dedicated key that allows sending only from specified domains. Credentials are stored in application settings and restricted configurations, while the JWT signing key is kept in Worker Secrets; neither the documentation nor the repository stores these values.
 
-On October 9, the Resend domain verification was successful, and the sender configuration was enabled. External clients also received domain responses to the test emails. Since we did not verify the email authentication headers and delivery events item by item at that time, the acceptance report only noted that responses had been received; it did not extend to a guarantee that all recipient services would consistently deliver emails to the primary inbox.
+On October 9, the Resend domain verification was successful, and the outgoing mail configuration was enabled. External clients also received domain response emails from the test email address. At that time, we did not verify the email authentication headers and delivery events item by item; therefore, the acceptance test results only noted that a response was received and did not extend to a guarantee that all incoming mail services would consistently deliver to the primary inbox.
 
-## Download emails first, then set up an email account; keep old emails where they are
+## Receive Mail First, Create Account Later; Old Emails Remain in Place
 
-In this specific case, a test email was sent to an address that had not yet been created. The catch-all feature intercepted the email, and the administrator can find it under “All Mail → Unclaimed Mail.”
+The specific scenario encountered this time involved sending a test email to an address that had not yet been created. The catch-all feature collected the email, and the administrator was able to find it under “All Mail → Unclaimed Mail.”
 
-I then created an email account for that address, opened the inbox, but the old emails weren't there.
+Subsequently, when the mailbox corresponding to this address was created and the inbox was opened, the old email did not appear.
 
-Looking at the code, the ownership is already stored when the email arrives. When an existing account is found, the record is written to the corresponding user and email ID; if there is no account associated with the address yet, the ownership ID is `0`. When an email address is created later, only a new account is added; these emails are not modified retroactively.
+Looking at the code, the ownership is already assigned when the email arrives. When an existing account is found, the record is written to the corresponding user and mailbox ID; if the address does not yet have an account, the ownership ID is `0`
+.When a mailbox is created later, only the account is added; these emails are not retroactively modified.
 
-This also explains why "visible in all emails" and "visible in my inbox" yield two different results. The regular inbox sorts messages by recipient, and the historical emails are still marked as unclaimed.
+This also explains why “visible in All Mail” and “visible in My Inbox” yield different results. The regular inbox queries by ownership, so historical emails remain in the “Unclaimed” status.
 
-I finally added a feature that allows administrators to claim items. The steps involved are very brief.
+Finally, I added an administrator “claim” feature. The steps are very brief.
 
 1. Create an email account with the same address as the original recipient.
-2. Open that old email in the "Unclaimed Messages" list.
-3. Click "Claim to Email," select the matching recipient, and confirm.
+2. Open the old email in the unclaimed emails list.
+3. Click “Claim to Email,” select the matching destination, and confirm.
 
-Once claimed, the email is removed from the unclaimed items list and appears in the recipient's inbox, along with any attachments. The email body and "unread" status remain unchanged.
+After claiming, the email leaves the unclaimed list and appears in the target email account’s inbox, with attachments transferred along with it. The email body and unread status remain unchanged.
 
-## The claim feature cannot be limited to just the email table
+## The Claim Feature Cannot Rely Solely on Modifying the Email Table
 
-The interface for this feature has only one button, but there are quite a few conditions that the backend needs to check.
+Although the interface for this feature consists of only one button, the backend must verify numerous conditions.
 
-First, let’s look at permissions. The system already has a delegated permission to “View All Emails.” Since claiming an email changes its ownership, this action is restricted to administrators only. Accounts with permission to view all emails do not automatically have permission to transfer ownership.
+First, consider permissions. The system already has a “View All Emails” delegation permission; since claiming an email changes its ownership, this action is restricted to administrators only. Accounts with permission to view all emails do not automatically have permission to transfer ownership.
 
-Next, check the address. The destination email address must match the original SMTP envelope recipient address, with case ignored. The `To` header in the email body cannot be used as a substitute for this check; the address where the email was actually received is the basis for the match.
+Next, consider the email address. The target email address must match the original SMTP envelope recipient address, ignoring case. The ``To`
+` header in the email body cannot be used as a substitute for this check; the address that actually received the email is the basis for the match.
 
-The existing inbox processing workflow supports "plus" aliases; when an exact email address is unavailable, it attempts to match the corresponding base email address. The newly added feature for claiming historical emails currently performs only exact address matching and does not yet include alias rules.
+The existing mail reception process supports “plus” aliases and attempts to map to the base email address when an exact email address is unavailable. For this new feature to claim historical emails, we are currently only performing exact address matching and have not extended the alias rules to include it.
 
-Attachments also have an ownership field. If you update only the email, the body may have already been moved to the new inbox, while the attachments remain in their original state. I’ve combined the ownership updates for the email, regular attachments, and inline attachments into a single D1 transaction; if any one step fails, the entire transaction is rolled back.
+Attachments also have ownership fields. If only the email is updated, the body may have already been moved to the new inbox, while the attachments remain in their original state. I’ve placed the ownership updates for emails, regular attachments, and inline attachments into a single D1 transaction; if any one step fails, the entire transaction is rolled back.
 
-Before executing the update statement, you must check again to ensure that the email has not yet been claimed and that the target account is still valid. Between the time the data was read and the time it is written, another administrator may have already claimed the account, or the account may have been deactivated. The fact that you checked once earlier is not sufficient to guarantee that the conditions will still hold at the time of the update.
+The update statements must also recheck whether the email is still unclaimed and whether the target account is still valid. Between reading and writing, another administrator may have already claimed the email, or the account may have been deactivated. The previous check alone is not sufficient to guarantee that the conditions still hold at the time of writing.
 
-For this claim feature, we ran 10 tests covering administrator permissions, address matching, attachment transfer, and transaction rollback, and also checked for concurrency and parameter errors. After deployment, we verified that requests from unauthenticated users were rejected and confirmed on the page that the old emails had been successfully claimed. This change did not add any new database fields nor rebuild existing data.
+This time, I ran 10 tests for the claim feature, covering administrator permissions, address matching, attachment transfer, and transaction rollback, as well as checking for concurrency and parameter errors. After deployment, I confirmed that unauthenticated requests were rejected and verified on the page that the old emails had been successfully claimed. This change did not add any new database fields nor rebuild existing data.
 
-## Deployment configurations should be separate from upstream defaults
+## Deployment Configurations Must Be Separated from Upstream Defaults
 
-During deployment, I kept `wrangler.personal.toml` separate and placed my D1, KV, static resource directories, and web domain bindings inside it. This way, when updating the upstream code, I can clearly see which configurations need to be retained for my personal deployment.
+During deployment, I kept `wrangler.personal.toml`
+separate and placed my D1, KV, static resource directories, and web domain bindings inside it. This way, when updating upstream code, I can clearly see which configurations need to be retained for my personal deployment.
 
-Below is the deployment sequence for this project. Paths are relative, and the commands are intended for instances that have already been initialized; for the initial deployment, you’ll also need to create resources, set up bindings, configure secrets, and set up email routing.
+Below is the update deployment sequence for this project. Paths use relative directories, and commands are intended for instances that have already been initialized; the first deployment also requires creating resources, configuring bindings, setting up Secrets, and configuring email routing.
 
 ```sh
 # 在 cloud-mail 仓库根目录开始，前端发布构建输出到 mail-worker/dist。
@@ -139,39 +150,46 @@ pnpm run test:storage
 pnpm exec wrangler deploy --config wrangler.personal.toml
 ```
 
-`test:claim` and `test:storage` are both scripts added in this fork; they may not be present in the upstream version. The location of the frontend artifacts is specified in this release’s environment configuration, so you’ll need to verify it again if you switch to a different version.
+,
 
-The database has been initialized; regular updates do not replay the initialization SQL during deployment, nor do they perform any cleanup operations. After pushing the code to GitHub, I ran the Wrangler deployment again, checked the production workers and web resources, and only then marked the changes as deployed.
+`test:claim`
+, and `test:storage`
+are all scripts added in this fork and may not be present in the upstream version. The locations of frontend artifacts are derived from this version’s production environment configuration, so switching to a different version requires re-verification.
 
-An HTTP 200 response from a web page only confirms that the page is accessible. Incoming messages must be checked using an external email account, and replies must also be verified in an external inbox. Unclaimed messages and previously claimed messages must be checked separately to determine where the problem lies.
+The database has already been initialized; routine updates do not replay the initialization SQL and certainly do not perform any data cleanup operations. After pushing the code to GitHub, a Wrangler deployment was executed again this time. Only after verifying the live Workers and web resources were the changes marked as deployed.
 
-## Email is working now, but the client integration hasn't been implemented yet.
+A 200 HTTP response from the webpage only confirms that the page is accessible. Incoming messages must be checked via an external email client, and replies must be verified in the external inbox. Unclaimed messages and historical claims must be checked separately to determine where the issue lies.
 
-In addition to sending and receiving messages, we’ve also updated the personalization settings page, adding a login effect preview and a panel transparency slider to make it easier to see the results of changes to the background and titles. The front-end build has passed, and we’ve performed local validation for both desktop and mobile screen widths.
+## Email is working, but client integration hasn’t been implemented yet
 
-The tasks confirmed as completed at that time included: the administrator logging in and changing the initial password; external mail delivery to existing addresses; emails sent to unknown addresses being marked as undeliverable; and viewing old emails in the target mailbox after claiming the account. Sender verification was also added for domain replies received by external clients.
+In addition to sending and receiving emails, we also adjusted the personalization settings page this time, adding a login preview and a panel transparency slider to make it easier to see the results of changes to the background and titles. The front-end build passed, and we performed local verification on both desktop and mobile screen widths.
 
-I'm still using the webmail interface. This time, I haven't configured IMAP, POP3, or SMTP client access, so neither the web address nor the Resend API key can be used as login credentials for an email client.
+The tasks confirmed as completed at that time included: an administrator logging in and changing the initial password; external email reception for existing addresses; emails from unknown addresses being routed to the "Unclaimed" folder; and viewing old emails in the target mailbox after claiming them. Sender verification was also added for domain replies received by external clients.
 
-Public registration remains disabled, and forwarding, AI extraction, and automatic deletion are also not enabled. The next steps involve handling attachments, D1 backups, retention policies, and determining whether client access is truly necessary. As for the planned contact and customer service addresses, they must first be created and verified before replacing the contact information on the website.
+I’m still using the webmail interface. I haven’t configured IMAP, POP3, or SMTP client access this time; neither the web address nor the Resend API key can be used as login credentials for email clients.
 
-## Updated on October 12: Switched file storage to Private R2
+Public registration remains disabled, and forwarding, AI extraction, and automatic deletion are not enabled. Next on the to-do list are attachments and D1 backups, retention policies, and determining whether client access is truly necessary. As for the planned contact and customer service addresses, I’ll need to create and verify them first before updating the contact information on the website.
 
-When we first went live, we used KV as a fallback. This time, we’ve decided to handle attachments and uploaded background files with R2, while the email body and ownership remain with D1. KV will continue to store configurations, login status, and cache.
+## October 12 Update: Switched File Storage to Private R2
 
-### I took stock first, but it turned out there were no old files to move.
+For the initial launch, we used a KV fallback. This time, we decided to move attachments and uploaded background files to R2, while keeping email bodies and ownership in D1. KV continues to store configurations, login status, and cache.
 
-Before getting started, I checked the attachment records for D1 and listed the keys in the KV. It turned out that the attachment record was `0`, the background was still the default image, and the KV contained only settings and login status—there were no attachments or uploaded backgrounds.
+### Initial inventory revealed no old files to migrate
 
-Therefore, no historical files were copied this time, nor was any business KV data deleted. What was completed was the file storage migration and compatibility processing. The existing email bodies were already on D1 and did not need to be moved.
+Before getting started, I checked D1’s attachment records and listed the keys in KV. It turned out the attachment records were labeled `0`
+, the background images were still the default ones, and KV only contained settings and login status—there were no attachments or uploaded background files.
 
-For instances involving legacy files, a separate process for copying and verification is required. The object key must be retained, and HTTP metadata—such as the MIME type and download filename—must also be preserved. Only after confirming that the target file’s byte content matches and it can be accessed normally should the corresponding KV file copy be deleted. Settings and cache entries are excluded from this cleanup process.
+Therefore, no historical files were copied this time, nor was any business KV data deleted. What was completed was the file storage migration and compatibility handling. Existing email bodies were already on D1 and did not need to be moved.
 
-### The bucket remains private; workers access it using binds
+Instances containing old files required separate copying and verification. The object keys had to be preserved, and HTTP metadata—such as MIME types and download filenames—had to be carried over. Only after confirming that the target files had consistent byte counts and were accessible normally were the corresponding KV file copies cleaned up. Settings and caches are not included in this cleanup scope.
 
-First, I activated the R2 subscription in the Cloudflare dashboard, then created a Standard bucket. `r2.dev` I kept public access disabled and did not connect a public domain name to the bucket.
+### Keep the bucket private; workers use bound access
 
-The bucket names below are examples; run these commands in the `mail-worker` directory. This set of commands is used to create and check the bucket for the first time; you do not need to rerun the creation process for every release.
+I first activated the R2 subscription in the Cloudflare dashboard, then created a Standard bucket. Public access to `r2.dev`
+remains disabled, and no public domain name is associated with the bucket.
+
+The bucket name below is for illustrative purposes; execute the commands in the `mail-worker`
+directory. This set of commands is used to create and verify the bucket initially; there is no need to rerun the creation process for every release.
 
 ```sh
 # 创建文件存储桶，再分别检查两种公开访问入口。
@@ -180,7 +198,7 @@ pnpm exec wrangler r2 bucket dev-url get example-mail-files --config wrangler.pe
 pnpm exec wrangler r2 bucket domain list example-mail-files --config wrangler.personal.toml
 ```
 
-Add an R2 binding to the personal deployment configuration; retain the existing D1, KV, and Secrets bindings.
+Add an R2 binding to the personal release configuration; retain the original D1, KV, and Secrets.
 
 ```toml
 # 仅增加文件存储绑定，保留已有数据库与 KV 配置。
@@ -189,48 +207,52 @@ binding = "r2"
 bucket_name = "example-mail-files"
 ```
 
-The application accessed the files via `env.r2`. This time, no new S3 keys were created, nor was the bucket URL used as a public download link.
+The application accesses files via `env.r2`
+. This time, no new S3 access keys were created, nor was the bucket address used as a public download endpoint.
 
-### Links to attachments must also undergo permission checks
+### Attachment links must also undergo permission checks
 
-While reviewing the read process, I found two more areas that need to be adjusted together. Old attachment addresses are read directly from KV, and background files are also always read from KV. Simply adding an R2 binding will separate writes from reads through these old entry points.
+While reviewing the read workflow, I identified two additional areas that need to be adjusted together. Old attachment URLs directly read from KV, and background files are also consistently read from KV. Adding only R2 bindings will separate writes from reads via these legacy entry points.
 
-I've centralized the reading process within the storage service: it first checks R2, and only reads from KV if the file does not exist. If an R2 request itself returns an error, the error is logged; a service failure is not treated as the file not existing.
+I consolidated the read operations into the storage service: first check R2, and only read from KV if the file does not exist. When an R2 request itself returns an error, the error is logged; service outages are not treated as file non-existence.
 
-Login and affiliation checks have been added to the attachment portal. Regular users can only view files for which they have an attachment record, while administrators and accounts with full email viewing permissions access the system according to their existing permissions. Knowing an object key is not sufficient to obtain download permissions.
+I’ve also added login and ownership checks to the attachment entry points. Regular users can only read files for which they have an attachment record, while administrators and accounts with full email viewing permissions access files according to their existing permissions. Knowing an object key alone is not sufficient to grant download permissions.
 
-The browser's original images and download links do not automatically include login request headers, so I modified them to first retrieve the file using a request with authentication headers, and then generate a local Blob URL. Inline images and attachment previews use this URL, and downloads start from the same file content; the login token is not included in the URL.
+The browser’s original image and download links do not automatically include authentication request headers. I modified them to first retrieve the file using a request with authentication headers, then generate a local Blob URL. Inline images and attachment previews use this address, and downloads also start from the same file content; the authentication token is not included in the URL.
 
-The existing online object address configurations point to the Web Worker itself. Images in emails may be relative keys or may be expanded into full website addresses; both formats must be converted to authenticated access, otherwise only relative paths will be tested, and images in older emails may still fail to open.
+Existing object URLs in production are configured to point to the Web Worker itself. Images in emails may be relative to the key or expanded into full website addresses; both formats must be converted to authenticated reads, otherwise only relative paths are checked, and images in older emails may still fail to load.
 
-Login backgrounds are handled separately. Only the currently configured background is allowed to be read anonymously, so that the login page can display it; email attachments are not subject to this rule.
+The login background is handled separately. Only the currently configured background allows anonymous access, so the login page can display it; email attachments do not follow this rule.
 
-### There was also a minor issue with the response headers and validation tool
+### There was also a minor issue with response headers and the validation tool
 
-R2 reads the return object and its metadata; the original KV fallback returns `Response`. After unification, both results must retain the content type and download filename. Private attachments are additionally marked with `Cache-Control: private, no-store` to prevent them from being cached as public files.
+R2 reads return the object and its metadata, while the original KV fallback returns `Response`
+.After unifying the reading process, both types of results must retain the content type and download filename. Private attachments are set to `Cache-Control: private, no-store`
+to prevent them from being cached as public files.
 
-I also encountered a 500 error once during the actual R2 validation. The cause was that the validation tool, which calls object methods via a remotely bound proxy, was unable to serialize the local `Headers` instance to the remote end.I modified the approach to read the object’s HTTP metadata, assemble the response headers within the current runtime environment, and then ran the validation again. Given the limitations of the validation environment at the time, I did not attribute this to an R2 storage failure.
+A 500 error was also encountered once during actual R2 validation. The cause was that the validation tool, when calling object methods via a remotely bound proxy, was unable to serialize the local `Headers`
+instance. I modified the approach to read the object’s HTTP metadata, assemble the response headers within the current runtime environment, and then reran the validation. Given the limitations of the validation environment at the time, this issue was not attributed to an R2 storage failure.
 
-### Verify Before Publishing
+### Release Following Validation
 
-Ten regression tests were added for storage and permissions, covering R2 priority reads, KV fallback, file deletion, and unauthorized access. The original 10 email claim tests also passed again.
+We added 10 regression tests for storage and permissions, covering R2 priority reads, KV fallback, file deletion, and unauthorized access. The original 10 email retrieval tests also passed again.
 
-Web validation used a local test email account to check inline images, attachment previews, and downloads. Downloaded files were compared byte-by-byte, and the original formatting of the email body was preserved.For the actual R2 bucket, read/write and metadata operations were verified via remote binding. Authentication, as well as D1 and KV operations, all used local test data; no production emails were modified or test emails sent for the purpose of verifying storage changes.
+For web validation, we used a local test email account to check inline images, attachment previews, and downloads. File downloads were verified through byte-by-byte comparison, and the original formatting of email bodies was preserved. For the actual R2 bucket, read, write, and metadata operations were verified via remote binding; authentication, D1, and KV all used local test data. No production emails were modified or test emails sent for the purpose of verifying storage changes.
 
-After deployment, the web page returned a 200 status code, while anonymous requests to both the new attachment API and the old attachment endpoint returned a 401 status code. Upon rechecking, public access to the bucket was still disabled, and the KV settings and original login status remained intact. The temporary authentication objects were cleaned up, and no test files remained in the bucket.
+After deployment, the production web page returned a 200 status code, while anonymous requests to both the new attachment API and the legacy attachment endpoint returned 401 status codes. A recheck confirmed that public access to the bucket remained disabled, and the KV settings and original login state were still intact. Temporary verification objects were cleaned up, leaving no test files in the bucket.
 
-## October 13 Addendum: Receipt of Authentic Attachments and Key Rotation
+## October 13 Update: Receiving Actual Attachments and Key Rotation
 
-We subsequently performed production verification using real emails. Two new attachments were retrieved from the remote R2; their SHA-256 hashes matched those of the original files, and the corresponding files were not retained in KV.Previewing and downloading worked normally on the production web page, and anonymous requests to both the old and new attachment links returned a 401 error. The bucket overview still showed zero at that time, so this aggregate figure cannot be taken as the result of reads on a per-object basis.
+Subsequently, production verification was completed using actual emails. Two new attachments were read from the remote R2; their SHA-256 hashes matched the original files, and the corresponding files were not retained in KV. Previewing and downloading worked normally on the production web interface, and anonymous requests for both the old and new attachment entry points returned a 401 response. The bucket overview still showed zero at that time; this aggregate figure should not be interpreted as the result of per-object reads.
 
-On the same day, we also updated the Resend sending key and verified that the D1 settings, KV cache, and local credentials were consistent. Sending requests using the old key were rejected, while the new key successfully sent messages through the Cloud Mail standard sending endpoint, and the test email was received in the actual email inbox.
+On the same day, the Resend sending key was also replaced, confirming consistency between the D1 configuration, KV cache, and local credentials. Sending requests using the old key were rejected, while the new key successfully sent messages through the standard Cloud Mail sending endpoint, and the test email was received in the actual mailbox.
 
-For the specific procedure, verification evidence, and aspects not covered in this round, see [Cloud Mail Supplement: R2 Attachment Verification and Resend Key Rotation](/blog/20261013-cloud-mail-r2-resend-verification). The switch log from October 12 is retained here, and subsequent test attachments will remain in the system.
+For the specific sequence of operations, verification evidence, and aspects not covered in this round, see [Cloud Mail Follow-up: R2 Attachment Verification and Resend Key Rotation](/blog/20261013-cloud-mail-r2-resend-verification). The switchover log for October 12 is retained here, while subsequent attachment tests will remain in the system.
 
 ## References
 
 - [Cloud Mail Upstream Project](https://github.com/maillab/cloud-mail)
 - [Cloudflare Email Workers Documentation](https://developers.cloudflare.com/email-routing/email-workers/)
 - [Resend Domain Configuration Documentation](https://resend.com/docs/dashboard/domains/introduction)
-- [Worker Binding for Cloudflare R2](https://developers.cloudflare.com/r2/api/workers/workers-api-usage/)
-- [Public Access Configuration for Cloudflare R2](https://developers.cloudflare.com/r2/buckets/public-buckets/)
+- [Cloudflare R2 Worker Binding](https://developers.cloudflare.com/r2/api/workers/workers-api-usage/)
+- [Cloudflare R2 Public Access Configuration](https://developers.cloudflare.com/r2/buckets/public-buckets/)
