@@ -56,6 +56,42 @@ test('句号后粘连的英文只改正文，不改代码块', () => {
   );
 });
 
+test('行内代码后的空行并回原句，代码块后的空行保留', () => {
+  const source = [
+    'see `hreflang`',
+    '',
+    'tags, and `Blog`',
+    '',
+    ').',
+    '',
+    '```',
+    'keep',
+    '',
+    'this',
+    '```',
+    '',
+    'next sentence.',
+    '',
+    'system:UI and plugins**:Using',
+  ].join('\n');
+  assert.equal(
+    repairTranslatedProse(source),
+    [
+      'see `hreflang` tags, and `Blog`).',
+      '',
+      '```',
+      'keep',
+      '',
+      'this',
+      '```',
+      '',
+      'next sentence.',
+      '',
+      'system: UI and plugins**: Using',
+    ].join('\n'),
+  );
+});
+
 test('超长正文按标题切开，拼回后与原文一致', () => {
   const text = [
     '开头。',
@@ -88,6 +124,15 @@ test('占位符丢失时中止', () => {
   assert.throws(
     () => assertKeepsSurvived('___KEEP_0___ ___KEEP_1___', '___KEEP_0___'),
     /占位符/,
+  );
+});
+
+test('英文调换占位符顺序时仍然接受', () => {
+  assert.doesNotThrow(() =>
+    assertKeepsSurvived(
+      '___KEEP_0___ ___KEEP_1___',
+      '___KEEP_1___ ___KEEP_0___',
+    ),
   );
 });
 

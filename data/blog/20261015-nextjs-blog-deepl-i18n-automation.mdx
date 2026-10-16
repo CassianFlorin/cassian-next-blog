@@ -10,10 +10,8 @@ tags:
   - 解决方案
 draft: false
 summary: 记录基于 DeepL API、Contentlayer 与 GitHub Actions 为个人博客搭建自动化 i18n 系统的实践与踩坑总结。
-tldr: 采用独立文档隔离、增量 Hash 缓存与 MDX 语法防护机制，在 DeepL 免费额度下实现了正文与词条的自动化翻译流水线。
+tldr: 采用独立文档隔离、整篇哈希缓存与 MDX 占位防护，在 DeepL 额度内自动翻译正文和界面词条。
 ---
-
-# Next.js 博客接入 DeepL 自动化国际化实践
 
 ## Why this matters
 
@@ -22,7 +20,7 @@ tldr: 采用独立文档隔离、增量 Hash 缓存与 MDX 语法防护机制，
 1. **纯人工双语维护**：写完一篇中文博客，再手动写一篇英文版。随着文章数量增加与日常持续修订，两套 MDX 很快就会产生巨大的内容脱节，最终沦为弃维护的负担。
 2. **纯前端机翻插件**：使用 Google Translate 等客户端 JS 挂件。这种做法不仅页面会发生明显的布局跳动（CLS），更关键的是搜索引擎爬虫爬不到静态翻译内容，无法生成独立的英文路由、`hreflang` 标识与 Sitemap，对技术 SEO 和生成式 AI 搜索（GEO）毫无价值。
 
-本文记录了本站接入 **DeepL Free API** 构建全自动双语系统的完整工程实践：从 UI 词条提取、MDX 语法树隔离防护，到 Contentlayer 独立文档架构、SHA-256 增量 Hash 缓存，再到 GitHub Actions 自动开 PR 交付。整套方案在 DeepL 每月 50 万免费字符额度内，实现了零心智负担的自动化发布。
+本文记录了本站接入 **DeepL API** 构建双语系统的做法：UI 词条和正文分开翻译，代码与标签先换成占位符，英文放在 Contentlayer 的独立文档类型里，用 SHA-256 判断整篇原文有没有改过，再由 GitHub Actions 开 PR。翻译按 DeepL 返回的实际字符计费。
 
 ---
 
@@ -72,7 +70,7 @@ export const BlogTranslation = defineDocumentType(() => ({
 
 英文译本统一存放在 `data/blog-i18n/en/*.mdx`，独立生成 `allBlogTranslations` 集合：
 
-- **`allBlogs` 保持原汁原味**：包含且仅包含 25 篇中文原稿，知识图谱、Tags 关联模型和路由绝对纯净；
+- **`allBlogs` 保持原汁原味**：只收录中文原稿，知识图谱、Tags 关联模型和路由不把英文译本再算进去；
 - **渲染层按需匹配**：访问 `/en/blog/[slug]` 时，优先从 `allBlogTranslations` 提取英文标题、摘要与 MDX 正文；若译本暂缺，则平滑降级展示中文，并显示友好提示。
 
 ---
@@ -94,23 +92,23 @@ UI 词条中常包含 `next-intl` 的参数占位符。在调用 DeepL 前，脚
 
 #### 正文 SHA-256 增量缓存
 
-在 `data/blog-i18n/en/*.mdx` 的 Frontmatter 中，记录了原中文文章正文的 `sourceHash`。流水线每次扫描时：
+在 `data/blog-i18n/en/*.mdx` 的 Frontmatter 中，记录整篇中文原稿的 `sourceHash`。流水线每次扫描时：
 
 ```javascript
-const currentHash = crypto.createHash('sha256').update(chineseBody).digest('hex');
+const currentHash = crypto.createHash('sha256').update(rawContent).digest('hex');
 if (existingTranslation?.sourceHash === currentHash) {
-  // Hash 一致，说明中文原稿未发生改动，直接跳过
+  // 整篇原文未改，跳过
   continue;
 }
 ```
 
-这意味着：**只有新发布的文章或发生过文字修改的段落，才会触发 DeepL 调用**。存量文章在后续构建和日常巡检中不消耗任何 API 配额。
+哈希覆盖整份 MDX，包括 Frontmatter。改标题、改一段正文，都会整篇重译，不是只翻译改过的段落。哈希一致的文章不会再调用 DeepL。
 
 ---
 
 ## 攻坚实录：解决机翻破坏 MDX 语法的技术痛点
 
-将长篇 Markdown/MDX 送入机器翻译 API，最常见的翻车现象不是语意不通顺，而是**格式崩塌导致编译直接挂掉**。在全量翻译存量 25 篇博客时，我们攻克了两个核心难点：
+将长篇 Markdown/MDX 送入机器翻译 API，最常见的翻车现象不是语意不通顺，而是**格式崩塌导致编译直接挂掉**。首次把当时已有的文章全部翻译成英文时，主要碰到两个难点：
 
 ### 难点一：YAML Frontmatter 的缩进错乱
 
@@ -161,8 +159,8 @@ MDX 编译器（acorn / remark）对段落与 JSX 块的界限非常严格。在
 
 **解决方案**：双层隔离与紧凑化清洗策略。
 
-1. **翻译前段落切分隔离（`separateBlockTags`）**：
-   在送翻译前，识别独立的 HTML/JSX 标签行，并在前后强制插入空行，使其作为独立段落被 `hasChinese` 判定为纯代码/标记而直接跳过，原样保留；
+1. **翻译前先占位，再整篇送出**：
+   代码块、行内代码、公式、链接地址和 JSX 标签换成占位符。没有中文的段落也收成占位符，但和前后正文留在同一次请求里，避免「对方」这类指代被拆开后猜错。占位符缺了或少了就不写入。DeepL 有时会在长文里丢掉成串的占位符，这时同一篇再按段落重试。`separateBlockTags` 只负责把单独成行的标签隔成自己的段落。
 2. **翻译后紧凑化清洗**：
    针对 `<tag>\n text</tag>` 这种被跨行打断的结构，正则自动折叠为单行紧凑形式，并清理容器内部不合规的游离空行：
    ```javascript
@@ -185,14 +183,18 @@ MDX 编译器（acorn / remark）对段落与 JSX 块的界限非常严格。在
 
 ### 1. 统一提取工具 `getLocalizedPosts(locale)`
 
-在 [`lib/postTranslations.ts`](/blog/20261015-nextjs-blog-deepl-i18n-automation) 中封装统一函数：
+在 `lib/postTranslations.ts` 中封装统一函数：
 
 ```typescript
 export function getLocalizedPosts(locale?: string): CoreContent<Blog>[] {
   const sorted = allCoreContent(sortPosts(allBlogs));
   if (!locale || locale === 'zh') return sorted;
 
-  const translationMap = new Map(allBlogTranslations.map((t) => [t.slug, t]));
+  const translationMap = new Map(
+    allBlogTranslations
+      .filter((t) => t.locale === locale)
+      .map((t) => [t.slug, t]),
+  );
   return sorted.map((post) => {
     const trans = translationMap.get(post.slug);
     if (!trans) return post;
@@ -232,12 +234,9 @@ const formatTag = (tag: string) => {
 
 ## 运行成本与效果
 
-这套自动化流水线跑通后，我们对全站存量全部 **25 篇深度技术博客** 进行了全量英文转换：
+这套流水线第一次把当时已有的 **25 篇**文章译成英文，DeepL 大约计了 18.2 万字符。单篇通常几秒到十几秒。之后每改一篇中文稿，按整篇重新计费。
 
-- **字符消耗**：25 篇包含长篇排障分析与架构探讨的文章，累计消耗 DeepL 字符约 18.2 万，远低于 DeepL Free 每月 50 万字符的上限；
-- **耗时与效率**：单篇文章翻译耗时约 5~8 秒，全量翻译由脚本自动跑完；
-- **后续增量成本**：后续每发布一篇 3000~5000 字的中文技术文章，仅消耗约 4000 字符，**相当于每月还可轻松支持 80~100 篇新文章的自动化翻译**；
-- **零心智负担**：博主平时只需在本地 `data/blog/` 专注写好中文 MDX 并推送到 `main`。每天定时运行或手动触发一次 GitHub Actions，系统就会自动发起带翻译结果的 PR，校验通过后一键合并，Vercel 自动部署全球上线。
+中文稿推到 `main`，并且改动了 `data/blog/` 或 `messages/zh.json` 时，GitHub Actions 会跑翻译。也可以在 Actions 里手动触发。译完后开 PR，核对再合并，Vercel 部署生产环境。没有按天定时的任务。某一篇没有写成英文时，这一步应以失败结束，而不是报成功后跳过。
 
 ---
 
@@ -246,5 +245,5 @@ const formatTag = (tag: string) => {
 搭建这套自动化多语言博客流水线，带来最深刻的体会是：**内容系统的国际化，本质是数据流的设计与语法的容错治理。**
 
 1. **唯一真相源（Single Source of Truth）**：始终以中文原稿为主数据源，翻译文件作为只读的生成态副本。切忌在两边分别做内容修改，否则必然失去同步。
-2. **AST 与自然语言的清晰边界**：机器翻译引擎擅长自然语言，极不擅长理解代码上下文。在送翻前，必须通过 AST 或精确分块将标签、公式与代码完全剥离，只把纯文本交给翻译引擎。
-3. **把校验留在 CI 里**：自动化必须配合严密的自动化防御。通过本地单元测试、TypeScript 静态检查与 Contentlayer 预编译作为守门员，才能保证自动化流水线的安全稳定。
+2. **代码和句子分开**：翻译引擎处理句子，不理解 Markdown 的语法树。送出前用占位符换走代码、公式和标签。占位符没有原样回来，就不写入译文。
+3. **校验留在 CI 里**：脚本测试和 Contentlayer 构建负责挡住编译不过的译文。单篇翻译失败时，任务本身也要失败，避免坏哈希一直留在 `main` 上、每次推送都重新扣字符。

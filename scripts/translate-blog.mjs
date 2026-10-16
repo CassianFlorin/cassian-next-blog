@@ -264,14 +264,59 @@ export function keepMarkers(text) {
   return [...text.matchAll(/___KEEP_\d+___/g)].map((match) => match[0]);
 }
 
+function keepCounts(markers) {
+  const counts = new Map();
+  for (const marker of markers) {
+    counts.set(marker, (counts.get(marker) || 0) + 1);
+  }
+  return counts;
+}
+
 export function assertKeepsSurvived(source, translated) {
-  const before = keepMarkers(source);
-  const after = keepMarkers(translated);
-  if (
-    before.length !== after.length ||
-    before.some((marker, index) => marker !== after[index])
-  ) {
+  const before = keepCounts(keepMarkers(source));
+  const after = keepCounts(keepMarkers(translated));
+  const sameSize = before.size === after.size;
+  const sameCounts =
+    sameSize &&
+    [...before].every(([marker, count]) => after.get(marker) === count);
+  if (!sameCounts) {
     throw new Error('DeepL 改动了占位符，已中止这篇文章的写入');
+  }
+}
+
+function plainContext(text) {
+  return text
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`\n]+`/g, ' ')
+    .replace(/[<>&]/g, ' ');
+}
+
+function canSplitTranslation(text, error) {
+  if (text.split(/\n\n+/).length < 2) return false;
+  return (
+    error.tagHandling === true || /占位符/.test(String(error && error.message))
+  );
+}
+
+async function translatePreservingKeeps(text, context) {
+  try {
+    const [translated] = await translateTexts([text], context);
+    assertKeepsSurvived(text, translated);
+    return translated;
+  } catch (error) {
+    if (!canSplitTranslation(text, error)) throw error;
+    console.warn('  - 整篇没有完整译出，改为按段落重试');
+    const pieces = [];
+    for (const paragraph of text.split(/\n\n+/)) {
+      if (!/[\u4e00-\u9fa5]/.test(paragraph)) {
+        pieces.push(paragraph);
+        continue;
+      }
+      const [part] = await translateTexts([paragraph], context);
+      assertKeepsSurvived(paragraph, part);
+      pieces.push(part);
+    }
+    return pieces.join('\n\n');
   }
 }
 
@@ -318,20 +363,38 @@ export function restoreMarkdown(text, placeholders) {
 }
 
 /**
- * DeepL 会把较长的占位符换行，链接的右括号就被拆开。句号后若直接接大写，也补回空格。
- * 代码块和行内代码保持原样。
+ * DeepL 会把较长的占位符换行，链接的右括号就被拆开。
+ * 行内代码后面多出来的空行会把句子和表格拆开，这里并回去。
+ * 句号或冒号后若直接接大写，也补回空格。代码块保持原样。
  */
 export function repairTranslatedProse(text) {
-  const chunks = text.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
+  const normalized = text.replace(/```">```/g, '```');
+  const chunks = normalized.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
   return chunks
     .map((chunk, index) => {
       if (index % 2 === 1) return chunk;
-      const linksFixed = chunk.replace(
+      let prose = chunk;
+      const previous = index > 0 ? chunks[index - 1] : '';
+      const previousIsInline =
+        previous.startsWith('`') && !previous.startsWith('```');
+      if (previousIsInline && /^\n\n+/.test(prose)) {
+        const rest = prose.replace(/^\n+/, '');
+        const startsBlock = /^(?:#{1,6} |```|---|\*\*\*|[*+-] |\d+\. |\|)/.test(
+          rest,
+        );
+        if (rest && !startsBlock) {
+          const glue = /^[,.;:)\]}]/.test(rest) ? '' : ' ';
+          prose = glue + rest;
+        }
+      }
+      const linksFixed = prose.replace(
         /\[([^\]]*)\]\(\s*([^)\s]+)\s*\)/g,
         (_, label, url) =>
           `[${label.replace(/\s*\n\s*/g, ' ').trim()}](${url})`,
       );
-      return linksFixed.replace(/([A-Za-z0-9])\.(?=[A-Z])/g, '$1. ');
+      return linksFixed
+        .replace(/([A-Za-z0-9])\.(?=[A-Z])/g, '$1. ')
+        .replace(/:(?=[A-Z])/g, ': ');
     })
     .join('');
 }
@@ -380,9 +443,13 @@ async function translateTexts(texts, context = '') {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
+        const error = new Error(
           `DeepL API responded with ${response.status} ${response.statusText}: ${errorText}`,
         );
+        if (response.status === 400 && /Tag handling/.test(errorText)) {
+          error.tagHandling = true;
+        }
+        throw error;
       }
 
       const data = await response.json();
@@ -393,6 +460,7 @@ async function translateTexts(texts, context = '') {
       }
       return data.translations.map((item) => unescapeXmlFromDeepL(item.text));
     } catch (err) {
+      if (err.tagHandling) throw err;
       console.warn(
         `⚠️  翻译批次失败 (第 ${attempt}/${MAX_RETRIES} 次重试): ${err.message}`,
       );
@@ -453,16 +521,16 @@ async function translatePost(file) {
       chunks.length === 1
         ? parsed.data.title || ''
         : fitToBytes(
-            [parsed.data.title, parsed.content.trim()]
-              .filter(Boolean)
-              .join('\n\n'),
+            plainContext(
+              [parsed.data.title, parsed.content.trim()]
+                .filter(Boolean)
+                .join('\n\n'),
+            ),
             CONTEXT_BUDGET_BYTES,
           );
     const translatedChunks = [];
     for (const chunk of chunks) {
-      const [translated] = await translateTexts([chunk], bodyContext);
-      assertKeepsSurvived(chunk, translated);
-      translatedChunks.push(translated);
+      translatedChunks.push(await translatePreservingKeeps(chunk, bodyContext));
     }
     translatedProtectedBody = translatedChunks.join('');
   }
@@ -470,7 +538,7 @@ async function translatePost(file) {
   const translatedMeta = metadataTexts.length
     ? await translateTexts(
         metadataTexts,
-        fitToBytes(parsed.content.trim(), CONTEXT_BUDGET_BYTES),
+        fitToBytes(plainContext(parsed.content.trim()), CONTEXT_BUDGET_BYTES),
       )
     : [];
 
@@ -647,6 +715,9 @@ async function main() {
   console.log(
     `\n🎉 翻译流程结束！共成功处理 ${successCount}/${toExecute.length} 篇文章 (约 ${totalChars.toLocaleString()} 字符)`,
   );
+  if (successCount !== toExecute.length) {
+    throw new Error(`${toExecute.length - successCount} 篇文章没有写成英文`);
+  }
 }
 
 if (isMainModule()) {
