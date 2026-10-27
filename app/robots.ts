@@ -9,10 +9,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        // API routes and build assets are never useful in an index. The query
-        // variants render the same content as their clean URLs, so blocking
-        // them keeps duplicates out of the index.
-        disallow: ['/api/', '/_next/', '/*?page=', '/*?post='],
+        // Limit crawling of API routes and duplicate query variants. Robots
+        // rules do not guarantee exclusion from the index. Keep Next.js assets
+        // crawlable so search engines can render pages.
+        disallow: ['/api/', '/*?page=', '/*?post='],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
