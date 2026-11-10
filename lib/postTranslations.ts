@@ -8,6 +8,7 @@ import {
   sortPosts,
   type CoreContent,
 } from 'pliny/utils/contentlayer';
+import { isLocale, type Locale } from '@/lib/i18nRouting';
 import { postContentLocale } from '@/lib/seo';
 
 export type LocalizedPost = CoreContent<Blog>;
@@ -46,4 +47,18 @@ export function getLocalizedPosts(locale?: string): LocalizedPost[] {
       tldr: translation.tldr || post.tldr,
     };
   });
+}
+
+/**
+ * Locales (other than the original) that have a published translation of the
+ * post with this slug. Drives the post's canonical, hreflang and sitemap.
+ */
+export function postTranslationLocales(slug: string): Locale[] {
+  const result: Locale[] = [];
+  for (const trans of allBlogTranslations) {
+    if (trans.slug !== slug || trans.draft) continue;
+    if (!isLocale(trans.locale) || trans.locale === postContentLocale) continue;
+    if (!result.includes(trans.locale)) result.push(trans.locale);
+  }
+  return result;
 }

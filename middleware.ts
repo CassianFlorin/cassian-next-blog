@@ -19,6 +19,8 @@ const DATELESS_BLOG_PATH = new RegExp(
   `^(/(?:${locales.join('|')}))?/blog/([^/]+?)/?$`,
 );
 
+const LOCALE_PREFIX = new RegExp(`^/(?:${locales.join('|')})(?:/|$)`);
+
 function resolveDatelessSlug(pathname: string): string | null {
   const match = pathname.match(DATELESS_BLOG_PATH);
   if (!match) return null;
@@ -35,15 +37,31 @@ function resolveDatelessSlug(pathname: string): string | null {
   }
 
   const target = (slugMap as Record<string, string>)[slug];
-  return target ? `${localePrefix}/blog/${target}` : null;
+  // 一次跳到带语言前缀的最终地址，不再经过无前缀的中间跳转
+  return target
+    ? `${localePrefix || `/${defaultLocale}`}/blog/${target}`
+    : null;
+}
+
+function permanentRedirect(request: NextRequest, pathname: string) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  return NextResponse.redirect(url, 308);
 }
 
 export default function middleware(request: NextRequest) {
-  const target = resolveDatelessSlug(request.nextUrl.pathname);
-  if (target) {
-    const url = request.nextUrl.clone();
-    url.pathname = target;
-    return NextResponse.redirect(url, 308);
+  const { pathname } = request.nextUrl;
+
+  const datelessTarget = resolveDatelessSlug(pathname);
+  if (datelessTarget) return permanentRedirect(request, datelessTarget);
+
+  // 根路径 / 交给 next-intl 按浏览器语言选（307，因人而异）。
+  // 其余不带前缀的深层路径只来自历史链接和外链，统一 308 到默认语言，
+  // 让搜索引擎把旧 URL 的权重合并到 /zh/… 上，而不是一直当临时跳转。
+  if (pathname !== '/' && !LOCALE_PREFIX.test(pathname)) {
+    // 顺带去掉尾斜杠（trailingSlash: false），省掉 Next 的第二跳。
+    const path = pathname.replace(/\/+$/, '');
+    return permanentRedirect(request, `/${defaultLocale}${path}`);
   }
 
   return intlMiddleware(request);

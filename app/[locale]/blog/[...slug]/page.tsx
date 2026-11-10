@@ -14,7 +14,10 @@ import {
   allAuthors,
 } from 'contentlayer/generated';
 import type { Authors, Blog } from 'contentlayer/generated';
-import { getLocalizedPosts } from '@/lib/postTranslations';
+import {
+  getLocalizedPosts,
+  postTranslationLocales,
+} from '@/lib/postTranslations';
 import PostSimple from '@/layouts/PostSimple';
 import PostLayout from '@/layouts/PostLayout';
 import PostBanner from '@/layouts/PostBanner';
@@ -105,9 +108,14 @@ export async function generateMetadata(props: {
     keywords: post.tags?.length ? post.tags : undefined,
     authors: authors.map((name) => ({ name })),
     // `canonicalUrl` frontmatter wins when the post was first published
-    // elsewhere; otherwise the default-locale URL is canonical for every
-    // locale, since the body is only written once.
-    alternates: buildPostAlternates(`/${post.path}`, post.canonicalUrl),
+    // elsewhere. Otherwise a translated locale is canonical to itself and an
+    // untranslated one points at the original.
+    alternates: buildPostAlternates(
+      `/${post.path}`,
+      locale,
+      postTranslationLocales(post.slug),
+      post.canonicalUrl,
+    ),
     openGraph: {
       title,
       description,
