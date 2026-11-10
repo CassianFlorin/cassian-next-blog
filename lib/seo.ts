@@ -93,27 +93,63 @@ export function buildAlternates(
 }
 
 /**
- * Posts are written once, in the default locale. `/en/blog/...` renders that
- * same body inside English chrome, so it is a duplicate, not a translation.
- * Every locale variant points its canonical at the default-locale URL and only
- * that language is advertised, which leaves one indexable page per post.
+ * Posts are written once, in the default locale. Some posts also have a full
+ * translation under `data/blog-i18n/<locale>/`; those locale URLs are real
+ * pages and get a self-referencing canonical plus a reciprocal hreflang pair.
+ * A locale without a translation renders the original body inside localized
+ * chrome, so it stays a duplicate whose canonical points at the original.
  */
 export const postContentLocale: Locale = defaultLocale;
 
-/** hreflang set for a post: just the default-locale URL. */
-export function postLanguageAlternates(path: string): Record<string, string> {
+/**
+ * hreflang set for a post: the original plus every translated locale.
+ * `x-default` always points at the original.
+ */
+export function postLanguageAlternates(
+  path: string,
+  translatedLocales: readonly Locale[] = [],
+): Record<string, string> {
   const url = localeUrl(postContentLocale, path);
-  return { [hreflangByLocale[postContentLocale]]: url, 'x-default': url };
+  const languages: Record<string, string> = {
+    [hreflangByLocale[postContentLocale]]: url,
+  };
+  for (const locale of translatedLocales) {
+    if (locale === postContentLocale) continue;
+    languages[hreflangByLocale[locale]] = localeUrl(locale, path);
+  }
+  languages['x-default'] = url;
+  return languages;
 }
 
+/**
+ * Canonical + hreflang block for a post rendered in `locale`.
+ * `canonicalOverride` (republished posts) wins for every locale.
+ */
 export function buildPostAlternates(
   path: string,
+  locale: Locale,
+  translatedLocales: readonly Locale[] = [],
   canonicalOverride?: string,
 ): Metadata['alternates'] {
+  const indexableLocale =
+    locale === postContentLocale || translatedLocales.includes(locale)
+      ? locale
+      : postContentLocale;
   return {
-    canonical: canonicalOverride || localeUrl(postContentLocale, path),
-    languages: postLanguageAlternates(path),
+    canonical: canonicalOverride || localeUrl(indexableLocale, path),
+    languages: postLanguageAlternates(path, translatedLocales),
   };
+}
+
+/**
+ * A topic page with fewer posts than this is thin: it repeats one article's
+ * summary under a different title. Those pages stay crawlable (follow) but
+ * are `noindex` and left out of the sitemap.
+ */
+export const MIN_INDEXABLE_TAG_POSTS = 2;
+
+export function isIndexableTag(postCount: number): boolean {
+  return postCount >= MIN_INDEXABLE_TAG_POSTS;
 }
 
 /** Turn a possibly-relative asset path into an absolute URL. */

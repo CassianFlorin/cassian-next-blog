@@ -5,7 +5,9 @@ import { defaultLocale, locales } from '@/lib/i18nRouting';
 import { caseStudyProjects, projectSlug } from '@/data/caseStudies';
 import { getKnowledgeIndex } from '@/lib/knowledgeData';
 import { knowledgeNodeHref } from '@/lib/knowledgeNodes';
+import { postTranslationLocales } from '@/lib/postTranslations';
 import {
+  isIndexableTag,
   languageAlternates,
   localeUrl,
   postContentLocale,
@@ -70,19 +72,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
-  // Posts only exist in the default locale; the other locale's URL is a
-  // canonicalised duplicate and stays out of the sitemap.
-  const postEntries: MetadataRoute.Sitemap = posts.map((post) => {
+  // The original is always listed. A translated locale is a real page with a
+  // self-referencing canonical, so it is listed too; untranslated locale URLs
+  // are canonicalised duplicates and stay out.
+  const postEntries: MetadataRoute.Sitemap = posts.flatMap((post) => {
     const path = `/${post.path}`;
-    return {
-      url: localeUrl(postContentLocale, path),
-      lastModified: new Date(post.lastmod || post.date).toISOString(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-      alternates: {
-        languages: postLanguageAlternates(path),
-      },
-    };
+    // Republished posts point their canonical elsewhere; list nothing extra.
+    const translated = post.canonicalUrl
+      ? []
+      : postTranslationLocales(post.slug);
+    const languages = postLanguageAlternates(path, translated);
+    const lastModified = new Date(post.lastmod || post.date).toISOString();
+    return [postContentLocale, ...translated].map((locale) => ({
+      url: localeUrl(locale, path),
+      lastModified,
+      changeFrequency: 'monthly' as const,
+      priority: locale === postContentLocale ? 0.8 : 0.7,
+      alternates: { languages },
+    }));
   });
 
   const projectEntries = caseStudyProjects().flatMap((project) =>
@@ -103,13 +110,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
   );
 
   const tagCounts = tagData as Record<string, number>;
-  const tagEntries = Object.keys(tagCounts).flatMap((tag) =>
-    localizedEntries(`/tags/${encodeURI(tag)}`, {
-      lastModified: blogLastModified,
-      changeFrequency: 'weekly',
-      priority: 0.5,
-    }),
-  );
+  // Thin topic pages are noindex; listing them only wastes crawl budget.
+  const tagEntries = Object.keys(tagCounts)
+    .filter((tag) => isIndexableTag(tagCounts[tag]))
+    .flatMap((tag) =>
+      localizedEntries(`/tags/${encodeURI(tag)}`, {
+        lastModified: blogLastModified,
+        changeFrequency: 'weekly',
+        priority: 0.5,
+      }),
+    );
 
   return [
     ...staticEntries,

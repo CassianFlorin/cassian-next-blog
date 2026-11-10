@@ -1,6 +1,6 @@
 import { slug } from 'github-slugger';
 import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import siteMetadata from '@/data/siteMetadata';
 import { allBlogs } from 'contentlayer/generated';
 import { getLocalizedPosts } from '@/lib/postTranslations';
@@ -15,7 +15,12 @@ import WritingPageHeader from '@/components/writing/WritingPageHeader';
 import { classifyKnowledgeNode } from '@/lib/knowledgeGraphMapModel';
 import { GENERIC_TAGS, knowledgeNodeHref } from '@/lib/knowledgeNodes';
 import { buildCollectionPageJsonLd } from '@/lib/structuredData';
-import { buildAlternates, resolveLocale } from '@/lib/seo';
+import {
+  buildAlternates,
+  isIndexableTag,
+  localePath,
+  resolveLocale,
+} from '@/lib/seo';
 
 /**
  * A tag's display name: its translation when one exists, otherwise the
@@ -39,7 +44,8 @@ export async function generateMetadata(props: {
   const locale = resolveLocale(params.locale);
   const t = await getTranslations({ locale, namespace: 'seo' });
   const count = (tagData as Record<string, number>)[slug(tag)] ?? 0;
-  const path = `/tags/${encodeURI(tag)}`;
+  // Canonical always uses the slug, so /tags/AI and /tags/ai never compete.
+  const path = `/tags/${encodeURI(slug(tag))}`;
   const label = await tagDisplayName(slug(tag), locale);
 
   return genPageMetadata({
@@ -47,6 +53,7 @@ export async function generateMetadata(props: {
     description: t('tagDescription', { tag: label, count }),
     locale,
     path,
+    index: isIndexableTag(count),
     alternates: {
       ...buildAlternates(locale, path),
       types: {
@@ -71,6 +78,10 @@ export default async function TagPage(props: {
   const tag = decodeURI(params.tag);
   const tagSlug = slug(tag);
   const locale = resolveLocale(params.locale);
+  // Mixed-case or unslugged spellings (/tags/AI) are duplicates of the slug.
+  if (tag !== tagSlug) {
+    permanentRedirect(localePath(locale, `/tags/${encodeURI(tagSlug)}`));
+  }
   const seo = await getTranslations({ locale, namespace: 'seo' });
   const t = await getTranslations('blog');
   const tk = await getTranslations('knowledge');
