@@ -5,7 +5,9 @@ import { genPageMetadata } from 'app/seo';
 import JsonLd from '@/components/JsonLd';
 import Link from '@/components/Link';
 import KnowledgeModeBar from '@/components/knowledge/KnowledgeModeBar';
+import KnowledgeUniverse from '@/components/knowledge/KnowledgeUniverse';
 import LocalKnowledgeGraph from '@/components/knowledge/LocalKnowledgeGraph';
+import { buildKnowledgeUniverse } from '@/lib/knowledgeUniverse';
 import TraceList from '@/components/writing/TraceList';
 import { projectHref } from '@/data/caseStudies';
 import projectsData from '@/data/projectsData';
@@ -74,6 +76,9 @@ export default async function KnowledgeNodePage(props: { params: Params }) {
   const tp = await getTranslations('projects');
   const label = (key: string) => t(`nodes.${key}.label`);
   const nodeLabel = label(node);
+  const universe = buildKnowledgeUniverse(index, label, (key) =>
+    t(`nodes.${key}.description`),
+  );
   const projects = summary.projects
     .map((id) => projectsData.find((project) => project.id === id))
     .filter((project) => project !== undefined);
@@ -167,11 +172,20 @@ export default async function KnowledgeNodePage(props: { params: Params }) {
 
         <section
           aria-label={t('localGraphLabel', { node: nodeLabel })}
-          className="surface-grid bleed mt-16 border-y border-gray-900/10 dark:border-white/10"
+          className="mt-12"
         >
-          <div className="container-atelier py-12 md:py-16">
-            <LocalKnowledgeGraph graph={graph} />
-          </div>
+          <KnowledgeUniverse
+            data={universe}
+            mode="territory"
+            focusKey={node}
+            fallback={
+              <div className="surface-grid bleed border-y border-gray-900/10 dark:border-white/10">
+                <div className="container-atelier py-12 md:py-16">
+                  <LocalKnowledgeGraph graph={graph} />
+                </div>
+              </div>
+            }
+          />
         </section>
 
         <div className="mt-20 grid gap-20 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-16 xl:gap-24">

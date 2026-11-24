@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import type { CSSProperties } from 'react';
 
@@ -15,26 +14,6 @@ export default async function HeroSection() {
       aria-labelledby="hero-title"
       className="bleed relative isolate overflow-hidden"
     >
-      {/* Atmosphere, not a portrait: the image sits to the right, dissolved
-          into the page, so the name stays the first thing you read. */}
-      <div
-        aria-hidden="true"
-        className="hero-backdrop hero-mask absolute inset-0 -z-10 lg:left-[34%]"
-      >
-        <div className="hero-backdrop-drift absolute inset-0">
-          <Image
-            src="/static/images/avatar.png"
-            alt=""
-            fill
-            priority
-            sizes="(min-width: 1024px) 66vw, 100vw"
-            className="object-cover object-[50%_58%]"
-          />
-        </div>
-        <div className="dark:bg-night/72 lg:dark:bg-night/58 absolute inset-0 bg-gray-50/75 lg:bg-gray-50/45" />
-        <div className="dark:to-night absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-gray-50" />
-      </div>
-
       <div className="container-atelier flex min-h-svh flex-col justify-between gap-10 pt-24 pb-8 md:pt-48 md:pb-10">
         <p
           className="type-meta hero-stage text-gray-600 dark:text-gray-400"

@@ -1,6 +1,8 @@
 import KnowledgeGraphExplorer from '@/components/KnowledgeGraphExplorer';
 import Link from '@/components/Link';
 import KnowledgeModeBar from '@/components/knowledge/KnowledgeModeBar';
+import KnowledgeUniverse from '@/components/knowledge/KnowledgeUniverse';
+import { buildKnowledgeUniverse } from '@/lib/knowledgeUniverse';
 import {
   buildKnowledgeGraph,
   mergeKnowledgeGraphs,
@@ -73,12 +75,24 @@ export default async function KnowledgePage({
           </div>
         </header>
 
-        <div className="mt-14">
-          <KnowledgeGraphExplorer
-            graphData={graphData}
+        <div className="mt-10">
+          <KnowledgeUniverse
+            data={buildKnowledgeUniverse(
+              index,
+              (key) => t(`nodes.${key}.label`),
+              (key) => t(`nodes.${key}.description`),
+            )}
+            mode="explore"
+            focusKey={isKnowledgeNodeKey(territory) ? territory : undefined}
             focusedPost={post}
-            initialTerritory={
-              isKnowledgeNodeKey(territory) ? territory : undefined
+            fallback={
+              <KnowledgeGraphExplorer
+                graphData={graphData}
+                focusedPost={post}
+                initialTerritory={
+                  isKnowledgeNodeKey(territory) ? territory : undefined
+                }
+              />
             }
           />
         </div>

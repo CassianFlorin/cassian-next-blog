@@ -24,7 +24,13 @@
       "lines": ["Building things.", "Mapping ideas.", "Leaving traces."],
       "areas": ["AI Engineering", "Developer Tools", "Knowledge Systems"],
       "explore": "Explore",
-      "summary": "一个持续构建工具、整理思想，并留下作品痕迹的个人数字空间。"
+      "summary": "一个持续构建工具、整理思想，并留下作品痕迹的个人数字空间。",
+      "archive": {
+        "label": "CF / ARCHIVE · 移动鼠标拨开星尘",
+        "entries": "篇文字",
+        "territories": "个领域",
+        "hint": "点击进入"
+      }
     },
     "work": {
       "title": "Work",
@@ -310,7 +316,10 @@
         "description": "数据分析、集成与数据系统。"
       }
     },
-    "statConnections": "连接"
+    "statConnections": "连接",
+    "universeHint": "拖拽旋转 · 双指或 Ctrl + 滚轮缩放 · 点领域飞过去，点文章打开",
+    "universeTerritoryHint": "拖拽旋转 · 点其他领域前往它的页面 · 点文章打开",
+    "matches": "{count} 个匹配"
   },
   "footer": {
     "copyright": "版权所有",

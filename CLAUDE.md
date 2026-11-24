@@ -13,11 +13,32 @@
 
 明确禁止（无论谁要求，先指出再做）：
 
-- 渐变、玻璃拟态（glassmorphism）、霓虹/赛博风、粒子、WebGL。
+- 渐变、玻璃拟态（glassmorphism）、霓虹/赛博风。
 - 第二种强调色。红/绿/黄/蓝语义色也不例外，状态用形状和文字表达。
 - 圆角药丸（`rounded-full`）、大圆角卡片、阴影卡片。V2 是直角 + 细线 + 面。
 - 弹性/回弹动效（bounce / elastic / spring），以及任何不必要的动画。
-- 新的 UI 依赖。现有栈（Tailwind v4、anime.js、react-force-graph）足够。
+- 新的 UI 依赖。现有栈（Tailwind v4、anime.js、react-force-graph、three）足够；三维代码的公共部分在 `components/three/shared.ts`。
+
+### 3D 档案（首页 + 知识页，2026-11-24 起）
+
+用户要求首页「进来就是进入我的世界」，并明确要激进，因此 Hero 背景是一个 three.js 场景：
+中心一颗噪声位移的「内核」，四周是按知识领域分旋臂的粒子星系，每篇文章是旋臂上的一颗星，
+悬停显示标题和同领域连线，点击进入文章。
+
+- 文件：布局 `lib/archiveScene.ts`（服务端算好星的位置）→ `components/home/ArchiveField.tsx`（挂载、HTML 标题）
+  → `components/home/archiveEngine.ts`（three.js、shader、后期）。
+- 视觉方向参考 Lusion / Igloo Inc：有机形体 + 菲涅尔边缘光 + 颗粒 + 单一强调色。
+  **不要退回方块卡片 + 线框网格**——用户看过那版，评价是「方方正正的很丑」。
+- 颜色全部从设计令牌运行时读取（oklch 经 canvas 转 sRGB），明暗切换走 MutationObserver，不要硬编码色值。
+  暗色用加色混合 + bloom；浅色用正常混合、无 bloom（加色光在纸面上会直接饱和成白）。
+- 启动要快：挂载即加载引擎，不等 idle；入场 2.2s。用户嫌过「文字都出来了节点还慢吞吞」。
+- 肖像图只在不支持 WebGL 时作为兜底渲染，正常情况下开屏不能闪出肖像。
+- 星系固定铺在整个首页背后，滚动时镜头在 5 个章节机位间切换（`STATIONS`），文字多的章节星系自动变淡。
+- 知识页（`/knowledge` 与 `/knowledge/[node]`）是同一个「知识宇宙」：布局 `lib/knowledgeUniverse.ts`（有测试）→
+  `components/knowledge/KnowledgeUniverse.tsx`（筛选、搜索、聚焦面板）→ `components/knowledge/universeEngine.ts`。
+  领域是小内核，标签是星尘，文章是星；跨领域文章落在领域之间。文字全部是投影上去的 HTML 标签，不画进 WebGL。
+  普通滚轮必须继续滚页面，缩放只认双指 / Ctrl + 滚轮；触屏不拦截单指拖动。不支持 WebGL 时退回旧的 2D 图。
+- `prefers-reduced-motion`：无入场、无自转、按需渲染；Hero 不在视口或标签页隐藏时停帧。
 
 ## 2. 设计令牌（唯一来源：`css/tailwind.css`）
 
@@ -73,7 +94,7 @@
 
 - 01 Hero：先名字，再三行 「Building things. / Mapping ideas. / Leaving traces.」，再 Explore ↓；肖像是氛围，不是视觉中心（`hero-mask` 渐隐）。头部叠在 Hero 上（`components/Header.tsx` 的 `overlay`）。
 - 02 Work → `/projects`，案例页顺序固定：WHY → PROBLEM → SYSTEM → IMPLEMENTATION → DECISIONS → RESULT → RELATED。
-- 03 Knowledge：图谱是核心交互，Explore / Focus 两种模式；布局算法在 `lib/knowledgeOverview.ts` 与 `lib/knowledgeLocalGraph.ts`，改之前先跑对应测试。
+- 03 Knowledge：图谱是核心交互。知识页主体是 3D 知识宇宙（见「3D 档案」），首页章节的 SVG 小图仍用 `lib/knowledgeOverview.ts`；`lib/knowledgeLocalGraph.ts` 与 2D 浏览器是无 WebGL 时的兜底。改布局前先跑对应测试。
 - 04 Writing：归档时间线，按年分组，日期在左。
 - 移动端：`CF … MENU` 全屏覆盖层；图谱容器必须 `overflow-hidden min-w-0`，否则 canvas 会把页面撑出横向滚动。
 
