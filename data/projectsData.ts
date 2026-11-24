@@ -26,7 +26,7 @@ const projectsData: Project[] = [
   {
     id: 'branchlight',
     title: 'Branchlight',
-    href: 'https://github.com/CassianFlorin/branchlight-app/releases/latest',
+    href: 'https://branchlight.florin-studio.com/',
     category: 'app',
     techStack: ['Rust', 'SwiftUI', 'AppKit', 'Git', 'Tauri'],
     knowledgeNodes: ['tools', 'languages'],

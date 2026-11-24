@@ -5,6 +5,11 @@ const branchlight: CaseStudyEntry = {
   started: '2026',
   links: [
     {
+      kind: 'site',
+      href: 'https://branchlight.florin-studio.com/',
+      label: { zh: '产品主页', en: 'Product site' },
+    },
+    {
       kind: 'download',
       href: 'https://github.com/CassianFlorin/branchlight-app/releases/latest',
       label: { zh: '下载 macOS 版', en: 'Download for macOS' },
