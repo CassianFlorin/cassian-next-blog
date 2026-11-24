@@ -43,6 +43,18 @@ function resolveDatelessSlug(pathname: string): string | null {
     : null;
 }
 
+// 下线的项目案例页：旧链接 308 回作品列表，别让它们 404。
+const RETIRED_PROJECTS = ['skill-hub'];
+const RETIRED_PROJECT_PATH = new RegExp(
+  `^(/(?:${locales.join('|')}))?/projects/(?:${RETIRED_PROJECTS.join('|')})/?$`,
+);
+
+function resolveRetiredProject(pathname: string): string | null {
+  const match = pathname.match(RETIRED_PROJECT_PATH);
+  if (!match) return null;
+  return `${match[1] ?? `/${defaultLocale}`}/projects`;
+}
+
 function permanentRedirect(request: NextRequest, pathname: string) {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
@@ -54,6 +66,9 @@ export default function middleware(request: NextRequest) {
 
   const datelessTarget = resolveDatelessSlug(pathname);
   if (datelessTarget) return permanentRedirect(request, datelessTarget);
+
+  const retiredTarget = resolveRetiredProject(pathname);
+  if (retiredTarget) return permanentRedirect(request, retiredTarget);
 
   // 根路径 / 交给 next-intl 按浏览器语言选（307，因人而异）。
   // 其余不带前缀的深层路径只来自历史链接和外链，统一 308 到默认语言，

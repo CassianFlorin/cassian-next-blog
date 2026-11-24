@@ -1,13 +1,19 @@
 import projectsData, { type Project } from '../projectsData';
+import branchlight from './branchlight';
 import databaseCli from './databaseCli';
 import litho from './litho';
-import skillHub from './skillHub';
+import waitlight from './waitlight';
 import type { CaseStudyEntry } from './types';
 
 export type { CaseStudy, CaseStudyEntry } from './types';
 
 /** Order here is the order of the Work index and prev/next navigation. */
-export const caseStudies: CaseStudyEntry[] = [litho, skillHub, databaseCli];
+export const caseStudies: CaseStudyEntry[] = [
+  waitlight,
+  branchlight,
+  litho,
+  databaseCli,
+];
 
 const byProjectId = new Map(
   caseStudies.map((entry) => [entry.projectId, entry]),
@@ -20,7 +26,7 @@ export const caseStudyProjects = (): Project[] =>
     .map((entry) => projectsData.find((p) => p.id === entry.projectId))
     .filter((project): project is Project => project !== undefined);
 
-/** URL segment for a project, e.g. `skill-hub`. */
+/** URL segment for a project, e.g. `waitlight`. */
 export const projectSlug = (project: Pick<Project, 'title'>) =>
   project.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 

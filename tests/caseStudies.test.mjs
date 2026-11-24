@@ -31,7 +31,12 @@ try {
   const projects = caseStudyProjects();
   assert.equal(projects.length, caseStudies.length);
   const slugs = projects.map(projectSlug);
-  assert.deepEqual(slugs, ['litho', 'skill-hub', 'database-cli']);
+  assert.deepEqual(slugs, [
+    'waitlight',
+    'branchlight',
+    'litho',
+    'database-cli',
+  ]);
   assert.equal(new Set(slugs).size, slugs.length);
   projects.forEach((project) =>
     assert.equal(projectHref(project), `/projects/${projectSlug(project)}`),

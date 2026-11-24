@@ -18,7 +18,7 @@ const siteMetadata = {
   mastodon: '',
   email: 'flowercard591@gmail.com',
   github: 'https://github.com/CassianFlorin',
-  x: 'https://x.com/ynyng90660098',
+  x: 'https://x.com/cassianflorin',
   // twitter: 'https://twitter.com/Twitter',
   facebook: '',
   youtube: '',
