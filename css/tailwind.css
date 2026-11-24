@@ -295,6 +295,148 @@
     }
   }
 
+  /* 3D archive field (components/home/ArchiveField). It fades in from the
+     page ground once its first frame is drawn. Without WebGL it renders the
+     portrait backdrop instead. */
+  .hero-field {
+    opacity: 0;
+    transition: opacity 500ms var(--ease-atelier);
+  }
+
+  .hero-field[data-ready='true'] {
+    opacity: 1;
+  }
+
+  .hero-field-label {
+    transition: opacity var(--motion-fast) var(--ease-atelier);
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-field {
+      transition-duration: 1ms;
+    }
+  }
+
+  /* Knowledge universe (components/knowledge/KnowledgeUniverse). */
+  .universe-stage {
+    opacity: 0;
+    transition: opacity 500ms var(--ease-atelier);
+  }
+
+  .universe-stage[data-ready='true'] {
+    opacity: 1;
+  }
+
+  .universe-label {
+    will-change: transform;
+    transition: opacity var(--motion-fast) var(--ease-atelier);
+  }
+
+  .universe-label--territory {
+    white-space: nowrap;
+  }
+
+  .universe-label--territory[data-state='focused'] > span:first-child {
+    color: var(--color-primary-700);
+  }
+
+  .dark .universe-label--territory[data-state='focused'] > span:first-child {
+    color: var(--color-primary-400);
+  }
+
+  .universe-label--item {
+    padding: 0.2rem 0.45rem;
+    border-left: 2px solid var(--color-primary-600);
+    background: color-mix(in oklab, var(--color-gray-50) 82%, transparent);
+  }
+
+  .dark .universe-label--item {
+    border-left-color: var(--color-primary-400);
+    background: color-mix(in oklab, var(--color-night) 78%, transparent);
+  }
+
+  .universe-label--item[data-kind='topic'] {
+    border-left-color: transparent;
+  }
+
+  .universe-label:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  .universe-chip {
+    border: 1px solid
+      color-mix(in oklab, var(--color-gray-950) 18%, transparent);
+    background: color-mix(in oklab, var(--color-gray-50) 80%, transparent);
+    padding: 0.3rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    color: var(--color-gray-700);
+    transition:
+      background-color var(--motion-fast) var(--ease-atelier),
+      color var(--motion-fast) var(--ease-atelier);
+  }
+
+  .universe-chip:hover {
+    color: var(--color-gray-950);
+  }
+
+  .universe-chip[aria-pressed='true'] {
+    border-color: var(--color-gray-950);
+    background: var(--color-gray-950);
+    color: var(--color-gray-50);
+  }
+
+  .dark .universe-chip {
+    border-color: color-mix(in oklab, white 20%, transparent);
+    background: color-mix(in oklab, var(--color-night) 70%, transparent);
+    color: var(--color-gray-300);
+  }
+
+  .dark .universe-chip:hover {
+    color: var(--color-gray-50);
+  }
+
+  .dark .universe-chip[aria-pressed='true'] {
+    border-color: var(--color-gray-50);
+    background: var(--color-gray-50);
+    color: var(--color-gray-950);
+  }
+
+  .universe-search {
+    border: 1px solid
+      color-mix(in oklab, var(--color-gray-950) 18%, transparent);
+    background: color-mix(in oklab, var(--color-gray-50) 85%, transparent);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-gray-900);
+  }
+
+  .dark .universe-search {
+    border-color: color-mix(in oklab, white 20%, transparent);
+    background: color-mix(in oklab, var(--color-night) 75%, transparent);
+    color: var(--color-gray-100);
+  }
+
+  .universe-panel {
+    border-left: 2px solid var(--color-primary-600);
+    background: color-mix(in oklab, var(--color-paper) 92%, transparent);
+    padding: 1.25rem 1.25rem 1rem;
+  }
+
+  .dark .universe-panel {
+    border-left-color: var(--color-primary-400);
+    background: color-mix(in oklab, var(--color-paper-dark) 90%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .universe-stage {
+      transition-duration: 1ms;
+    }
+  }
+
   @keyframes hero-rise {
     from {
       opacity: 0;

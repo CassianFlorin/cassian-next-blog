@@ -24,7 +24,13 @@
       "lines": ["Building things.", "Mapping ideas.", "Leaving traces."],
       "areas": ["AI Engineering", "Developer Tools", "Knowledge Systems"],
       "explore": "Explore",
-      "summary": "A personal system for building tools, thinking clearly, and leaving traces."
+      "summary": "A personal system for building tools, thinking clearly, and leaving traces.",
+      "archive": {
+        "label": "CF / ARCHIVE · move to part the dust",
+        "entries": "entries",
+        "territories": "territories",
+        "hint": "click to open"
+      }
     },
     "work": {
       "title": "Work",
@@ -310,7 +316,10 @@
         "description": "Analytics, integrations, and data systems."
       }
     },
-    "statConnections": "Connections"
+    "statConnections": "Connections",
+    "universeHint": "Drag to turn · pinch or Ctrl + scroll to zoom · click a territory to fly there, an article to open it",
+    "universeTerritoryHint": "Drag to turn · click another territory to go there · click an article to open it",
+    "matches": "{count, plural, one {# match} other {# matches}}"
   },
   "footer": {
     "copyright": "All rights reserved",

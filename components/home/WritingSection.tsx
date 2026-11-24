@@ -35,7 +35,7 @@ export default async function WritingSection({
     <section
       id="writing"
       aria-labelledby="writing-title"
-      className="bleed surface-paper"
+      className="bleed bg-paper/80 dark:bg-paper-dark/80"
     >
       <div className="container-atelier py-24 md:py-36">
         <SectionHeading

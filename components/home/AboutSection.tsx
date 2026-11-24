@@ -20,7 +20,7 @@ export default async function AboutSection() {
     <section
       id="about"
       aria-labelledby="about-title"
-      className="bleed bg-night relative isolate overflow-hidden text-gray-100"
+      className="bleed bg-night/85 relative isolate overflow-hidden text-gray-100"
     >
       <div aria-hidden="true" className="absolute inset-0 -z-10 opacity-25">
         <Image
