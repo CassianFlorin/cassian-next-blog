@@ -94,5 +94,8 @@
       "yarn prettier --write"
     ]
   },
+  "engines": {
+    "node": "24.x"
+  },
   "packageManager": "yarn@3.6.1"
 }
