@@ -5,7 +5,7 @@ import Reveal from '@/components/motion/Reveal';
 import { projectHref } from '@/data/caseStudies';
 import projectsData from '@/data/projectsData';
 
-const HOME_PROJECTS = ['litho', 'skillHub', 'databaseCli'];
+const HOME_PROJECTS = ['waitlight', 'branchlight', 'litho'];
 
 export default async function WorkSection() {
   const t = await getTranslations();

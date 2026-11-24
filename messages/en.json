@@ -157,6 +157,22 @@
     "relatedPosts": "Related Posts",
     "github": "GitHub",
     "items": {
+      "waitlight": {
+        "status": "Active · v0.12 released",
+        "tagline": "A macOS workspace for coding agents",
+        "why": "With several agents running, the tiring part is not the code — it is flipping through tabs to see which one is waiting for you.",
+        "description": "A native macOS workspace built on Ghostty for running Claude Code, Codex, Gemini and other coding agents side by side, locally or over SSH, with a sidebar that shows which one needs you.",
+        "problem": "Agents end up scattered across terminal tabs with no sign of which is working and which is stuck on a prompt; a dropped SSH connection takes the agent with it, and a relaunch loses the conversation.",
+        "solution": "Waitlight tracks each agent per pane, adds an Agent overview and a jump to the next one waiting, restores sessions and conversations, and can give every task its own git worktree, on this Mac or on a server."
+      },
+      "branchlight": {
+        "status": "In daily use · v0.8.7 released",
+        "tagline": "A quieter Git desktop client",
+        "why": "The hard part of Git is not the commands — it is seeing how branches relate, reviewing changes, and resolving conflicts without losing either side.",
+        "description": "A Git client for macOS built around a clear commit graph, useful diffs and careful three-way conflict resolution, with a native SwiftUI/AppKit interface over a Rust engine that drives official Git.",
+        "problem": "Conflict markers make it easy to drop one side by accident, discards, hard resets and force pushes are one step from losing work, and clients that reimplement Git can disagree with the command line.",
+        "solution": "Branchlight drives official Git and adds a three-pane merge editor, hunk and line staging, restorable discards and a history with a lane graph, with explicit consent for every destructive action."
+      },
       "litho": {
         "status": "Daily driver · iOS beta / Android released",
         "tagline": "Native client for linux.do",
@@ -165,14 +181,6 @@
         "problem": "linux.do runs on Discourse behind Cloudflare, so third-party tools and even simple scripts constantly hit challenge pages and lose their session. There is no smooth, native way to browse and interact from an iPhone.",
         "solution": "Litho routes every request through an off-screen WKWebView gateway that borrows the browser UA / Cookie / TLS fingerprint, so it sails past Cloudflare and holds the login state. On that foundation it delivers a full SwiftUI experience: topic feeds, single-document post rendering, reactions, chat, private messages and real-time notifications via MessageBus."
       },
-      "skillHub": {
-        "status": "Active",
-        "tagline": "The package manager for AI agent skills",
-        "why": "Agent skills were scattered across repos and folders with no way to install, update, or govern them.",
-        "description": "The package manager for AI agent skills. Install, update, sync, and govern skills across coding agents.",
-        "problem": "AI coding agents are becoming part of daily development, but their reusable skills are still scattered across repos, local folders, and different agent ecosystems.",
-        "solution": "skill-hub turns skills into manageable packages so they can be installed, updated, synchronized, and governed across Codex, Claude, Gemini, and similar workflows."
-      },
       "databaseCli": {
         "status": "Active",
         "tagline": "Safe database investigation for agents",
@@ -180,12 +188,6 @@
         "description": "Read-only database CLI skill for Codex.",
         "problem": "Real production debugging often needs schema lookup, safe read-only SQL, and cross-environment comparison without turning an AI session into an unsafe database client.",
         "solution": "database-cli gives Codex a controlled database investigation workflow: inspect schema, search metadata, run read-only queries, and compare records with guardrails."
-      },
-      "skillHubRegistry": {
-        "status": "Active",
-        "description": "Official catalog registry for skill-hub.",
-        "problem": "A package manager needs a trusted source of skill metadata so users can discover installable skills without copying raw repository paths by hand.",
-        "solution": "skill-hub-registry provides the catalog layer for skill-hub, separating registry metadata from the CLI runtime."
       },
       "mooTool": {
         "status": "Open-source participation",
@@ -464,7 +466,7 @@
     "aboutTitle": "About",
     "aboutDescription": "Cassian Florin builds tools, workflows, and systems around software, AI, and knowledge. Background, current focus, and how to get in touch.",
     "projectsTitle": "Work",
-    "projectsDescription": "Things Cassian Florin builds — Litho, skill-hub, database-cli — each with a case study on why it exists and how it works.",
+    "projectsDescription": "Things Cassian Florin builds — Waitlight, Branchlight, Litho, database-cli — each with a case study on why it exists and how it works.",
     "knowledgeTitle": "Knowledge Map",
     "knowledgeDescription": "An interactive map of how Cassian Florin's writing connects: explore the whole graph or focus on one territory.",
     "breadcrumbHome": "Home",

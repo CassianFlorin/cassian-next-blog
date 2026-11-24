@@ -138,7 +138,7 @@ export function buildBlogPostingJsonLd(
 export interface ProjectCaseStudyInput {
   name: string;
   description: string;
-  /** Locale-less path of the case study, e.g. `/projects/skill-hub`. */
+  /** Locale-less path of the case study, e.g. `/projects/waitlight`. */
   path: string;
   keywords: string[];
   codeRepository?: string;

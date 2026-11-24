@@ -15,6 +15,23 @@ export interface Project {
 
 const projectsData: Project[] = [
   {
+    id: 'waitlight',
+    title: 'Waitlight',
+    href: 'https://waitlight.cassianflorin.com/',
+    sourceHref: 'https://github.com/CassianFlorin/Waitlight',
+    category: 'featured',
+    techStack: ['Swift', 'AppKit', 'libghostty', 'SSH', 'AI Agent'],
+    knowledgeNodes: ['ai-agent', 'tools'],
+  },
+  {
+    id: 'branchlight',
+    title: 'Branchlight',
+    href: 'https://github.com/CassianFlorin/branchlight-app/releases/latest',
+    category: 'app',
+    techStack: ['Rust', 'SwiftUI', 'AppKit', 'Git', 'Tauri'],
+    knowledgeNodes: ['tools', 'languages'],
+  },
+  {
     id: 'litho',
     title: 'Litho',
     href: '/litho',
@@ -32,15 +49,6 @@ const projectsData: Project[] = [
     knowledgeNodes: ['projects', 'languages'],
   },
   {
-    id: 'skillHub',
-    title: 'skill-hub',
-    href: 'https://github.com/CassianFlorin/skill-hub',
-    sourceHref: 'https://github.com/CassianFlorin/skill-hub',
-    category: 'featured',
-    techStack: ['Go', 'CLI', 'AI Agent', 'Developer Tools'],
-    knowledgeNodes: ['ai-agent', 'tools'],
-  },
-  {
     id: 'databaseCli',
     title: 'database-cli',
     href: 'https://github.com/CassianFlorin/database-cli',
@@ -48,15 +56,6 @@ const projectsData: Project[] = [
     category: 'featured',
     techStack: ['Python', 'CLI', 'Codex Skill', 'Database'],
     knowledgeNodes: ['ai-agent', 'tools', 'data-integration'],
-  },
-  {
-    id: 'skillHubRegistry',
-    title: 'skill-hub-registry',
-    href: 'https://github.com/CassianFlorin/skill-hub-registry',
-    sourceHref: 'https://github.com/CassianFlorin/skill-hub-registry',
-    category: 'ecosystem',
-    techStack: ['Python', 'Registry', 'Catalog', 'Automation'],
-    knowledgeNodes: ['ai-agent', 'tools'],
   },
   {
     id: 'mooTool',
