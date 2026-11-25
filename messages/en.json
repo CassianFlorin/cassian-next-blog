@@ -171,7 +171,13 @@
       "keepReading": "Keep reading",
       "inTheMap": "In the knowledge map",
       "untranslated": "This article is currently only available in Chinese.",
-      "readOriginal": "Read the original"
+      "readOriginal": "Read the original",
+      "scene": {
+        "label": "CF / 03 · Article system · Hover a point, click to go",
+        "sections": "{count} sections",
+        "neighbours": "{count} nearby",
+        "territories": "{count} territories"
+      }
     }
   },
   "about": {

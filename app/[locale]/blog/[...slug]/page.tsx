@@ -307,6 +307,7 @@ export default async function Page(props: {
         knowledgeGraph={localKnowledgeGraph}
         knowledgeUniverse={knowledgeUniverse}
         relations={relations}
+        toc={displayToc}
         isTranslated={isTranslated}
       >
         <MDXLayoutRenderer
