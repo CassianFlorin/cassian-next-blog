@@ -1,3 +1,4 @@
+import TextReveal from '@/components/motion/TextReveal';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { genPageMetadata } from 'app/seo';
@@ -42,9 +43,13 @@ export default async function PrivacyPage() {
             <p className="type-meta text-gray-500 dark:text-gray-400">
               {t('updated')}
             </p>
-            <h1 className="type-section break-words text-gray-950 dark:text-gray-50">
+            <TextReveal
+              as="h1"
+              on="mount"
+              className="type-section break-words text-gray-950 dark:text-gray-50"
+            >
               {t('title')}
-            </h1>
+            </TextReveal>
           </div>
           <p className="text-base leading-7 text-gray-600 lg:pb-2 dark:text-gray-400">
             {t('intro')}

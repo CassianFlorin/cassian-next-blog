@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import TextReveal from '@/components/motion/TextReveal';
 
 interface Props {
   /** Chapter number, rendered as `CF / 01`. */
@@ -31,17 +32,20 @@ export default function SectionHeading({
         >
           CF / {index}
         </p>
-        <h2
+        <TextReveal
+          as="h2"
           id={id}
           className={`type-section ${inverse ? 'text-gray-50' : 'text-gray-950 dark:text-gray-50'}`}
         >
           {title}
-        </h2>
-        <p
+        </TextReveal>
+        <TextReveal
+          as="p"
+          delay={0.15}
           className={`type-editorial text-2xl italic sm:text-3xl ${inverse ? 'text-gray-300' : 'text-gray-600 dark:text-gray-300'}`}
         >
           {lede}
-        </p>
+        </TextReveal>
         {description && (
           <p
             className={`max-w-xl text-base leading-7 ${inverse ? 'text-gray-500' : 'text-gray-600 dark:text-gray-400'}`}

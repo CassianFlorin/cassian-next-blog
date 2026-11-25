@@ -11,8 +11,7 @@ import SectionContainer from '@/components/SectionContainer';
 import siteMetadata from '@/data/siteMetadata';
 import ScrollTopAndComment from '@/components/ScrollTopAndComment';
 import Tldr from '@/components/Tldr';
-import { useAnime } from '@/lib/hooks/useAnime';
-import { fadeInUp } from '@/lib/animations/fadeIn';
+import { gsap, motionQuery, useGSAP } from '@/lib/motion/gsap';
 
 interface LayoutProps {
   content: CoreContent<Blog>;
@@ -34,10 +33,14 @@ export default function PostLayout({
   const { path, slug, date, title, tldr } = content;
   const contentRef = useRef<HTMLDivElement>(null);
 
-  useAnime({
-    targets: contentRef,
-    ...fadeInUp(220, 'strong'),
-  });
+  useGSAP(
+    () => {
+      gsap.matchMedia().add(motionQuery, () => {
+        gsap.from(contentRef.current, { autoAlpha: 0, y: 24, delay: 0.22 });
+      });
+    },
+    { scope: contentRef },
+  );
 
   return (
     <SectionContainer>
@@ -66,7 +69,6 @@ export default function PostLayout({
               <div
                 ref={contentRef}
                 className="prose dark:prose-invert max-w-none pt-10 pb-8"
-                style={{ opacity: 0 }}
               >
                 <Tldr>{tldr}</Tldr>
                 {children}

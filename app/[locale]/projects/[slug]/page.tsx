@@ -1,3 +1,4 @@
+import TextReveal from '@/components/motion/TextReveal';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
@@ -246,9 +247,13 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
             </span>
           </div>
 
-          <h1 className="type-hero mt-14 text-gray-950 normal-case md:mt-20 dark:text-gray-50">
+          <TextReveal
+            as="h1"
+            on="mount"
+            className="type-hero mt-14 text-gray-950 normal-case md:mt-20 dark:text-gray-50"
+          >
             {project.title}
-          </h1>
+          </TextReveal>
           <p className="type-editorial mt-8 max-w-4xl text-3xl leading-tight text-gray-800 sm:text-4xl lg:text-5xl dark:text-gray-200">
             {tagline}
           </p>

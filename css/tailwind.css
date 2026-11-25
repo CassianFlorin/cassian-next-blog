@@ -249,15 +249,20 @@
     color: white;
   }
 
-  /* Hero: staged, slow reveal (CSS only so it runs before hydration).
-     Desktop takes its time; on phones the whole sequence is compressed
-     (600ms fades, delays halved) because under mobile throttling the slow
-     version keeps the viewport visually unsettled for seconds and inflates
-     Speed Index without any of the atmosphere paying off on a small screen. */
-  .hero-stage {
-    animation: hero-rise var(--hero-rise, var(--motion-slow))
-      var(--ease-atelier) both;
-    animation-delay: calc(var(--stage-delay, 0ms) * var(--hero-tempo, 1));
+  /* Motion guard (GSAP entrances, see lib/motion). <html> gets `motion-ok`
+     before first paint when motion is welcome; only then do the hero parts
+     and on-load titles start hidden, so GSAP can reveal them without a flash.
+     The failsafe shows them anyway if the script never runs. */
+  .motion-ok [data-hero],
+  .motion-ok [data-motion-hidden] {
+    visibility: hidden;
+    animation: motion-failsafe 0s 2.6s forwards;
+  }
+
+  @keyframes motion-failsafe {
+    to {
+      visibility: visible;
+    }
   }
 
   .hero-backdrop {
@@ -266,11 +271,8 @@
   }
 
   @media (width < 64rem) {
-    .hero-stage,
     .hero-backdrop {
-      --hero-rise: 600ms;
       --hero-backdrop-in: 600ms;
-      --hero-tempo: 0.5;
     }
   }
 
@@ -316,6 +318,23 @@
     .hero-field {
       transition-duration: 1ms;
     }
+  }
+
+  /* About observatory (components/about). */
+  .about-label {
+    will-change: transform;
+    transition: opacity var(--motion-normal) var(--ease-atelier);
+  }
+
+  .about-label--post {
+    padding: 0.2rem 0.45rem;
+    border-left: 2px solid var(--color-primary-600);
+    background: color-mix(in oklab, var(--color-gray-50) 82%, transparent);
+  }
+
+  .dark .about-label--post {
+    border-left-color: var(--color-primary-400);
+    background: color-mix(in oklab, var(--color-night) 78%, transparent);
   }
 
   /* Work orbit + system stack (components/work). */
@@ -519,17 +538,6 @@
     }
   }
 
-  @keyframes hero-rise {
-    from {
-      opacity: 0;
-      transform: translateY(14px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
-
   @keyframes hero-backdrop-in {
     from {
       opacity: 0;
@@ -546,38 +554,6 @@
     to {
       transform: scale(1.07) translate3d(-1.2%, -0.8%, 0);
     }
-  }
-
-  /* Scroll reveal grammar (see components/motion/Reveal.tsx).
-     Only armed after hydration, so content is never hidden without JS. */
-  [data-reveal='rise'].is-armed {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-
-  [data-reveal='drift'].is-armed > * {
-    opacity: 0;
-    transform: translateX(28px);
-  }
-
-  [data-reveal='graph'].is-armed .graph-node,
-  [data-reveal='graph'].is-armed .graph-edge {
-    opacity: 0;
-  }
-
-  [data-reveal='rise'],
-  [data-reveal='drift'] > *,
-  [data-reveal='graph'] .graph-node,
-  [data-reveal='graph'] .graph-edge {
-    transition:
-      opacity var(--motion-normal) var(--ease-atelier),
-      transform var(--motion-normal) var(--ease-atelier);
-    transition-delay: calc(var(--reveal-index, 0) * 90ms);
-  }
-
-  [data-reveal='graph'] .graph-node,
-  [data-reveal='graph'] .graph-edge {
-    transition-duration: 900ms;
   }
 
   /* Section materials */
@@ -617,17 +593,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hero-stage,
     .hero-backdrop {
       animation: none;
-    }
-
-    [data-reveal].is-armed,
-    [data-reveal].is-armed > *,
-    [data-reveal].is-armed .graph-node,
-    [data-reveal].is-armed .graph-edge {
-      opacity: 1 !important;
-      transform: none !important;
     }
   }
 }

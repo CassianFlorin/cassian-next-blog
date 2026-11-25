@@ -1,3 +1,4 @@
+import TextReveal from '@/components/motion/TextReveal';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -139,9 +140,13 @@ export default async function KnowledgeNodePage(props: { params: Params }) {
             <p className="type-meta text-gray-500 dark:text-gray-400">
               {t('nodeLabel')}
             </p>
-            <h1 className="type-section mt-6 text-gray-950 dark:text-gray-50">
+            <TextReveal
+              as="h1"
+              on="mount"
+              className="type-section mt-6 text-gray-950 dark:text-gray-50"
+            >
               {nodeLabel}
-            </h1>
+            </TextReveal>
             <p className="type-editorial mt-6 text-2xl text-gray-600 italic sm:text-3xl dark:text-gray-300">
               {t(`nodes.${node}.description`)}
             </p>

@@ -1,3 +1,4 @@
+import TextReveal from '@/components/motion/TextReveal';
 import KnowledgeGraphExplorer from '@/components/KnowledgeGraphExplorer';
 import Link from '@/components/Link';
 import KnowledgeModeBar from '@/components/knowledge/KnowledgeModeBar';
@@ -62,9 +63,13 @@ export default async function KnowledgePage({
           </div>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end">
             <div className="space-y-6">
-              <h1 className="type-section text-gray-950 dark:text-gray-50">
+              <TextReveal
+                as="h1"
+                on="mount"
+                className="type-section text-gray-950 dark:text-gray-50"
+              >
                 {t('title')}
-              </h1>
+              </TextReveal>
               <p className="type-editorial text-2xl text-gray-600 italic sm:text-3xl dark:text-gray-300">
                 {t('lede')}
               </p>

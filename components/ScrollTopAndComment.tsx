@@ -2,7 +2,36 @@
 
 import siteMetadata from '@/data/siteMetadata';
 import { useEffect, useState } from 'react';
-import { smoothScrollTo } from '@/lib/animations/scroll';
+import { DURATION, gsap } from '@/lib/motion/gsap';
+
+/**
+ * Scroll with a plain GSAP tween driving window.scrollTo (no ScrollToPlugin:
+ * two buttons don't justify the extra bytes on every article). <html> keeps
+ * CSS smooth scrolling for anchor links, which would fight a per-frame tween,
+ * so it is paused for the tween's duration only.
+ */
+/** One shared proxy, so a new click cancels a scroll still in flight. */
+const scrollPosition = { y: 0 };
+
+const scrollToTarget = (target: number | HTMLElement) => {
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const root = document.documentElement;
+  const to =
+    typeof target === 'number'
+      ? target
+      : target.getBoundingClientRect().top + window.scrollY - 24;
+  const restore = () => root.style.removeProperty('scroll-behavior');
+  gsap.killTweensOf(scrollPosition);
+  scrollPosition.y = window.scrollY;
+  root.style.scrollBehavior = 'auto';
+  gsap.to(scrollPosition, {
+    y: Math.max(0, to),
+    duration: reduced ? 0 : DURATION.slow,
+    onUpdate: () => window.scrollTo(0, scrollPosition.y),
+    onComplete: restore,
+    onInterrupt: restore,
+  });
+};
 
 /**
  * Quiet back-to-top / jump-to-comments controls for long articles. They fade
@@ -35,7 +64,7 @@ const ScrollTopAndComment = () => {
           tabIndex={show ? 0 : -1}
           onClick={() => {
             const comment = document.getElementById('comment');
-            if (comment) smoothScrollTo(comment);
+            if (comment) scrollToTarget(comment);
           }}
           className={buttonClass}
         >
@@ -52,7 +81,7 @@ const ScrollTopAndComment = () => {
         type="button"
         aria-label="Scroll To Top"
         tabIndex={show ? 0 : -1}
-        onClick={() => smoothScrollTo(0)}
+        onClick={() => scrollToTarget(0)}
         className={buttonClass}
       >
         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

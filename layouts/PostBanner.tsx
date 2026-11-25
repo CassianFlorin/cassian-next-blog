@@ -12,8 +12,7 @@ import SectionContainer from '@/components/SectionContainer';
 import siteMetadata from '@/data/siteMetadata';
 import ScrollTopAndComment from '@/components/ScrollTopAndComment';
 import Tldr from '@/components/Tldr';
-import { useAnime } from '@/lib/hooks/useAnime';
-import { fadeInScale, fadeInUp } from '@/lib/animations/fadeIn';
+import { gsap, motionQuery, useGSAP } from '@/lib/motion/gsap';
 
 interface LayoutProps {
   content: CoreContent<Blog>;
@@ -41,14 +40,12 @@ export default function PostMinimal({
   const imageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  useAnime({
-    targets: imageRef,
-    ...fadeInScale(0, 'strong'),
-  });
-
-  useAnime({
-    targets: contentRef,
-    ...fadeInUp(280, 'strong'),
+  // Content is visible as rendered; GSAP only adds the entrance on top.
+  useGSAP(() => {
+    gsap.matchMedia().add(motionQuery, () => {
+      gsap.from(imageRef.current, { autoAlpha: 0, scale: 0.96 });
+      gsap.from(contentRef.current, { autoAlpha: 0, y: 24, delay: 0.28 });
+    });
   });
 
   return (
@@ -57,7 +54,7 @@ export default function PostMinimal({
       <article>
         <div>
           <div className="space-y-1 pb-10 text-center dark:border-gray-700">
-            <div ref={imageRef} className="w-full" style={{ opacity: 0 }}>
+            <div ref={imageRef} className="w-full">
               <Bleed>
                 <div className="relative aspect-2/1 w-full">
                   <Image
@@ -76,7 +73,6 @@ export default function PostMinimal({
           <div
             ref={contentRef}
             className="prose dark:prose-invert max-w-none py-4"
-            style={{ opacity: 0 }}
           >
             <Tldr>{tldr}</Tldr>
             {children}

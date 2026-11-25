@@ -17,7 +17,7 @@
 - 第二种强调色。红/绿/黄/蓝语义色也不例外，状态用形状和文字表达。
 - 圆角药丸（`rounded-full`）、大圆角卡片、阴影卡片。V2 是直角 + 细线 + 面。
 - 弹性/回弹动效（bounce / elastic / spring），以及任何不必要的动画。
-- 新的 UI 依赖。现有栈（Tailwind v4、anime.js、react-force-graph、three）足够；三维代码的公共部分在 `components/three/shared.ts`。
+- 新的 UI 依赖。现有栈（Tailwind v4、GSAP、react-force-graph、three）足够；三维代码的公共部分在 `components/three/shared.ts`。
 
 ### 3D 档案（首页 + 知识页，2026-11-24 起）
 
@@ -38,12 +38,19 @@
   `components/knowledge/KnowledgeUniverse.tsx`（筛选、搜索、聚焦面板）→ `components/knowledge/universeEngine.ts`。
   领域是小内核，标签是星尘，文章是星；跨领域文章落在领域之间。文字全部是投影上去的 HTML 标签，不画进 WebGL。
   普通滚轮必须继续滚页面，缩放只认双指 / Ctrl + 滚轮；触屏不拦截单指拖动。不支持 WebGL 时退回旧的 2D 图。
+- 项目页：`/projects` 顶部作品星轨、案例页头部（`components/work/workEngine.ts`），System 章节的爆炸分层图
+  （`systemStackEngine.ts`，旁边的编号列表是可读的正文来源）。
+- 关于页：观察台（`components/about/`），5 个视角对应简介里的 5 个 h2，读到哪节就转到哪个视角，并配一行说明；
+  文章星可在「按主题（圆环）/按时间（螺旋）」两种排法间形变。3D 要回答问题，不做纯装饰。
+- 两个踩过的坑：① EffectComposer 下清屏色会被重复做 sRGB 编码，背景比页面亮一块——一律用
+  `composerClearColor()`；背景色从令牌读，不读 body（body 有背景过渡）。② 嵌在页面里的舞台不要 bloom，
+  光晕会把整块画布抬亮，在页面上显出方框；只有首页全屏星系保留 bloom。
 - `prefers-reduced-motion`：无入场、无自转、按需渲染；Hero 不在视口或标签页隐藏时停帧。
 
 ## 2. 设计令牌（唯一来源：`css/tailwind.css`）
 
 | 类别     | 令牌                                                                           | 说明                                                           |
-| -------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------- | ------- | ------------------------------------------ |
+| -------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------- | -------- | ------------------------------------------ |
 | 强调色   | `primary-50…950`                                                               | 矿物绿，色相 160，低饱和。**全站唯一强调色**                   |
 | 中性色   | `gray-50…950`                                                                  | 暖石灰，色相 85。`gray-500` 是允许用作正文的最浅一档（≥4.5:1） |
 | 面       | `night` / `paper` / `paper-dark`                                               | 页面底 / 纸面（`.surface-paper` 自动切明暗）                   |
@@ -51,7 +58,7 @@
 | 字号工具 | `type-hero` `type-section` `type-editorial` `type-meta`                        | 不要自己拼 `text-5xl font-bold`                                |
 | 版式     | `container-atelier` `bleed`                                                    | 全站统一内容宽度；通栏用 `bleed`，不要 `-mx-…`                 |
 | 动效     | `--motion-fast/normal/slow/ambient` + `--ease-atelier`                         | 只有 ease-out 一种曲线                                         |
-| 揭示     | `data-reveal="rise                                                             | drift                                                          | graph"` | 滚动进入的唯一写法，见 `components/motion` |
+| 揭示     | `<Reveal variant="rise                                                         | drift                                                          | graph">` | 滚动进入的唯一写法，见 `components/motion` |
 | 按钮     | `.btn .btn-primary .btn-ghost`                                                 | 直角，无渐变                                                   |
 
 规则：
@@ -59,7 +66,21 @@
 - 颜色只写令牌类名（`text-primary-700`、`bg-gray-200/70`），不写十六进制、不写 Tailwind 默认的 `yellow-*` `green-*` `blue-*` `red-*`。
 - 暗色用 `dark:` 变体或 `.dark …` 选择器。**布局里 prose 用的是 `dark:prose-invert`，不存在裸的 `prose-invert` 类**，CSS 里覆盖暗色 prose 要写 `.dark .prose`（见 `css/tailwind.css` 中的注释，这是踩过的坑）。
 - 文字最浅到 `gray-500`（浅色）/ `gray-400`（暗色，`gray-500` 在 paper-dark 上只有 3.4:1），再浅的只能做装饰线，不能承载信息。
-- `prefers-reduced-motion` 必须有降级：CSS 动画走 `@media` 关掉，JS 动画查 `matchMedia`。
+- `prefers-reduced-motion` 必须有降级：CSS 动画走 `@media` 关掉，GSAP 动画一律包在 `gsap.matchMedia().add(motionQuery, …)` 里。
+
+### DOM 动效（GSAP，2026-11-25 起取代 anime.js）
+
+- 唯一入口 `lib/motion/gsap.ts`：随页面加载的只有核心、SplitText、useGSAP（首屏入场要用）。缓动 `EASE` 是自写的
+  cubic-bezier 求解，与 `--ease-atelier` 同一条曲线（不装 CustomEase），`DURATION` 对应 `--motion-*`。不要再引入第二个动画库。
+- 首屏以下才用到的插件（ScrollTrigger、DrawSVG）一律从 `lib/motion/plugins.ts` 按需加载，用 `whenReady()` 把异步创建的
+  动画挂回 useGSAP 的 context，卸载时照样回收。不要在首屏 bundle 里静态 import 它们；滚动到某处用普通补间驱动
+  `window.scrollTo`，不装 ScrollToPlugin。体积基线：引入 GSAP 后首屏 JS 每页约多 21–32 kB。
+- React 里一律 `useGSAP` + `scope`，不在 SSR 期间调用 gsap；事件回调里新建的动画用 `contextSafe`。
+- 组件：`HeroMotion`（首页 Hero 编排，靠 `data-hero` 标记）、`TextReveal`（标题按行从遮罩升起，`on="scroll" | "mount"`）、
+  `Reveal`（rise / drift / graph，ScrollTrigger 只播一次；graph 的连线用 DrawSVG 画出）、`ReadingProgress`（文章阅读进度细线）。
+- 防闪烁：`app/layout.tsx` 的 `<head>` 里有一段脚本，动效允许时给 `<html>` 加 `motion-ok`；只有这时 `[data-hero]`、
+  `[data-motion-hidden]` 才在首帧隐藏，并有 2.6 秒 CSS 兜底强制显示。根布局必须保留显式的 `<head>`，脚本放到 `<html>` 直下会触发水合报错。
+- `<html>` 带 CSS `scroll-smooth`，用 ScrollToPlugin 滚动时要临时关掉（见 `ScrollTopAndComment`），否则逐帧打架。
 
 ## 3. 站点结构与命名
 

@@ -1,3 +1,4 @@
+import TextReveal from '@/components/motion/TextReveal';
 import type { ReactNode } from 'react';
 import Link from '@/components/Link';
 
@@ -46,9 +47,13 @@ export default function WritingPageHeader({
       </nav>
       <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-end">
         <div className="min-w-0 space-y-6">
-          <h1 className="type-section break-words text-gray-950 dark:text-gray-50">
+          <TextReveal
+            as="h1"
+            on="mount"
+            className="type-section break-words text-gray-950 dark:text-gray-50"
+          >
             {title}
-          </h1>
+          </TextReveal>
           {lede && (
             <p className="type-editorial text-2xl text-gray-600 italic sm:text-3xl dark:text-gray-300">
               {lede}
