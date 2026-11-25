@@ -14,6 +14,7 @@ import { htmlLangByLocale, postContentLocale, resolveLocale } from '@/lib/seo';
 import TraceList, { type Trace } from '@/components/writing/TraceList';
 import siteMetadata from '@/data/siteMetadata';
 import type { KnowledgeGraphData } from '@/lib/knowledgeGraph';
+import type { UniverseData } from '@/lib/knowledgeUniverse';
 import { knowledgeNodeHref, type KnowledgeNodeKey } from '@/lib/knowledgeNodes';
 
 const editUrl = (path: string) =>
@@ -42,6 +43,7 @@ interface LayoutProps {
   next?: { path: string; title: string };
   prev?: { path: string; title: string };
   knowledgeGraph?: KnowledgeGraphData;
+  knowledgeUniverse?: UniverseData;
   relations?: ArticleRelations;
   isTranslated?: boolean;
   children: ReactNode;
@@ -58,6 +60,7 @@ export default async function PostLayout({
   next,
   prev,
   knowledgeGraph,
+  knowledgeUniverse,
   relations,
   isTranslated = false,
   children,
@@ -307,17 +310,20 @@ export default async function PostLayout({
               </section>
             )}
 
-            {knowledgeGraph && knowledgeGraph.nodes.length > 0 && (
-              <section aria-labelledby="article-map">
-                <h2 id="article-map" className={`${asideTitle} mb-4`}>
-                  {t('article.inTheMap')}
-                </h2>
-                <ArticleKnowledgeGraph
-                  graphData={knowledgeGraph}
-                  currentSlug={slug}
-                />
-              </section>
-            )}
+            {knowledgeUniverse &&
+              knowledgeGraph &&
+              knowledgeGraph.nodes.length > 0 && (
+                <section aria-labelledby="article-map">
+                  <h2 id="article-map" className={`${asideTitle} mb-4`}>
+                    {t('article.inTheMap')}
+                  </h2>
+                  <ArticleKnowledgeGraph
+                    universe={knowledgeUniverse}
+                    graphData={knowledgeGraph}
+                    currentSlug={slug}
+                  />
+                </section>
+              )}
           </aside>
         </div>
 
