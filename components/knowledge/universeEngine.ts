@@ -921,6 +921,13 @@ export function mountUniverse(
   /* Loop ------------------------------------------------------------------ */
   let frame = 0;
   let started = 0;
+  /**
+   * Entry time only runs while frames run (stage on screen, tab visible), so
+   * a stage scrolled into view later still gets its whole arrival.
+   */
+  let entryClock = 0;
+  let lastTick = 0;
+  let entryDone = !motion;
   let readyFired = false;
   let visible = true;
   const entryFrom = new THREE.Vector3(0, 34, 120);
@@ -1014,12 +1021,18 @@ export function mountUniverse(
   const tick = (now: number) => {
     frame = 0;
     if (!started) started = now;
+    entryClock += lastTick ? Math.min(now - lastTick, 64) : 0;
+    lastTick = now;
     const time = motion ? (now - started) / 1000 : 0;
 
     // Entry: arrive from far out while nothing else moves the camera.
-    if (motion && !flight.active && now - started < ENTRY_MS) {
-      const entry = easeOut(clamp01((now - started) / ENTRY_MS));
+    if (!entryDone && !flight.active) {
+      const entry = easeOut(clamp01(entryClock / ENTRY_MS));
       camera.position.lerpVectors(entryFrom, entryTo, entry);
+      if (entry >= 1) entryDone = true;
+    } else if (!entryDone) {
+      // A flight took over the camera; the entry has nothing left to do.
+      entryDone = true;
     }
 
     if (flight.active) {
@@ -1092,10 +1105,14 @@ export function mountUniverse(
 
   const intersection = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
+    lastTick = 0;
     if (visible) requestRender();
   });
   intersection.observe(host);
-  const onVisibility = () => requestRender();
+  const onVisibility = () => {
+    lastTick = 0;
+    requestRender();
+  };
   document.addEventListener('visibilitychange', onVisibility);
 
   const themeObserver = new MutationObserver(() => {
