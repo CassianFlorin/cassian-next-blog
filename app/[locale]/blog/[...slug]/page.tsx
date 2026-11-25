@@ -26,6 +26,7 @@ import siteMetadata from '@/data/siteMetadata';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { buildLocalKnowledgeGraph } from '@/lib/knowledgeGraph';
+import { buildKnowledgeUniverse } from '@/lib/knowledgeUniverse';
 import { getKnowledgeIndex } from '@/lib/knowledgeData';
 import { getNodesForTags } from '@/lib/knowledgeNodes';
 import { relatedArticles, relatedProjects } from '@/lib/writingRelations';
@@ -193,6 +194,12 @@ export default async function Page(props: {
   // as the knowledge map so both sides of every link agree.
   const tProjects = await getTranslations({ locale, namespace: 'projects' });
   const knowledgeIndex = getKnowledgeIndex(locale);
+  const tKnowledge = await getTranslations({ locale, namespace: 'knowledge' });
+  const knowledgeUniverse = buildKnowledgeUniverse(
+    knowledgeIndex,
+    (key) => tKnowledge(`nodes.${key}.label`),
+    (key) => tKnowledge(`nodes.${key}.description`),
+  );
   const citations = new Map(
     caseStudies.map((entry) => [entry.projectId, entry.relatedPostSlugs || []]),
   );
@@ -298,6 +305,7 @@ export default async function Page(props: {
         next={next}
         prev={prev}
         knowledgeGraph={localKnowledgeGraph}
+        knowledgeUniverse={knowledgeUniverse}
         relations={relations}
         isTranslated={isTranslated}
       >

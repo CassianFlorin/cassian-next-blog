@@ -46,7 +46,12 @@ export interface UniverseCallbacks {
 export interface UniverseOptions {
   reducedMotion: boolean;
   /** 'explore' focuses territories in place; 'territory' navigates. */
-  mode: 'explore' | 'territory';
+  /**
+   * 'explore' focuses territories in place; 'territory' arrives focused and
+   * navigates elsewhere; 'article' circles one article's star, lit with its
+   * topics, inside an article page.
+   */
+  mode: 'explore' | 'territory' | 'article';
   initialFocus?: KnowledgeNodeKey;
   initialPost?: string;
   labelLayer: HTMLElement;
@@ -252,17 +257,19 @@ export function mountUniverse(
     return { geometry, material, dim, lit, dimAttribute, litAttribute };
   };
 
+  // The article sidebar is close-up and small: quieter points.
+  const pointScale = options.mode === 'article' ? 18 : 30;
   const posts = makePoints(
     data.posts.map((p) => p.position),
     data.posts.map(() => 34),
     1,
-    30,
+    pointScale,
   );
   const topics = makePoints(
     data.topics.map((t) => t.position),
     data.topics.map((t) => 12 + Math.min(14, t.count * 3)),
     0,
-    30,
+    pointScale,
   );
 
   /* Lines: article → topic threads, and territory bridges --------------- */
@@ -490,6 +497,8 @@ export function mountUniverse(
     ? data.territories.findIndex((t) => t.key === options.initialFocus)
     : -1;
   let hovered: UniverseItem | null = null;
+  /** Lit without the pointer: the article a page is about. */
+  let pinned: UniverseItem | null = null;
   let query = '';
   let matches = { posts: new Set<number>(), topics: new Set<number>() };
 
@@ -514,9 +523,10 @@ export function mountUniverse(
   /** Recompute every target from focus + hover + search. */
   const retarget = () => {
     const searching = query.length > 0;
-    const hoverPost = hovered?.kind === 'post' ? hovered.index : -1;
-    const hoverTopic = hovered?.kind === 'topic' ? hovered.index : -1;
-    const hoverTerritory = hovered?.kind === 'territory' ? hovered.index : -1;
+    const lit = hovered ?? pinned;
+    const hoverPost = lit?.kind === 'post' ? lit.index : -1;
+    const hoverTopic = lit?.kind === 'topic' ? lit.index : -1;
+    const hoverTerritory = lit?.kind === 'territory' ? lit.index : -1;
 
     data.posts.forEach((_, i) => {
       const own = inFocus(postTerritoryIdx[i]);
@@ -576,14 +586,29 @@ export function mountUniverse(
     data.territories.forEach((_, i) => {
       energy.target[i] = i === focused || i === hoverTerritory ? 1 : 0;
       coreScale.target[i] = focused < 0 || i === focused ? 1 : 0.4;
+      const articleHome =
+        pinned?.kind === 'post' && postTerritoryIdx[pinned.index].includes(i);
       territoryLabels[i].dataset.state =
-        i === focused ? 'focused' : focused >= 0 ? 'dim' : 'idle';
+        options.mode === 'article' && !articleHome && i !== hoverTerritory
+          ? 'hidden'
+          : i === focused
+            ? 'focused'
+            : focused >= 0
+              ? 'dim'
+              : 'idle';
     });
 
     // Floating labels: hovered item first, then the focused territory's
     // newest articles and biggest topics.
     const wanted: UniverseItem[] = [];
     if (hovered && hovered.kind !== 'territory') wanted.push(hovered);
+    if (pinned?.kind === 'post') {
+      // The page's own article, then the topics it carries.
+      wanted.push(pinned);
+      [...postTopics[pinned.index]]
+        .slice(0, MAX_TOPIC_LABELS)
+        .forEach((index) => wanted.push({ kind: 'topic', index }));
+    }
     if (searching) {
       [...matches.posts]
         .slice(0, MAX_POST_LABELS)
@@ -621,8 +646,9 @@ export function mountUniverse(
   controls.enablePan = false;
   controls.enableZoom = false;
   controls.rotateSpeed = 0.55;
-  controls.autoRotate = motion && options.mode === 'explore';
-  controls.autoRotateSpeed = 0.35;
+  const circles = options.mode === 'explore' || options.mode === 'article';
+  controls.autoRotate = motion && circles;
+  controls.autoRotateSpeed = options.mode === 'article' ? 0.8 : 0.35;
   if (coarse) {
     // One finger should still scroll the page; taps still select.
     controls.enabled = false;
@@ -636,7 +662,7 @@ export function mountUniverse(
   };
   const onControlEnd = () => {
     window.clearTimeout(idleTimer);
-    if (motion && options.mode === 'explore') {
+    if (motion && circles) {
       idleTimer = window.setTimeout(() => {
         controls.autoRotate = focused < 0;
       }, 6000);
@@ -705,6 +731,7 @@ export function mountUniverse(
   const focus = (key: KnowledgeNodeKey | null) => {
     const next = key ? data.territories.findIndex((t) => t.key === key) : -1;
     focused = next;
+    pinned = null;
     controls.autoRotate = motion && options.mode === 'explore' && next < 0;
     if (next >= 0) {
       flyTo(
@@ -722,7 +749,7 @@ export function mountUniverse(
 
   function activateTerritory(i: number) {
     const key = data.territories[i].key;
-    if (options.mode === 'territory') {
+    if (options.mode !== 'explore') {
       if (i !== focused) callbacks.onOpen(data.territories[i].href);
       return;
     }
@@ -850,6 +877,7 @@ export function mountUniverse(
   /* Search ---------------------------------------------------------------- */
   const search = (raw: string) => {
     query = raw.trim().toLowerCase();
+    if (query) pinned = null;
     matches = { posts: new Set(), topics: new Set() };
     if (query) {
       data.posts.forEach((post, i) => {
@@ -931,12 +959,16 @@ export function mountUniverse(
         el.style.visibility = 'hidden';
         return;
       }
+      const size = measure(el);
+      // Flip to the left of the point when the label would leave the stage.
+      const flip = projected.x + dx + size.w > width - 4;
       const box = {
-        x: projected.x + dx,
+        x: flip ? Math.max(4, projected.x - dx - size.w) : projected.x + dx,
         y: projected.y - 10,
-        ...measure(el),
+        ...size,
       };
-      // First placed wins: territories, then the hovered item, then the rest.
+      // First placed wins: the article in view and the hovered item, then
+      // territories, then the rest.
       const blocked = avoid && taken.some((other) => overlaps(box, other));
       el.style.visibility = 'visible';
       el.style.transform = `translate3d(${Math.round(box.x)}px, ${Math.round(box.y)}px, 0)`;
@@ -944,8 +976,23 @@ export function mountUniverse(
       el.style.pointerEvents = blocked ? 'none' : '';
       if (!blocked) taken.push(box);
     };
+    const primary = (slot: Floating) =>
+      sameItem(slot.item, hovered) || sameItem(slot.item, pinned);
+    const placeFloating = (slot: Floating) => {
+      if (!slot.item || slot.item.kind === 'territory') return;
+      const p =
+        slot.item.kind === 'post'
+          ? data.posts[slot.item.index].position
+          : data.topics[slot.item.index].position;
+      place(slot.el, p, 12, 1, true);
+    };
+    floatingPool.filter(primary).forEach(placeFloating);
     data.territories.forEach((territory, i) => {
       const state = territoryLabels[i].dataset.state;
+      if (state === 'hidden') {
+        territoryLabels[i].style.visibility = 'hidden';
+        return;
+      }
       const fade = state === 'dim' ? 0.45 : 1;
       // Clear the core by its radius on screen, which depends on depth.
       toScreen(territory.position, projected);
@@ -959,16 +1006,9 @@ export function mountUniverse(
         edgeProbe,
       );
       const radius = Math.abs(rim.x - centreX);
-      place(territoryLabels[i], territory.position, radius + 10, fade);
+      place(territoryLabels[i], territory.position, radius + 10, fade, true);
     });
-    floatingPool.forEach((slot) => {
-      if (!slot.item || slot.item.kind === 'territory') return;
-      const p =
-        slot.item.kind === 'post'
-          ? data.posts[slot.item.index].position
-          : data.topics[slot.item.index].position;
-      place(slot.el, p, 12, 1, true);
-    });
+    floatingPool.filter((slot) => !primary(slot)).forEach(placeFloating);
   };
 
   const tick = (now: number) => {
@@ -1073,12 +1113,17 @@ export function mountUniverse(
     ? data.posts.findIndex((post) => post.href === options.initialPost)
     : -1;
   if (initialPostIndex >= 0) {
-    // Arriving from an article: fly to its star and light its threads.
-    const target = v3(data.posts[initialPostIndex].position);
+    // An article's own map, or arriving from one: its star, lit with its
+    // threads, seen from outside the universe.
+    const position = data.posts[initialPostIndex].position;
+    const target = v3(position);
     controls.target.copy(target);
-    entryTo.copy(target).add(new THREE.Vector3(0, 4, 14));
-    controls.autoRotate = false;
-    hovered = { kind: 'post', index: initialPostIndex };
+    entryTo
+      .copy(outward(position))
+      .multiplyScalar(options.mode === 'article' ? 9 : 14)
+      .add(target);
+    controls.autoRotate = motion && options.mode === 'article';
+    pinned = { kind: 'post', index: initialPostIndex };
   } else if (focused >= 0) {
     const target = v3(data.territories[focused].position);
     controls.target.copy(target);

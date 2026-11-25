@@ -19,8 +19,9 @@ import type { UniverseHandle } from './universeEngine';
 /**
  * The knowledge universe in a page: a full-bleed stage, territory filters,
  * search, and a panel for the territory in focus. The same component serves
- * /knowledge (mode "explore") and each territory page (mode "territory",
- * arriving already focused; other territories link to their own pages).
+ * /knowledge (mode "explore"), each territory page (mode "territory",
+ * arriving already focused; other territories link to their own pages) and
+ * the article sidebar (mode "article", a small stage circling that article).
  * Without WebGL it renders `fallback`, the 2D graph.
  */
 
@@ -43,7 +44,7 @@ export default function KnowledgeUniverse({
   fallback,
 }: {
   data: UniverseData;
-  mode: 'explore' | 'territory';
+  mode: 'explore' | 'territory' | 'article';
   focusKey?: KnowledgeNodeKey;
   /** Post slug from `?post=`; the camera arrives at that star. */
   focusedPost?: string;
@@ -145,13 +146,17 @@ export default function KnowledgeUniverse({
   if (!webgl) return <>{fallback}</>;
 
   const explore = mode === 'explore';
+  const article = mode === 'article';
+  const stageSize = explore
+    ? 'h-[82svh] min-h-[560px]'
+    : article
+      ? 'h-[22rem]'
+      : 'h-[64svh] min-h-[460px]';
 
   return (
-    <div className="bleed relative">
+    <div className={article ? 'relative' : 'bleed relative'}>
       <div
-        className={`universe-stage relative overflow-hidden ${
-          explore ? 'h-[82svh] min-h-[560px]' : 'h-[64svh] min-h-[460px]'
-        }`}
+        className={`universe-stage relative overflow-hidden ${stageSize}`}
         data-ready={ready ? 'true' : 'false'}
       >
         <div ref={hostRef} className="absolute inset-0" />
@@ -260,11 +265,13 @@ export default function KnowledgeUniverse({
           </aside>
         ) : null}
 
-        <p className="type-meta pointer-events-none absolute inset-x-0 bottom-0">
-          <span className="container-atelier block pb-5 text-gray-600 dark:text-gray-400">
-            {explore ? t('universeHint') : t('universeTerritoryHint')}
-          </span>
-        </p>
+        {article ? null : (
+          <p className="type-meta pointer-events-none absolute inset-x-0 bottom-0">
+            <span className="container-atelier block pb-5 text-gray-600 dark:text-gray-400">
+              {explore ? t('universeHint') : t('universeTerritoryHint')}
+            </span>
+          </p>
+        )}
       </div>
     </div>
   );
