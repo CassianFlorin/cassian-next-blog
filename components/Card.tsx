@@ -1,24 +1,14 @@
 'use client';
 
-import { useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import Image from './Image';
 import Link from './Link';
-import { useScrollAnimation } from '@/lib/hooks/useAnime';
-import { fadeInUp } from '@/lib/animations/fadeIn';
 
 const Card = ({ title, description, imgSrc, href }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('projects');
 
-  useScrollAnimation(cardRef, fadeInUp(0, 'strong'), 0.12);
-
   return (
-    <div
-      ref={cardRef}
-      className="md max-w-[544px] p-4 md:w-1/2"
-      style={{ opacity: 0 }}
-    >
+    <div className="md max-w-[544px] p-4 md:w-1/2">
       <div
         className={`${
           imgSrc && 'h-full'

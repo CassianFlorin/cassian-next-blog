@@ -87,7 +87,40 @@
         "Independent Projects"
       ],
       "more": "More about me",
-      "email": "Email"
+      "email": "Email",
+      "observatory": {
+        "label": "Observatory: one person, and the traces left behind",
+        "hint": "Drag to turn · hover a star or project for its name · click to open",
+        "roots": [
+          "Java",
+          "Spring Boot",
+          "Backend systems",
+          "Production debugging"
+        ],
+        "stations": [
+          {
+            "name": "Overview",
+            "caption": "I am the core. The four rings are the directions I work in; stars on them are what I have written, small cores are what I have built."
+          },
+          {
+            "name": "Focus",
+            "caption": "The four directions from above. The number after each ring is how much I have written there."
+          },
+          {
+            "name": "Roots",
+            "caption": "The ring underneath is where I started: Java, Spring Boot, backend systems, production debugging. It is why my tools aim to be practical and observable."
+          },
+          {
+            "name": "Work",
+            "caption": "The small cores on the rings are projects, each on the direction it belongs to. Click a name for the case study."
+          },
+          {
+            "name": "Time",
+            "caption": "The same writing read another way: re-laid as a spiral by date, newest at the top."
+          }
+        ],
+        "hintTouch": "Tap a viewpoint above to switch · tap a star or project to open it"
+      }
     }
   },
   "blog": {

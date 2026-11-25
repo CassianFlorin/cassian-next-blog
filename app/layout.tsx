@@ -104,66 +104,82 @@ export default async function RootLayout({
       className={`${geist.variable} ${instrument_serif.variable} ${jetbrains_mono.variable} scroll-smooth`}
       suppressHydrationWarning
     >
-      <link
-        rel="apple-touch-icon"
-        sizes="76x76"
-        href={`${basePath}/static/favicons/apple-touch-icon.png`}
-      />
-      <link
-        rel="icon"
-        type="image/png"
-        sizes="32x32"
-        href={`${basePath}/static/favicons/favicon-32x32.png`}
-      />
-      <link
-        rel="icon"
-        type="image/png"
-        sizes="16x16"
-        href={`${basePath}/static/favicons/favicon-16x16.png`}
-      />
-      <link
-        rel="manifest"
-        href={`${basePath}/static/favicons/site.webmanifest`}
-      />
-      <link
-        rel="mask-icon"
-        href={`${basePath}/static/favicons/safari-pinned-tab.svg`}
-        color="#244b43"
-      />
-      <meta name="msapplication-TileColor" content="#000000" />
-      <meta
-        name="theme-color"
-        media="(prefers-color-scheme: light)"
-        content="#f7f6f3"
-      />
-      <meta
-        name="theme-color"
-        media="(prefers-color-scheme: dark)"
-        content="#0e0d0c"
-      />
-      <link
-        rel="alternate"
-        type="application/rss+xml"
-        href={`${basePath}/feed.xml`}
-      />
-      {/*
+      <head>
+        <link
+          rel="apple-touch-icon"
+          sizes="76x76"
+          href={`${basePath}/static/favicons/apple-touch-icon.png`}
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href={`${basePath}/static/favicons/favicon-32x32.png`}
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href={`${basePath}/static/favicons/favicon-16x16.png`}
+        />
+        <link
+          rel="manifest"
+          href={`${basePath}/static/favicons/site.webmanifest`}
+        />
+        <link
+          rel="mask-icon"
+          href={`${basePath}/static/favicons/safari-pinned-tab.svg`}
+          color="#244b43"
+        />
+        {/*
+        Motion guard: before first paint, mark the page when motion is welcome
+        so the hero's split text can start hidden and be revealed by GSAP
+        (lib/motion). Without JS, or under reduced motion, nothing is hidden.
+      */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(matchMedia('(prefers-reduced-motion: no-preference)').matches)document.documentElement.classList.add('motion-ok')}catch(e){}",
+          }}
+        />
+        <meta name="msapplication-TileColor" content="#000000" />
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: light)"
+          content="#f7f6f3"
+        />
+        <meta
+          name="theme-color"
+          media="(prefers-color-scheme: dark)"
+          content="#0e0d0c"
+        />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          href={`${basePath}/feed.xml`}
+        />
+        {/*
         AdSense 站点验证。审核期间 Google 需要在页面上读到这个 meta，
         因此不随环境开关一起关闭——它是惰性的，不产生任何请求。
       */}
-      {adsenseConfig.enabled && (
-        <meta name="google-adsense-account" content={adsenseConfig.clientId} />
-      )}
-      {/*
+        {adsenseConfig.enabled && (
+          <meta
+            name="google-adsense-account"
+            content={adsenseConfig.clientId}
+          />
+        )}
+        {/*
         自动广告脚本。位置与数量由 AdSense 后台的「自动广告」开关控制，
         页面里不需要任何 <ins> 广告位。仅生产部署注入，避免无效流量。
       */}
-      {loadAdsense && (
-        <script
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseConfig.clientId}`}
-          crossOrigin="anonymous"
-        />
-      )}
+        {loadAdsense && (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseConfig.clientId}`}
+            crossOrigin="anonymous"
+          />
+        )}
+      </head>
       <body className="dark:bg-night bg-gray-50 font-sans text-gray-800 antialiased dark:text-gray-200">
         <ThemeProviders>{children}</ThemeProviders>
       </body>

@@ -1,3 +1,4 @@
+import TextReveal from '@/components/motion/TextReveal';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { genPageMetadata } from 'app/seo';
@@ -63,9 +64,13 @@ export default async function ProjectsPage(props: {
             <p className="type-meta text-gray-500 dark:text-gray-400">
               CF / 01
             </p>
-            <h1 className="type-section text-gray-950 dark:text-gray-50">
+            <TextReveal
+              as="h1"
+              on="mount"
+              className="type-section text-gray-950 dark:text-gray-50"
+            >
               {t('index.title')}
-            </h1>
+            </TextReveal>
             <p className="type-editorial text-2xl text-gray-600 italic sm:text-3xl dark:text-gray-300">
               {t('index.lede')}
             </p>

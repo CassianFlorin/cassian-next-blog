@@ -1,3 +1,4 @@
+import TextReveal from '@/components/motion/TextReveal';
 import type { ReactNode } from 'react';
 import { slug as slugify } from 'github-slugger';
 import { CoreContent } from 'pliny/utils/contentlayer';
@@ -8,6 +9,7 @@ import Comments from '@/components/Comments';
 import Image from '@/components/Image';
 import Link from '@/components/Link';
 import ScrollTopAndComment from '@/components/ScrollTopAndComment';
+import ReadingProgress from '@/components/motion/ReadingProgress';
 import Tldr from '@/components/Tldr';
 import PostLanguageNotice from '@/components/PostLanguageNotice';
 import { htmlLangByLocale, postContentLocale, resolveLocale } from '@/lib/seo';
@@ -97,6 +99,7 @@ export default async function PostLayout({
   return (
     <div className="bleed">
       <ScrollTopAndComment />
+      <ReadingProgress targetId="article-body" />
       <article className="container-atelier pb-8">
         <header className="pt-6 md:pt-10">
           <nav aria-label="Breadcrumb" className="type-meta">
@@ -124,9 +127,13 @@ export default async function PostLayout({
               {dayOf(published)}
             </time>
             <div className="max-w-4xl">
-              <h1 className="text-[2rem] leading-[1.15] font-semibold tracking-tight text-gray-950 sm:text-5xl lg:text-6xl lg:leading-[1.08] dark:text-gray-50">
+              <TextReveal
+                as="h1"
+                on="mount"
+                className="text-[2rem] leading-[1.15] font-semibold tracking-tight text-gray-950 sm:text-5xl lg:text-6xl lg:leading-[1.08] dark:text-gray-50"
+              >
                 {title}
-              </h1>
+              </TextReveal>
               {summary && (
                 <p className="type-editorial mt-6 text-xl leading-snug text-gray-600 md:text-2xl dark:text-gray-300">
                   {summary}
@@ -200,6 +207,7 @@ export default async function PostLayout({
                   ? htmlLangByLocale[locale]
                   : htmlLangByLocale[postContentLocale]
               }
+              id="article-body"
               className="prose prose-gray dark:prose-invert prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-relaxed prose-lg max-w-3xl"
             >
               <Tldr>{tldr}</Tldr>

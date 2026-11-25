@@ -1,28 +1,19 @@
-'use client';
-
-import { ReactNode, useRef } from 'react';
-import { useAnime } from '@/lib/hooks/useAnime';
-import { fadeInUp } from '@/lib/animations/fadeIn';
+import type { ReactNode } from 'react';
+import TextReveal from '@/components/motion/TextReveal';
 
 interface Props {
   children: ReactNode;
 }
 
+/** Article title for the legacy post layouts: rises line by line on load. */
 export default function PageTitle({ children }: Props) {
-  const titleRef = useRef<HTMLHeadingElement>(null);
-
-  useAnime({
-    targets: titleRef,
-    ...fadeInUp(0, 'medium'),
-  });
-
   return (
-    <h1
-      ref={titleRef}
+    <TextReveal
+      as="h1"
+      on="mount"
       className="text-2xl leading-tight font-bold tracking-tight text-gray-800 sm:text-3xl md:text-4xl dark:text-gray-100"
-      style={{ opacity: 0 }}
     >
       {children}
-    </h1>
+    </TextReveal>
   );
 }
