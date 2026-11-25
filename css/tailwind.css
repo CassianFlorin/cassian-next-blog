@@ -318,6 +318,88 @@
     }
   }
 
+  /* Work orbit + system stack (components/work). */
+  .work-stage {
+    opacity: 0;
+    transition: opacity 500ms var(--ease-atelier);
+  }
+
+  .work-stage[data-ready='true'] {
+    opacity: 1;
+  }
+
+  .work-label,
+  .stack-label {
+    will-change: transform;
+    transition: opacity var(--motion-fast) var(--ease-atelier);
+  }
+
+  .work-label--project {
+    white-space: nowrap;
+  }
+
+  .work-label--project .work-label-tagline {
+    display: none;
+    white-space: normal;
+  }
+
+  .work-label--project[data-state='lit'] .work-label-tagline {
+    display: block;
+  }
+
+  .work-label--project[data-state='lit'] > span:first-child {
+    color: var(--color-primary-700);
+  }
+
+  .dark .work-label--project[data-state='lit'] > span:first-child {
+    color: var(--color-primary-400);
+  }
+
+  .work-label--tech {
+    white-space: nowrap;
+    font-size: 0.68rem;
+  }
+
+  .work-label:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  .stack-label[data-state='lit'] > span:last-child {
+    color: var(--color-primary-700);
+  }
+
+  .dark .stack-label[data-state='lit'] > span:last-child {
+    color: var(--color-primary-400);
+  }
+
+  .stack-item {
+    border-left-color: color-mix(
+      in oklab,
+      var(--color-gray-950) 14%,
+      transparent
+    );
+    transition: border-color var(--motion-fast) var(--ease-atelier);
+  }
+
+  .dark .stack-item {
+    border-left-color: color-mix(in oklab, white 16%, transparent);
+  }
+
+  .stack-item[data-active='true'] {
+    border-left-color: var(--color-primary-600);
+  }
+
+  .dark .stack-item[data-active='true'] {
+    border-left-color: var(--color-primary-400);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .work-stage {
+      transition-duration: 1ms;
+    }
+  }
+
   /* Knowledge universe (components/knowledge/KnowledgeUniverse). */
   .universe-stage {
     opacity: 0;

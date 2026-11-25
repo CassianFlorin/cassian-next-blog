@@ -49,7 +49,14 @@ export function readPalette(): Palette {
 
   return {
     dark,
-    background: toRgb(getComputedStyle(document.body).backgroundColor),
+    // From the tokens, not body's computed colour: body transitions its
+    // background on theme change, so reading it mid-switch returns a blend
+    // and the stage shows as a lighter box.
+    background: toRgb(
+      dark
+        ? token('--color-night', 'oklch(0.145 0.005 85)')
+        : token('--color-gray-50', 'oklch(0.978 0.004 85)'),
+    ),
     ink: toRgb(
       dark
         ? token('--color-gray-200', 'oklch(0.9 0.008 85)')
@@ -286,15 +293,18 @@ export const FINISH_SHADER = {
     float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
     void main(){
       vec4 c = texture2D(tDiffuse, vUv);
-      // Film grain: the tactile layer the reference sites all share.
-      c.rgb += (hash(vUv * 1000.0 + fract(uTime)) - 0.5) * uGrain;
+      // Film grain: the tactile layer the reference sites all share. In-page
+      // stages keep it to a soft centre, or on paper it reads as a box.
+      float radial = smoothstep(0.62, 0.22, length((vUv - 0.5) * vec2(1.0, 1.15)));
+      float grainMask = mix(1.0, radial, uEdge);
+      c.rgb += (hash(vUv * 1000.0 + fract(uTime)) - 0.5) * uGrain * grainMask;
       // Settle the header strip, give the hero text its left side, and step
       // the whole world back behind text-heavy chapters.
       float keep = smoothstep(1.0, 0.9, vUv.y);
       keep *= mix(1.0, smoothstep(0.04, 0.46, vUv.x), uLeft);
       // In-page stages melt into the page on every side.
-      float frame = smoothstep(0.0, 0.14, vUv.y) * smoothstep(0.0, 0.05, vUv.x)
-        * smoothstep(1.0, 0.95, vUv.x);
+      float frame = smoothstep(0.0, 0.14, vUv.y) * smoothstep(0.0, 0.1, vUv.x)
+        * smoothstep(1.0, 0.9, vUv.x);
       keep *= mix(1.0, frame, uEdge);
       c.rgb = mix(uBg, c.rgb, keep * uPresence);
       gl_FragColor = c;
@@ -337,9 +347,65 @@ export function isTextTarget(target: EventTarget | null, x: number, y: number) {
   return false;
 }
 
+/**
+ * Clear colour for scenes rendered through an EffectComposer. three.js
+ * encodes the clear colour to the output colour space even when clearing the
+ * composer's linear render target, and the OutputPass then encodes it again,
+ * so the background comes out brighter than the page around it. Pre-decode
+ * once so the two encodings cancel and the stage matches the page exactly.
+ */
+export function composerClearColor(color: THREE.Color) {
+  return new THREE.Color().setRGB(
+    color.r,
+    color.g,
+    color.b,
+    THREE.SRGBColorSpace,
+  );
+}
+
 /** sRGB triple of a color, for shaders that run after the output pass. */
 export function srgbVector(color: THREE.Color, out: THREE.Vector3) {
   const srgb = { r: 0, g: 0, b: 0 };
   color.getRGB(srgb, THREE.SRGBColorSpace);
   return out.set(srgb.r, srgb.g, srgb.b);
 }
+
+/** Sized, dimmable, lightable points: articles, topics, satellites. */
+export const POINT_VERTEX = /* glsl */ `
+uniform float uPixelRatio;
+uniform float uTime;
+uniform float uScale;
+attribute float aSize;
+attribute float aDim;
+attribute float aLit;
+attribute float aSeed;
+varying float vDim;
+varying float vLit;
+void main(){
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * mv;
+  float pulse = 1.0 + 0.06 * sin(uTime * 1.5 + aSeed * 40.0);
+  float size = aSize * (1.0 + aLit * 0.45) * pulse * (uScale / -mv.z);
+  gl_PointSize = min(size, 56.0) * uPixelRatio;
+  vDim = aDim;
+  vLit = aLit;
+}
+`;
+
+export const POINT_FRAGMENT = /* glsl */ `
+uniform vec3 uInk;
+uniform vec3 uAccent;
+uniform float uOpacity;
+uniform float uRing;
+varying float vDim;
+varying float vLit;
+void main(){
+  float r = length(gl_PointCoord - 0.5);
+  float core = smoothstep(0.16, 0.1, r);
+  float ring = smoothstep(0.03, 0.0, abs(r - 0.38)) * uRing * (0.35 + 0.65 * vLit);
+  float halo = pow(smoothstep(0.5, 0.0, r), 3.0) * 0.45;
+  float a = max(max(core, ring), halo);
+  vec3 col = mix(uInk, uAccent, max(vLit, uRing * 0.75));
+  gl_FragColor = vec4(col, a * vDim * uOpacity);
+}
+`;

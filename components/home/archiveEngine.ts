@@ -13,6 +13,7 @@ import {
   STAR_FRAGMENT,
   STAR_VERTEX,
   clamp01,
+  composerClearColor,
   easeOut,
   isTextTarget,
   mulberry32,
@@ -386,7 +387,7 @@ export function mountArchive(
   composer.addPass(finish);
 
   const applyPalette = () => {
-    renderer.setClearColor(palette.background, 1);
+    renderer.setClearColor(composerClearColor(palette.background), 1);
     coreUniforms.uBase.value.copy(palette.coreBase);
     coreUniforms.uRim.value.copy(palette.accent);
     coreUniforms.uInk.value.copy(palette.ink);

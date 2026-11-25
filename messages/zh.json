@@ -233,7 +233,8 @@
       "caseStudies": "案例",
       "ecosystem": "生态与开源参与",
       "readCaseStudy": "阅读案例",
-      "visit": "访问"
+      "visit": "访问",
+      "orbitHint": "拖拽旋转 · 悬停项目看简介和它的技术栈 · 点击进入案例"
     }
   },
   "knowledge": {
