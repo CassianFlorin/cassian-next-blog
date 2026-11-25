@@ -922,11 +922,10 @@ export function mountUniverse(
   let frame = 0;
   let started = 0;
   /**
-   * Entry time only runs while frames run (stage on screen, tab visible), so
-   * a stage scrolled into view later still gets its whole arrival.
+   * The entry clock starts when the stage is first on screen, so a stage
+   * scrolled into view later (the article sidebar) still gets its arrival.
    */
-  let entryClock = 0;
-  let lastTick = 0;
+  let entryStart = 0;
   let entryDone = !motion;
   let readyFired = false;
   let visible = true;
@@ -1021,13 +1020,19 @@ export function mountUniverse(
   const tick = (now: number) => {
     frame = 0;
     if (!started) started = now;
-    entryClock += lastTick ? Math.min(now - lastTick, 64) : 0;
-    lastTick = now;
+    // The entry starts the first time the stage is actually on screen, then
+    // runs on wall-clock time, whatever the frame rate.
+    if (!entryDone && !entryStart) {
+      const rect = host.getBoundingClientRect();
+      if (rect.bottom > 0 && rect.top < window.innerHeight) entryStart = now;
+    }
     const time = motion ? (now - started) / 1000 : 0;
 
     // Entry: arrive from far out while nothing else moves the camera.
     if (!entryDone && !flight.active) {
-      const entry = easeOut(clamp01(entryClock / ENTRY_MS));
+      const entry = entryStart
+        ? easeOut(clamp01((now - entryStart) / ENTRY_MS))
+        : 0;
       camera.position.lerpVectors(entryFrom, entryTo, entry);
       if (entry >= 1) entryDone = true;
     } else if (!entryDone) {
@@ -1105,12 +1110,10 @@ export function mountUniverse(
 
   const intersection = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
-    lastTick = 0;
     if (visible) requestRender();
   });
   intersection.observe(host);
   const onVisibility = () => {
-    lastTick = 0;
     requestRender();
   };
   document.addEventListener('visibilitychange', onVisibility);
