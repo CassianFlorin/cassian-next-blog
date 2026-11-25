@@ -4,14 +4,16 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import {
   CORE_FRAGMENT,
   CORE_VERTEX,
   DUST_FRAGMENT,
   DUST_VERTEX,
   FINISH_SHADER,
+  POINT_FRAGMENT,
+  POINT_VERTEX,
   clamp01,
+  composerClearColor,
   easeOut,
   isTextTarget,
   mulberry32,
@@ -65,45 +67,6 @@ export interface UniverseHandle {
   search: (query: string) => number;
   dispose: () => void;
 }
-
-const POINT_VERTEX = /* glsl */ `
-uniform float uPixelRatio;
-uniform float uTime;
-uniform float uScale;
-attribute float aSize;
-attribute float aDim;
-attribute float aLit;
-attribute float aSeed;
-varying float vDim;
-varying float vLit;
-void main(){
-  vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  gl_Position = projectionMatrix * mv;
-  float pulse = 1.0 + 0.06 * sin(uTime * 1.5 + aSeed * 40.0);
-  float size = aSize * (1.0 + aLit * 0.45) * pulse * (uScale / -mv.z);
-  gl_PointSize = min(size, 56.0) * uPixelRatio;
-  vDim = aDim;
-  vLit = aLit;
-}
-`;
-
-const POINT_FRAGMENT = /* glsl */ `
-uniform vec3 uInk;
-uniform vec3 uAccent;
-uniform float uOpacity;
-uniform float uRing;
-varying float vDim;
-varying float vLit;
-void main(){
-  float r = length(gl_PointCoord - 0.5);
-  float core = smoothstep(0.16, 0.1, r);
-  float ring = smoothstep(0.03, 0.0, abs(r - 0.38)) * uRing * (0.35 + 0.65 * vLit);
-  float halo = pow(smoothstep(0.5, 0.0, r), 3.0) * 0.45;
-  float a = max(max(core, ring), halo);
-  vec3 col = mix(uInk, uAccent, max(vLit, uRing * 0.75));
-  gl_FragColor = vec4(col, a * vDim * uOpacity);
-}
-`;
 
 const LINE_VERTEX = /* glsl */ `
 attribute float aAlpha;
@@ -374,8 +337,8 @@ export function mountUniverse(
   /* Post-processing ------------------------------------------------------- */
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.5, 0.2);
-  composer.addPass(bloom);
+  // No bloom on in-page stages: its halo lifts the whole background and the
+  // stage shows as a lighter box against the page (see the finish pass).
   composer.addPass(new OutputPass());
   const finish = new ShaderPass(FINISH_SHADER);
   finish.uniforms.uEdge.value = 1;
@@ -383,7 +346,7 @@ export function mountUniverse(
 
   const pointMaterials = [posts.material, topics.material];
   const applyPalette = () => {
-    renderer.setClearColor(palette.background, 1);
+    renderer.setClearColor(composerClearColor(palette.background), 1);
     cores.forEach(({ material }) => {
       material.uniforms.uBase.value.copy(palette.coreBase);
       material.uniforms.uRim.value.copy(palette.accent);
@@ -401,7 +364,6 @@ export function mountUniverse(
     });
     dustUniforms.uOpacity.value = palette.dark ? 0.55 : 0.7;
     dustUniforms.uSizeScale.value = palette.dark ? 1 : 1.3;
-    bloom.enabled = palette.dark && !compact;
     finish.uniforms.uGrain.value = palette.dark ? 0.06 : 0.035;
     srgbVector(palette.background, finish.uniforms.uBg.value as THREE.Vector3);
   };

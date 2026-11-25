@@ -12,6 +12,8 @@ import {
 import projectsData from '@/data/projectsData';
 import { resolveLocale } from '@/lib/seo';
 import { buildCollectionPageJsonLd } from '@/lib/structuredData';
+import { getWorkScene } from '@/lib/workSceneData';
+import WorkOrbit from '@/components/work/WorkOrbit';
 
 export async function generateMetadata(props: {
   params: Promise<{ locale: string }>;
@@ -39,6 +41,7 @@ export default async function ProjectsPage(props: {
 
   const featured = caseStudyProjects();
   const others = projectsData.filter((project) => !getCaseStudy(project.id));
+  const workScene = await getWorkScene(locale);
 
   return (
     <div className="bleed">
@@ -72,7 +75,14 @@ export default async function ProjectsPage(props: {
           </p>
         </header>
 
-        <section aria-labelledby="case-studies" className="mt-20 md:mt-28">
+        <WorkOrbit
+          data={workScene}
+          mode="index"
+          hint={t('index.orbitHint')}
+          className="bleed relative mt-10 h-[72svh] min-h-[520px]"
+        />
+
+        <section aria-labelledby="case-studies" className="mt-16 md:mt-20">
           <h2
             id="case-studies"
             className="type-meta flex items-baseline justify-between border-b border-gray-900/20 pb-4 text-gray-950 dark:border-white/20 dark:text-gray-50"

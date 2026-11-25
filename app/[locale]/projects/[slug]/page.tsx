@@ -7,9 +7,11 @@ import { getLocalizedPosts } from '@/lib/postTranslations';
 import { genPageMetadata } from 'app/seo';
 import JsonLd from '@/components/JsonLd';
 import Link from '@/components/Link';
-import Reveal from '@/components/motion/Reveal';
 import CaseStudyContents from '@/components/work/CaseStudyContents';
 import RichText from '@/components/work/RichText';
+import SystemStack from '@/components/work/SystemStack';
+import WorkOrbit from '@/components/work/WorkOrbit';
+import { getWorkScene } from '@/lib/workSceneData';
 import TraceList, { type Trace } from '@/components/writing/TraceList';
 import {
   caseStudyProjects,
@@ -172,6 +174,7 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
   const tagline = t(`items.${project.id}.tagline`);
+  const workScene = await getWorkScene(locale);
   const source = entry.links.find((link) => link.kind === 'source');
   const site = entry.links.find((link) => link.kind === 'site');
   const chapterLabel = (id: (typeof CHAPTERS)[number]['id']) =>
@@ -210,7 +213,14 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
       />
 
       <article className="container-atelier pb-8">
-        <header className="pt-6 md:pt-10">
+        <header className="relative isolate pt-6 md:pt-10">
+          {/* This project's core, stack and territories, behind the title. */}
+          <WorkOrbit
+            data={workScene}
+            mode="detail"
+            projectId={project.id}
+            className="absolute top-0 right-[calc(50%-50vw)] left-[calc(50%-50vw)] -z-10 hidden h-[31rem] lg:block"
+          />
           <div className="type-meta flex flex-wrap items-center justify-between gap-4">
             <nav aria-label="Breadcrumb">
               <ol className="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-400">
@@ -351,38 +361,14 @@ export default async function ProjectCaseStudyPage(props: { params: Params }) {
               <p className="type-editorial max-w-3xl text-2xl leading-snug text-gray-950 md:text-3xl dark:text-gray-50">
                 <RichText text={study.system.intro} />
               </p>
-              <Reveal variant="rise" className="mt-12">
-                <ol
-                  aria-label={t('caseStudy.systemLabel', {
+              <div className="mt-12">
+                <SystemStack
+                  layers={study.system.layers}
+                  label={t('caseStudy.systemLabel', {
                     project: project.title,
                   })}
-                  className="max-w-3xl"
-                >
-                  {study.system.layers.map((layer, i) => (
-                    <li key={layer.title}>
-                      {i > 0 && (
-                        <span
-                          aria-hidden="true"
-                          className="ml-8 block h-8 w-px bg-gray-900/25 dark:bg-white/25"
-                        />
-                      )}
-                      <div className="grid gap-3 border border-gray-900/20 bg-gray-50 p-6 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-8 dark:border-white/20 dark:bg-white/[0.02]">
-                        <p className="space-y-1">
-                          <span className="type-meta block text-gray-500 dark:text-gray-400">
-                            L{i + 1}
-                          </span>
-                          <span className="block font-semibold tracking-tight text-gray-950 dark:text-gray-50">
-                            {layer.title}
-                          </span>
-                        </p>
-                        <p className="leading-7 text-gray-700 dark:text-gray-300">
-                          <RichText text={layer.body} />
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              </Reveal>
+                />
+              </div>
             </Chapter>
 
             <Chapter

@@ -233,7 +233,8 @@
       "caseStudies": "Case studies",
       "ecosystem": "Ecosystem & open source",
       "readCaseStudy": "Read the case study",
-      "visit": "Visit"
+      "visit": "Visit",
+      "orbitHint": "Drag to turn · hover a project for its story and stack · click to open the case study"
     }
   },
   "knowledge": {
