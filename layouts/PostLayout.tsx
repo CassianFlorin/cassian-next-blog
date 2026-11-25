@@ -18,6 +18,8 @@ import siteMetadata from '@/data/siteMetadata';
 import type { KnowledgeGraphData } from '@/lib/knowledgeGraph';
 import type { UniverseData } from '@/lib/knowledgeUniverse';
 import { knowledgeNodeHref, type KnowledgeNodeKey } from '@/lib/knowledgeNodes';
+import ArticleOrbit from '@/components/article/ArticleOrbit';
+import { buildArticleScene, type TocHeading } from '@/lib/articleScene';
 
 const editUrl = (path: string) =>
   `${siteMetadata.siteRepo}/blob/main/data/${path}`;
@@ -47,6 +49,8 @@ interface LayoutProps {
   knowledgeGraph?: KnowledgeGraphData;
   knowledgeUniverse?: UniverseData;
   relations?: ArticleRelations;
+  /** Headings of the body as rendered, for the header scene's sections. */
+  toc?: TocHeading[];
   isTranslated?: boolean;
   children: ReactNode;
 }
@@ -64,6 +68,7 @@ export default async function PostLayout({
   knowledgeGraph,
   knowledgeUniverse,
   relations,
+  toc = [],
   isTranslated = false,
   children,
 }: LayoutProps) {
@@ -93,6 +98,21 @@ export default async function PostLayout({
   const projects = relations?.projects ?? [];
   const related = relations?.articles ?? [];
 
+  const articleScene = buildArticleScene({
+    toc,
+    neighbours: related.map((article) => ({
+      title: article.title,
+      href: article.href,
+      date: article.date ?? '',
+    })),
+    territories: territories.map((territory) => ({
+      label: tk(`nodes.${territory.key}.label`),
+      href: knowledgeNodeHref(territory.key),
+    })),
+  });
+  const hasScene =
+    articleScene.chapters.length > 0 || articleScene.neighbours.length > 0;
+
   const asideTitle =
     'type-meta border-b border-gray-900/20 pb-3 text-gray-500 dark:border-white/20 dark:text-gray-400';
 
@@ -101,44 +121,70 @@ export default async function PostLayout({
       <ScrollTopAndComment />
       <ReadingProgress targetId="article-body" />
       <article className="container-atelier pb-8">
-        <header className="pt-6 md:pt-10">
-          <nav aria-label="Breadcrumb" className="type-meta">
-            <ol className="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-400">
-              <li>
-                <Link
-                  href="/blog"
-                  className="transition-colors hover:text-gray-950 dark:hover:text-gray-50"
-                >
-                  CF / 03 · {t('article.writing')}
-                </Link>
-              </li>
-              <li aria-hidden="true">/</li>
-              <li className="text-gray-950 dark:text-gray-50">
-                {published.getFullYear()}
-              </li>
-            </ol>
-          </nav>
+        <header className="isolate pt-6 md:pt-10">
+          <div className={hasScene ? 'relative lg:min-h-[34rem]' : undefined}>
+            {hasScene && (
+              // Sections, nearby writing and territories, behind the title.
+              <ArticleOrbit
+                data={articleScene}
+                className="absolute -top-10 right-[calc(50%-50vw)] bottom-0 left-[calc(50%-50vw)] -z-10 hidden lg:block"
+                label={t('article.scene.label')}
+                stats={[
+                  t('article.scene.sections', {
+                    count: pad(articleScene.chapters.length),
+                  }),
+                  t('article.scene.neighbours', {
+                    count: pad(articleScene.neighbours.length),
+                  }),
+                  t('article.scene.territories', {
+                    count: pad(articleScene.territories.length),
+                  }),
+                ].join(' · ')}
+              />
+            )}
+            <nav aria-label="Breadcrumb" className="type-meta">
+              <ol className="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-400">
+                <li>
+                  <Link
+                    href="/blog"
+                    className="transition-colors hover:text-gray-950 dark:hover:text-gray-50"
+                  >
+                    CF / 03 · {t('article.writing')}
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li className="text-gray-950 dark:text-gray-50">
+                  {published.getFullYear()}
+                </li>
+              </ol>
+            </nav>
 
-          <div className="mt-12 grid gap-4 md:mt-16 lg:grid-cols-[10rem_minmax(0,1fr)] lg:gap-12">
-            <time
-              dateTime={date}
-              className="font-mono text-xl text-gray-500 tabular-nums lg:pt-2 lg:text-3xl dark:text-gray-400"
-            >
-              {dayOf(published)}
-            </time>
-            <div className="max-w-4xl">
-              <TextReveal
-                as="h1"
-                on="mount"
-                className="text-[2rem] leading-[1.15] font-semibold tracking-tight text-gray-950 sm:text-5xl lg:text-6xl lg:leading-[1.08] dark:text-gray-50"
+            <div className="mt-12 grid gap-4 md:mt-16 lg:grid-cols-[10rem_minmax(0,1fr)] lg:gap-12">
+              <time
+                dateTime={date}
+                className="font-mono text-xl text-gray-500 tabular-nums lg:pt-2 lg:text-3xl dark:text-gray-400"
               >
-                {title}
-              </TextReveal>
-              {summary && (
-                <p className="type-editorial mt-6 text-xl leading-snug text-gray-600 md:text-2xl dark:text-gray-300">
-                  {summary}
-                </p>
-              )}
+                {dayOf(published)}
+              </time>
+              <div
+                data-scene-clear
+                className={
+                  hasScene ? 'max-w-4xl lg:max-w-lg 2xl:max-w-xl' : 'max-w-4xl'
+                }
+              >
+                <TextReveal
+                  as="h1"
+                  on="mount"
+                  className="text-[2rem] leading-[1.15] font-semibold tracking-tight text-gray-950 sm:text-5xl lg:text-6xl lg:leading-[1.08] dark:text-gray-50"
+                >
+                  {title}
+                </TextReveal>
+                {summary && (
+                  <p className="type-editorial mt-6 text-xl leading-snug text-gray-600 md:text-2xl dark:text-gray-300">
+                    {summary}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 

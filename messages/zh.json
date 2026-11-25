@@ -166,7 +166,13 @@
       "keepReading": "继续阅读",
       "inTheMap": "在知识地图中",
       "untranslated": "这篇文章目前只有中文版。",
-      "readOriginal": "阅读中文原文"
+      "readOriginal": "阅读中文原文",
+      "scene": {
+        "label": "CF / 03 · 文章星系 · 悬停星点查看，点击前往",
+        "sections": "{count} 节",
+        "neighbours": "{count} 篇相邻",
+        "territories": "{count} 个领域"
+      }
     }
   },
   "about": {

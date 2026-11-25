@@ -337,6 +337,65 @@
     background: color-mix(in oklab, var(--color-night) 78%, transparent);
   }
 
+  /* Article header scene (components/article). */
+  .article-stage {
+    opacity: 0;
+    transition: opacity 500ms var(--ease-atelier);
+  }
+
+  .article-stage[data-ready='true'] {
+    opacity: 1;
+  }
+
+  .article-label {
+    white-space: nowrap;
+    will-change: transform;
+    transition: opacity var(--motion-fast) var(--ease-atelier);
+  }
+
+  .article-label--chapter {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  /* Idle points show only their number or date; hover gives the title. */
+  .article-label .article-label-title {
+    display: none;
+  }
+
+  .article-label[data-flip='true'] {
+    text-align: right;
+  }
+
+  .article-label[data-flip='true'].article-label--chapter {
+    flex-direction: row-reverse;
+  }
+
+  .article-label[data-state='lit'] {
+    z-index: 1;
+  }
+
+  .article-label[data-state='lit'] .article-label-title {
+    display: block;
+    max-width: 20rem;
+    white-space: normal;
+    padding: 0.2rem 0.45rem;
+    border-left: 2px solid var(--color-primary-600);
+    background: color-mix(in oklab, var(--color-gray-50) 82%, transparent);
+  }
+
+  .dark .article-label[data-state='lit'] .article-label-title {
+    border-left-color: var(--color-primary-400);
+    background: color-mix(in oklab, var(--color-night) 78%, transparent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .article-stage {
+      transition-duration: 1ms;
+    }
+  }
+
   /* Work orbit + system stack (components/work). */
   .work-stage {
     opacity: 0;
